@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>three.js</title>
+	<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="menu">
+        <button id="startGame">Start</button>
+        <button id="exitGame">Exit</button>
+    </div>
+    <script type="module">
+		
+		// three.js Import
+        import * as THREE from 'https://cdn.skypack.dev/three@0.128.0';
+        import { PointerLockControls } from 'https://cdn.skypack.dev/three@0.128.0/examples/jsm/controls/PointerLockControls.js';
+		
+		// Class Imports
+		import Player from './Classes/player.class.js';
+		import World from './Classes/world.class.js';
+		
+		// Game World Imports
+		import * as Worlds from './Worlds/worlds.js';
+		
+		
+		// Game UI HTML Elements
+		const menu = document.getElementById('menu');
+        const startGameButton = document.getElementById('startGame');
+        const exitGameButton = document.getElementById('exitGame');
+		
+
+		// Game Declarations
+		
+		// three.js Game Renderer
+        let renderer, render_once, stop_animating;
+
+		// Game Player
+		let player;
+		
+		// Game World
+		let worlds, selected_world;
+		
+		
+		// Game Functions
+		
+		/**
+		 * Game Initialization - Initializes the renderer/player/world, then starts the game loop.
+		 */
+		function init()
+		{
+			
+			// Initialize three.js renderer
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+			render_once = false;
+			stop_animating = false;
+			
+			// Initialize player
+			player = new Player(window, document);
+			
+			// Initialize worlds
+			worlds = [];
+			
+			// Initialize custom game worlds from Worlds class
+			for (const world_class in Worlds)
+			{
+				const game_world = new Worlds[world_class];
+				if (game_world.world)
+				{
+					worlds.push(game_world.world);
+				}
+			}
+			
+			// Load the first available game world
+			if (worlds.length > 0)
+			{
+				selected_world = worlds[0];
+				
+				// Start game loop
+				animate();
+			}
+			else
+			{
+				// TODO: No game worlds loaded :(
+			}
+			
+		}
+		
+		/**
+		 * Game Loop - Renders a single frame after handling movement/collision. Called once per frame.
+		 */
+		function animate()
+		{
+			
+			// Request a frame to be rendered using this method as a callback
+			const frame_id = requestAnimationFrame(animate);
+			
+			// Make sure at least one frame is rendered (This is workaround for collision bounding boxes before handling ANY collision detection...)
+			//
+			// 	NOTE: One frame must be initially rendered because the THREE.Box3().setFromObject() function expects objects to have a 
+			//	      matrixWorld property that is up-to-date first, so rendering a single frame before collision detection prevents a crash.
+			if (render_once)
+			{
+
+				// Handle player movement and collision detection
+				player.HandlePlayerMovement(selected_world);
+			
+			}
+			else
+			{
+				render_once = true;
+			}
+			
+			// Render the frame (or break game loop if flag is set)
+			if (!stop_animating)
+			{
+				renderer.render(selected_world.scene, player.camera);
+			}
+			else
+			{
+				cancelAnimationFrame(frame_id);
+				
+				// TODO: Game loop broken. Do something? Show main menu?
+			}
+			
+		}
+		
+		
+		// Browser Window Event Handlers
+		
+		/**
+		 * Window load event.
+		 */
+		window.onload = function(e)
+		{ 
+			// TODO: Remove this temporary menu override...
+            menu.style.display = 'none';
+            init();
+		}
+		
+		/**
+		 * Window resize event.
+		 */
+		window.addEventListener('resize', () => {
+			
+			// Update player camera
+            player.camera.aspect = window.innerWidth / window.innerHeight;
+            player.camera.updateProjectionMatrix();
+			
+			// Update game renderer
+            renderer.setSize(window.innerWidth, window.innerHeight);
+			
+        });
+		
+		
+		// Main Menu UI Events
+		
+		/**
+		 * Start button click event.
+		 */
+        startGameButton.addEventListener('click', () => {
+		
+			// Hide main menu UI
+            menu.style.display = 'none';
+			
+			// Initialize game
+            init();
+			
+        });
+		
+		/**
+		 * Exit button click event.
+		 */
+        exitGameButton.addEventListener('click', () => {
+			
+			// Close browser
+            window.close();
+			
+        });
+        
+    </script>
+</body>
+</html>
