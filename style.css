@@ -1,3 +1,5 @@
+/* HTML Elements */
+
 body {
 	margin: 0;
 	overflow: hidden;
@@ -9,12 +11,56 @@ button {
 	font-size: 20px; 
 }
 
+
+/* three.js Renderer */
+
+#renderer {
+	position: fixed;
+	top: 0;
+	z-index: -11111;
+}
+
+
+/* Menu UIs */
+
+/* Main Menu */
 #menu { 
 	position: absolute; 
 	top: 50%; 
 	left: 50%; 
 	transform: translate(-50%, -50%); 
-	display: flex; 
+	display: block; 
 	flex-direction: column; 
 	align-items: center;
+}
+
+
+/* Game UI Elements */
+
+/* Player Crosshair */
+.crosshair {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 20px;
+	height: 20px;
+	background: transparent;
+	transform: translate(-50%, -50%);
+}
+.crosshair:before, .crosshair:after {
+	content: '';
+	position: absolute;
+	background: white;
+}
+.crosshair:before {
+	width: 2px;
+	height: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+}
+.crosshair:after {
+	height: 2px;
+	width: 100%;
+	top: 50%;
+	transform: translateY(-50%);
 }

@@ -1,5 +1,5 @@
 // three.js Import
-import * as THREE from 'https://cdn.skypack.dev/three@0.128.0';
+import * as THREE from '../Three.js/three.js';
 
 // Class Imports
 import World from '../Classes/world.class.js';
@@ -39,8 +39,8 @@ class World1
 		const higherPlane = new THREE.Mesh(higherPlaneGeometry, higherPlaneMaterial);
 		higherPlane.rotation.x = -Math.PI / 2;
 		higherPlane.position.x = 0;
-		higherPlane.position.z = -23;
-		higherPlane.position.y = 10; // Plane height
+		higherPlane.position.z = -25;
+		higherPlane.position.y = 3.5; // Plane height
 		this.world.addTerrain(higherPlane);
 
 		// Ramp
@@ -54,12 +54,54 @@ class World1
 		
 		// Initialize Objects
 
-		// Enemy
-		const enemyGeometry = new THREE.BoxGeometry(1, 2, 1);
-		const enemyMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-		const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
-		enemy.position.set(5, 1, -10);
-		this.world.addObject(enemy);
+		// Step1
+		const step1Geometry = new THREE.BoxGeometry(3, 0.4, 3);
+		const step1Material = new THREE.MeshBasicMaterial({ color: 0xac8053 });
+		const step1 = new THREE.Mesh(step1Geometry, step1Material);
+		step1.position.set(5, 0.2, -10);
+		this.world.addObject(step1);
+		
+		// Step2
+		const step2Geometry = new THREE.BoxGeometry(3, 0.4, 3);
+		const step2Material = new THREE.MeshBasicMaterial({ color: 0x9b734b });
+		const step2 = new THREE.Mesh(step2Geometry, step2Material);
+		step2.position.set(7.5, 0.6, -10);
+		this.world.addObject(step2);
+		
+		// Step3
+		const step3Geometry = new THREE.BoxGeometry(3, 0.4, 3);
+		const step3Material = new THREE.MeshBasicMaterial({ color: 0x8a6642 });
+		const step3 = new THREE.Mesh(step3Geometry, step3Material);
+		step3.position.set(10, 1, -10);
+		this.world.addObject(step3);
+		
+		// Step4
+		const step4Geometry = new THREE.BoxGeometry(3, 0.52, 3);
+		const step4Material = new THREE.MeshBasicMaterial({ color: 0xff9900 });
+		const step4 = new THREE.Mesh(step4Geometry, step4Material);
+		step4.position.set(15, 0.26, -10);
+		this.world.addObject(step4);
+		
+		// Step5
+		const step5Geometry = new THREE.BoxGeometry(3, 0.52, 3);
+		const step5Material = new THREE.MeshBasicMaterial({ color: 0xe68a00 });
+		const step5 = new THREE.Mesh(step5Geometry, step5Material);
+		step5.position.set(20, 1.26, -10);
+		this.world.addObject(step5);
+		
+		// Step6
+		const step6Geometry = new THREE.BoxGeometry(3, 0.52, 3);
+		const step6Material = new THREE.MeshBasicMaterial({ color: 0xcc7a00 });
+		const step6 = new THREE.Mesh(step6Geometry, step6Material);
+		step6.position.set(25, 2.5, -10);
+		this.world.addObject(step6);
+		
+		// Step7
+		const step7Geometry = new THREE.BoxGeometry(3, 0.52, 3);
+		const step7Material = new THREE.MeshBasicMaterial({ color: 0x1a0f00 });
+		const step7 = new THREE.Mesh(step7Geometry, step7Material);
+		step7.position.set(32, 5, -10);
+		this.world.addObject(step7);
 
 		// Tree on Lower Plane
 		const treeTrunkGeometry = new THREE.CylinderGeometry(0.5, 0.5, 5);
