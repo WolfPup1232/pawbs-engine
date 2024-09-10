@@ -268,48 +268,82 @@ class World
 	handleEditorHighlightedObject(player)
 	{
 		
-		let new_highlighted_object = null;
+		let reset_highlight = false;
 		
-		// Cast a ray from the player's position in the direction the player is looking
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
-		
-		// Check intersections with all world objects
-		const intersects = player.raycaster.intersectObjects(this.all_objects);
-		if (intersects.length > 0)
+		// If editor mode is enabled, handle object highlighting...
+		if (player.controls.mode_editor)
 		{
 			
-			// Get the first object object that the player is looking at
-			new_highlighted_object = intersects[0].object;
+			// Initialize potential new highlighted object
+			let new_highlighted_object = null;
 			
-			// If the new highlighted object is different than the current highlighted object
-			if (this.editor_highlighted_object !== new_highlighted_object)
+			// Cast a ray from the player's position in the direction the player is looking
+			player.raycaster.ray.origin.copy(player.position);
+			player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+			player.raycaster.near = 0;
+			player.raycaster.far = Infinity;
+			
+			// Check intersections with all world objects
+			const intersects = player.raycaster.intersectObjects(this.all_objects);
+			if (intersects.length > 0)
 			{
 				
-				// Reset the old highlighted object's material
-				if (this.editor_highlighted_object)
-				{
-					this.editor_highlighted_object.material = this.editor_original_materials.get(this.editor_highlighted_object);
-				}
+				// Get the first object object that the player is looking at
+				new_highlighted_object = intersects[0].object;
 				
-				// Set the new highlighted object's material to a solid colour
-				if (new_highlighted_object)
+				// If the new highlighted object is different than the current highlighted object
+				if (this.editor_highlighted_object !== new_highlighted_object)
 				{
-					if (!this.editor_original_materials.has(new_highlighted_object))
+					
+					// Reset the old highlighted object's material
+					if (this.editor_highlighted_object)
 					{
-						this.editor_original_materials.set(new_highlighted_object, new_highlighted_object.material);
+						this.editor_highlighted_object.material = this.editor_original_materials.get(this.editor_highlighted_object);
 					}
 					
-					new_highlighted_object.material = new THREE.MeshBasicMaterial({ color: editor_highlighted_object_colour });
+					// Set the new highlighted object's material to a solid colour
+					if (new_highlighted_object)
+					{
+						if (!this.editor_original_materials.has(new_highlighted_object))
+						{
+							this.editor_original_materials.set(new_highlighted_object, new_highlighted_object.material);
+						}
+						
+						new_highlighted_object.material = new THREE.MeshBasicMaterial({ color: this.editor_highlighted_object_colour });
+					}
+					
+					// Get the new highlighted object
+					this.editor_highlighted_object = new_highlighted_object;
+					
 				}
 				
-				// Get the new highlighted object
-				this.editor_highlighted_object = new_highlighted_object;
+				
+			} // Otherwise, if the player isn't looking at any objects...
+			else
+			{
+				
+				// Flag for highlight reset
+				reset_highlight = true;
 				
 			}
 			
+		} // Otherwise, if editing mode is disabled...
+		else
+		{
+			
+			// Flag for highlight reset
+			reset_highlight = true;
+			
+		}
+		
+		// Reset the highlighted object
+		if (reset_highlight)
+		{
+			if (this.editor_highlighted_object)
+			{
+				this.editor_highlighted_object.material = this.editor_original_materials.get(this.editor_highlighted_object);
+				this.editor_highlighted_object = null;
+			}
 		}
 		
 	}

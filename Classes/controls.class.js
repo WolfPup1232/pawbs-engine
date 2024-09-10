@@ -97,7 +97,18 @@ class Controls
 					controls.is_player_moving_backward = true;
 					break;
 				case 'KeyD':
-					controls.is_player_moving_right = true;
+					if (controls.modifier_shift_left_pressed)
+					{
+						// ShiftLeft + KeyD
+						
+						// Do nothing.
+					}
+					else
+					{
+						// KeyD
+						
+						controls.is_player_moving_right = true;
+					}
 					break;
 				case 'Space':
 					controls.is_player_jumping = true;

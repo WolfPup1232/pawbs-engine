@@ -276,19 +276,13 @@ class Player
 		
 		// Editor Mode
 		
-		// Handle editor mode considerations
-		if (this.controls.mode_editor)
-		{
-			
-			// Handle editor mode object highlighting
-			world.handleEditorHighlightedObject(this);
-			
-		}
+		// Handle editor mode object highlighting
+		world.handleEditorHighlightedObject(this);
 		
 		
 		// Debug Mode
 		
-		// Handle debug mode considerations
+		// Handle debug mode output
 		if (this.controls.mode_debug)
 		{
 			
