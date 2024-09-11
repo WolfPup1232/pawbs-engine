@@ -40,10 +40,27 @@
 	
 	<div id="editor" class="mx-3" style="display: none;">
 		<div class="row">
-			<div class="col">
+			<div class="col-12 col-lg-7 col-xl-5">
 				<div class="card mt-3 shadow-sm">
 					<div class="card-body">
-						<p class="card-title small fw-bold">Editor</p>
+						<div class="input-group">
+							<div class="card-title small fw-bold input-group-text w-100 m-0">
+								Edit World
+								<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" type="text" placeholder="Enter your world's name."></p>
+							</div>
+						</div>
+						<!--
+						<p class="card-text small mb-1">This is the in-game level editor window.</p>
+						<input class="form-control form-control-sm" type="text" placeholder="Example Text Box">
+						-->
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-3">
+				<div class="card mt-3 shadow-sm">
+					<div class="card-body">
 						<p class="card-text small mb-1">This is the in-game level editor window.</p>
 						<input class="form-control form-control-sm" type="text" placeholder="Example Text Box">
 					</div>
@@ -135,9 +152,6 @@
 			
 			$('#renderer').append(renderer.domElement);
 			
-			// Initialize player
-			player = new Player(window, document, renderer);
-			
 			// Initialize worlds
 			worlds = [];
 			
@@ -151,17 +165,23 @@
 				}
 			}
 			
-			// Load the first available game world
+			// Load game world
 			if (worlds.length > 0)
 			{
+				
+				// Select the first available game world by default
 				selected_world = worlds[0];
+				
+				// Initialize player
+				player = new Player(window, document, renderer, selected_world);
 				
 				// Start game loop
 				animate();
+				
 			}
 			else
 			{
-				// TODO: No game worlds loaded :(
+				// TODO: No game worlds loaded, crash the game? :(
 			}
 			
 		}
@@ -216,9 +236,11 @@
 		 */
 		window.onload = function(e)
 		{ 
-			// TODO: Remove this temporary menu override...
-            //$('#menu').hide();
-            //init();
+			// TODO: Remove these temporary overrides...
+            $('#menu').hide();
+            init();
+			
+			player.controls.toggleEditorMode(selected_world);
 		}
 		
 		/**
@@ -234,6 +256,23 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
 			
         });
+		
+		
+		// Editor UI Events
+		
+		/**
+		 * Editor world name text changed event.
+		 */
+		$("editor-world-name").change(function()
+		{
+			if (this.controls.mode_debug)
+			{
+				
+				// Set world ame
+				world.name = $("editor-world-name").val();
+				
+			}
+		});
 		
 		
 		// Main Menu UI Events

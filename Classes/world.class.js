@@ -37,6 +37,10 @@ class World
 		//this.scene.background = skybox;
 		
 		
+		// World attributes
+		this.name = "";
+		
+		
 		// World Terrain
 		
 		// Initialize an array to hold terrain objects
@@ -66,6 +70,23 @@ class World
 		// This holds the original materials of an object being highlighted
 		this.editor_original_materials = new WeakMap();
 		
+	}
+	
+	
+	// Serialization
+	
+	/**
+	 * Custom JSON serialization method to prevent unwanted class variables from being saved when exporting the class to JSON using JSON.stringify().
+	 *
+	 * @return {world} A simplified version of the world with some attributes removed.
+	 */
+	toJSON()
+	{
+		return {
+			name: this.name,
+			terrain: this.terrain,
+			objects: this.objects
+		};
 	}
 	
 	

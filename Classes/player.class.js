@@ -16,8 +16,9 @@ class Player
 	 * @param {window} window_interface A reference to the web browser window, which contains the DOM document. This is required to size the camera.
 	 * @param {document} dom_document A reference to the DOM document within the web browser window. This is required for mouse/keyboard controls.
 	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element. This is also required for mouse controls.
+	 * @param {world} world The game world in which the player exists.
 	 */
-	constructor(window_interface, dom_document, renderer)
+	constructor(window_interface, dom_document, renderer, world)
 	{
 		
 		// Class Declarations/Initialization
@@ -83,7 +84,7 @@ class Player
 		// Player Controls
 		
 		// Initialize player's keyboard/mouse controls
-		this.controls = new Controls(dom_document, renderer, this);
+		this.controls = new Controls(dom_document, renderer, world, this);
 		
 	}
 	

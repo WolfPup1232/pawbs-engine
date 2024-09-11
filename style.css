@@ -1,5 +1,4 @@
 /* HTML Elements */
-
 body {
 	margin: 0;
 	overflow: hidden;
@@ -13,7 +12,6 @@ button {
 
 
 /* three.js Renderer */
-
 #renderer {
 	position: fixed;
 	top: 0;

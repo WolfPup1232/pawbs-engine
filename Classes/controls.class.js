@@ -13,9 +13,10 @@ class Controls
 	 *
 	 * @param {document} dom_document A reference to the browser window's DOM document. The document listens for mouse/keyboard input.
 	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element. This is required for mouse controls.
+	 * @param {world} world The game world which can be affected by the mouse/keyboard controls.
 	 * @param {player} player The player being controlled by the mouse/keyboard controls.
 	 */
-	constructor(dom_document, renderer, player)
+	constructor(dom_document, renderer, world, player)
 	{
 		
 		// Class Declarations/Initialization
@@ -29,7 +30,7 @@ class Controls
 		
 		// Editor Mode
 		
-		// Enable/disable debug mode
+		// Enable/disable editor mode
 		this.mode_editor = false;
 		
 		
@@ -66,8 +67,8 @@ class Controls
 		$(renderer.domElement).on('click', () => player.controls.pointer_lock_controls.lock());
 		
 		// Keyboard event listeners
-		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, player.controls));
-		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, player.controls));
+		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player.controls));
+		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, world, player.controls));
 		
 		
 		// Keyboard Control Events
@@ -75,7 +76,7 @@ class Controls
 		/**
 		 * Keyboard key press event.
 		 */
-		this.onKeyDown = function (event, dom_document, controls)
+		this.onKeyDown = function (event, dom_document, world, controls)
 		{
 			
 			// Ignore key presses if a text box or text area is being edited
@@ -126,7 +127,7 @@ class Controls
 		/**
 		 * Keyboard key release event.
 		 */
-		this.onKeyUp = function (event, dom_document, controls)
+		this.onKeyUp = function (event, dom_document, world, controls)
 		{
 			
 			// Ignore key releases if a text box or text area is being edited
@@ -153,16 +154,7 @@ class Controls
 						// ShiftLeft + KeyD
 						
 						// Toggle debug mode on/off
-						if (!controls.mode_debug)
-						{
-							controls.mode_debug = true;
-							$("#debug").show();
-						}
-						else
-						{
-							controls.mode_debug = false;
-							$("#debug").hide();
-						}
+						controls.toggleDebugMode();
 					}
 					else
 					{
@@ -177,16 +169,7 @@ class Controls
 						// ShiftLeft + KeyE
 						
 						// Toggle editor mode on/off
-						if (!controls.mode_editor)
-						{
-							controls.mode_editor = true;
-							$("#editor").show();
-						}
-						else
-						{
-							controls.mode_editor = false;
-							$("#editor").hide();
-						}
+						controls.toggleEditorMode(world);
 					}
 					else
 					{
@@ -207,6 +190,61 @@ class Controls
 			}
 			
 		};
+		
+	}
+	
+	/**
+	 * Toggle editor mode on/off.
+	 */
+	toggleEditorMode(world)
+	{
+		
+		// Toggle editor mode
+		if (!this.mode_editor)
+		{
+			
+			// Show Editor UI
+			this.mode_editor = true;
+			$("#editor").show();
+			
+			// Initialize UI elements
+			$("#editor-world-name").val(world.name);
+			
+		}
+		else
+		{
+			
+			// Hide Editor UI
+			this.mode_editor = false;
+			$("#editor").hide();
+			
+		}
+		
+	}
+	
+	/**
+	 * Toggle debug mode on/off.
+	 */
+	toggleDebugMode()
+	{
+		
+		// Toggle debug mode
+		if (!this.mode_debug)
+		{
+			
+			// Show Debug UI
+			this.mode_debug = true;
+			$("#debug").show();
+			
+		}
+		else
+		{
+			
+			// Hide Debug UI
+			this.mode_debug = false;
+			$("#debug").hide();
+			
+		}
 		
 	}
 	
