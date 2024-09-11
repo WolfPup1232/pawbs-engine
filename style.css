@@ -62,3 +62,9 @@ button {
 	top: 50%;
 	transform: translateY(-50%);
 }
+
+
+/* Utility */
+.small-important {
+	font-size: .875em !important;
+}

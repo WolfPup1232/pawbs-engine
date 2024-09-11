@@ -39,30 +39,39 @@
 	<!-- Editor UI -->
 	
 	<div id="editor" class="mx-3" style="display: none;">
-		<div class="row">
+		<div id="editor-title" class="row">
 			<div class="col-12 col-lg-7 col-xl-5">
-				<div class="card mt-3 shadow-sm">
-					<div class="card-body">
-						<div class="input-group">
-							<div class="card-title small fw-bold input-group-text w-100 m-0">
-								Edit World
-								<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" type="text" placeholder="Enter your world's name."></p>
-							</div>
+				<div class="card p-2 mt-3 shadow-sm">
+					<div class="input-group">
+						<div class="card-title fw-bold input-group-text w-100 m-0">
+							Edit World
+							<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" type="text" placeholder="Enter your world's name."></p>
 						</div>
-						<!--
-						<p class="card-text small mb-1">This is the in-game level editor window.</p>
-						<input class="form-control form-control-sm" type="text" placeholder="Example Text Box">
-						-->
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="row">
-			<div class="col-3">
-				<div class="card mt-3 shadow-sm">
-					<div class="card-body">
-						<p class="card-text small mb-1">This is the in-game level editor window.</p>
-						<input class="form-control form-control-sm" type="text" placeholder="Example Text Box">
+		<div id="editor-selected-object" class="row" style="display: none;">
+			<div class="col-6 col-sm-5 col-md-4 col-lg-3 col-xl-2">
+				<div class="card p-2 mt-3 shadow-sm">
+					<div class="card-title small-important fw-bold input-group-text w-100">
+						Selected Object
+					</div>
+					<div class="mb-1">
+						<label class="form-label small">Position</label>
+						<div class="d-flex justify-content-center">
+							<input id="editor-selected-object-position-x" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="X">
+							<input id="editor-selected-object-position-y" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Y">
+							<input id="editor-selected-object-position-z" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Z">
+						</div>
+					</div>
+					<div class="mb-1">
+						<label class="form-label small">Size</label>
+						<div class="d-flex justify-content-center">
+							<input id="editor-selected-object-width" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Width">
+							<input id="editor-selected-object-height" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Height">
+							<input id="editor-selected-object-depth" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Depth">
+						</div>
 					</div>
 				</div>
 			</div>
@@ -187,7 +196,7 @@
 		}
 		
 		/**
-		 * Game Loop - Renders a single frame after handling movement/collision. Called once per frame.
+		 * Game Loop - Handles processes that update every frame, then renders the frame.
 		 */
 		function animate()
 		{
@@ -205,8 +214,11 @@
 				// Handle player movement and collision detection
 				player.handlePlayerMovement(selected_world);
 				
-				// Handle special modes (editor/debug mode)
-				player.handleSpecialModes(selected_world);
+				// Handle editor mode processes that update every frame
+				player.handleEditorMode(selected_world);
+				
+				// Handle debug mode processes that update every frame
+				player.handleDebugMode(selected_world);
 				
 			}
 			else
@@ -236,11 +248,12 @@
 		 */
 		window.onload = function(e)
 		{ 
-			// TODO: Remove these temporary overrides...
+			// TODO: Remove everything in this function so it does nothing...
+			
             $('#menu').hide();
             init();
 			
-			player.controls.toggleEditorMode(selected_world);
+			player.toggleEditorMode(selected_world);
 		}
 		
 		/**
@@ -265,7 +278,7 @@
 		 */
 		$("editor-world-name").change(function()
 		{
-			if (this.controls.mode_debug)
+			if (this.controls.mode_editor)
 			{
 				
 				// Set world ame

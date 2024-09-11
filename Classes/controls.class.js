@@ -37,6 +37,7 @@ class Controls
 		// three.js Pointer Lock Controls (Mouse Controls)
 		
 		// Initialize mouse controls
+		this.is_mouse_locked = false;
 		this.pointer_lock_controls = new PointerLockControls(player.camera, dom_document.body);
 		
 		
@@ -61,14 +62,102 @@ class Controls
 		this.modifier_control_left_pressed = false;
 		
 		
-		// Player Mouse/Keyboard Control Listeners
+		// Player Mouse/Keyboard Control Event Listeners
 		
-		// Mouse click-to-lock listener
+		// Mouse event listeners
+		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, world, player));
+		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, world, player));
+		
 		$(renderer.domElement).on('click', () => player.controls.pointer_lock_controls.lock());
 		
+		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onMouseLock());
+		this.pointer_lock_controls.addEventListener('unlock', () => player.controls.onMouseUnlock());
+		
 		// Keyboard event listeners
-		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player.controls));
-		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, world, player.controls));
+		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player));
+		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, world, player));
+		
+		
+		// Mouse Control Events
+		
+		/**
+		 * Mouse button click event.
+		 */
+		this.onMouseDown = function(event, world, player)
+		{
+			
+			// Handle mouse button click event
+			switch (event.button)
+			{
+				case 0:
+					// Left-click
+					
+					// Do nothing.
+					
+					break;
+				case 2:
+					// Right-click
+					
+					// Do nothing.
+					
+					break;
+			}
+		};
+		
+		/**
+		 * Mouse button release event.
+		 */
+		this.onMouseUp = function(event, world, player)
+		{
+			
+			// Handle mouse button release event
+			switch (event.button)
+			{
+				case 0:
+					// Left-click
+					
+					// Handle player left-click
+					player.handlePlayerLeftClick();
+					
+					// Handle editor mode left-click
+					player.handleEditorModeLeftClick(world);
+					
+					break;
+				case 2:
+					// Right-click
+					
+					// Handle player right-click
+					player.handlePlayerRightClick();
+					
+					// Handle editor mode right-click
+					player.handleEditorModeRightClick(world);
+					
+					break;
+			}
+			
+		};
+		
+		/**
+		 * Mouse lock event, used by three.js PointerLockControls to lock the mouse to the renderer.
+		 */
+		this.onMouseLock = function()
+		{
+			
+			// Mouse is now locked to the renderer
+			this.is_mouse_locked = true;
+			
+		};
+		
+		/**
+		 * Mouse unlock event, used by three.js PointerLockControls to unlock the mouse from the renderer.
+		 */
+		this.onMouseUnlock = function()
+		{
+			
+			// Mouse is now unlocked from the renderer
+			this.is_mouse_locked = false;
+			
+		};
 		
 		
 		// Keyboard Control Events
@@ -76,7 +165,7 @@ class Controls
 		/**
 		 * Keyboard key press event.
 		 */
-		this.onKeyDown = function (event, dom_document, world, controls)
+		this.onKeyDown = function(event, dom_document, world, player)
 		{
 			
 			// Ignore key presses if a text box or text area is being edited
@@ -89,16 +178,16 @@ class Controls
 			switch (event.code)
 			{
 				case 'KeyW':
-					controls.is_player_moving_forward = true;
+					player.controls.is_player_moving_forward = true;
 					break;
 				case 'KeyA':
-					controls.is_player_moving_left = true;
+					player.controls.is_player_moving_left = true;
 					break;
 				case 'KeyS':
-					controls.is_player_moving_backward = true;
+					player.controls.is_player_moving_backward = true;
 					break;
 				case 'KeyD':
-					if (controls.modifier_shift_left_pressed)
+					if (player.controls.modifier_shift_left_pressed)
 					{
 						// ShiftLeft + KeyD
 						
@@ -108,17 +197,17 @@ class Controls
 					{
 						// KeyD
 						
-						controls.is_player_moving_right = true;
+						player.controls.is_player_moving_right = true;
 					}
 					break;
 				case 'Space':
-					controls.is_player_jumping = true;
+					player.controls.is_player_jumping = true;
 					break;
 				case 'ShiftLeft':
-					controls.modifier_shift_left_pressed = true;
+					player.controls.modifier_shift_left_pressed = true;
 					break;
 				case 'ControlLeft':
-					controls.is_control_left_pressed = true;
+					player.controls.is_control_left_pressed = true;
 					break;
 			}
 			
@@ -127,7 +216,7 @@ class Controls
 		/**
 		 * Keyboard key release event.
 		 */
-		this.onKeyUp = function (event, dom_document, world, controls)
+		this.onKeyUp = function(event, dom_document, world, player)
 		{
 			
 			// Ignore key releases if a text box or text area is being edited
@@ -140,36 +229,36 @@ class Controls
 			switch (event.code)
 			{
 				case 'KeyW':
-					controls.is_player_moving_forward = false;
+					player.controls.is_player_moving_forward = false;
 					break;
 				case 'KeyA':
-					controls.is_player_moving_left = false;
+					player.controls.is_player_moving_left = false;
 					break;
 				case 'KeyS':
-					controls.is_player_moving_backward = false;
+					player.controls.is_player_moving_backward = false;
 					break;
 				case 'KeyD':
-					if (controls.modifier_shift_left_pressed)
+					if (player.controls.modifier_shift_left_pressed)
 					{
 						// ShiftLeft + KeyD
 						
 						// Toggle debug mode on/off
-						controls.toggleDebugMode();
+						player.toggleDebugMode();
 					}
 					else
 					{
 						// KeyD
 						
-						controls.is_player_moving_right = false;
+						player.controls.is_player_moving_right = false;
 					}
 					break;
 				case 'KeyE':
-					if (controls.modifier_shift_left_pressed)
+					if (player.controls.modifier_shift_left_pressed)
 					{
 						// ShiftLeft + KeyE
 						
 						// Toggle editor mode on/off
-						controls.toggleEditorMode(world);
+						player.toggleEditorMode(world);
 					}
 					else
 					{
@@ -179,72 +268,17 @@ class Controls
 					}
 					break;
 				case 'Space':
-					controls.is_player_jumping = false;
+					player.controls.is_player_jumping = false;
 					break;
 				case 'ShiftLeft':
-					controls.modifier_shift_left_pressed = false;
+					player.controls.modifier_shift_left_pressed = false;
 					break;
 				case 'ControlLeft':
-					controls.is_control_left_pressed = false;
+					player.controls.is_control_left_pressed = false;
 					break;
 			}
 			
 		};
-		
-	}
-	
-	/**
-	 * Toggle editor mode on/off.
-	 */
-	toggleEditorMode(world)
-	{
-		
-		// Toggle editor mode
-		if (!this.mode_editor)
-		{
-			
-			// Show Editor UI
-			this.mode_editor = true;
-			$("#editor").show();
-			
-			// Initialize UI elements
-			$("#editor-world-name").val(world.name);
-			
-		}
-		else
-		{
-			
-			// Hide Editor UI
-			this.mode_editor = false;
-			$("#editor").hide();
-			
-		}
-		
-	}
-	
-	/**
-	 * Toggle debug mode on/off.
-	 */
-	toggleDebugMode()
-	{
-		
-		// Toggle debug mode
-		if (!this.mode_debug)
-		{
-			
-			// Show Debug UI
-			this.mode_debug = true;
-			$("#debug").show();
-			
-		}
-		else
-		{
-			
-			// Hide Debug UI
-			this.mode_debug = false;
-			$("#debug").hide();
-			
-		}
 		
 	}
 	

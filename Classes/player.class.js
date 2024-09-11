@@ -119,6 +119,22 @@ class Player
 	// Methods
 	
 	/**
+	 * Handles player mouse left-click.
+	 */
+	handlePlayerLeftClick()
+	{
+		// Do nothing.
+	}
+	
+	/**
+	 * Handles player mouse left-click.
+	 */
+	handlePlayerRightClick()
+	{
+		// Do nothing.
+	}
+	
+	/**
 	 * Handles player movement and collision detection.
 	 *
 	 * @param {world} world The game world in which the player exists.
@@ -267,34 +283,185 @@ class Player
 		
 	}
 	
+	
+	// Editor Mode Methods
+	
 	/**
-	 * Handles special mode considerations, such as debug mode and editor mode.
+	 * Toggle editor mode on/off.
+	 */
+	toggleEditorMode(world)
+	{
+		
+		// Toggle editor mode
+		if (!this.controls.mode_editor)
+		{
+			
+			// Enable editor mode
+			this.controls.mode_editor = true;
+			
+			// Initialize UI elements
+			$("#editor-world-name").val(world.name);
+			
+			// Show editor mode UI
+			$("#editor").show();
+			
+		}
+		else
+		{
+			
+			// Hide editor mode UI
+			$("#editor").hide();
+			
+			// Reset any highlighted or selected objects
+			world.editorResetHighlightedObject();
+			world.editorResetSelectedObject();
+			
+			// Disable editor mode
+			this.controls.mode_editor = false;
+			
+		}
+		
+	}
+	
+	/**
+	 * Handles editor mode processes that update every frame.
 	 *
 	 * @param {world} world The game world in which the player exists.
 	 */
-	handleSpecialModes(world)
+	handleEditorMode(world)
 	{
 		
-		// Editor Mode
+		// Check if editor mode is enabled
+		if (this.controls.mode_editor)
+		{
+			
+			// Do nothing.
+
+		}
+		
+		// Do the following regardless of whether editor mode is enabled
+		//
+		//	NOTE: These method calls may or may not have their own editor mode checks.
 		
 		// Handle editor mode object highlighting
-		world.handleEditorHighlightedObject(this);
+		world.editorHandleHighlightedObject(this);
 		
+	}
+	
+	/**
+	 * Handles player left-click in editor mode.
+	 */
+	handleEditorModeLeftClick(world)
+	{
 		
-		// Debug Mode
+		// Check if editor mode is enabled
+		if (this.controls.mode_editor)
+		{
+			
+			// If the mouse is locked to the renderer
+			if (this.controls.is_mouse_locked)
+			{
+				
+				// Select the object the player is facing
+				world.editorSelectObject(this);
+				
+			}
+			
+		}
 		
-		// Handle debug mode output
+	}
+	
+	/**
+	 * Handles player right-click in editor mode.
+	 */
+	handleEditorModeRightClick(world)
+	{
+		
+		// Check if editor mode is enabled
+		if (this.controls.mode_editor)
+		{
+			
+			// If the mouse is locked to the renderer
+			if (this.controls.is_mouse_locked)
+			{
+				
+				// Attempt to reset the selected object
+				world.editorResetSelectedObject();
+				
+			}
+			
+		}
+		
+	}
+	
+	
+	// Debug Mode Methods
+	
+	/**
+	 * Toggle debug mode on/off.
+	 */
+	toggleDebugMode()
+	{
+		
+		// Toggle debug mode
+		if (!this.controls.mode_debug)
+		{
+			
+			// Enable debug mode
+			this.controls.mode_debug = true;
+			
+			// Show debug mode UI
+			$("#debug").show();
+			
+		}
+		else
+		{
+			
+			// Hide debug mode UI
+			$("#debug").hide();
+			
+			// Disable debug mode
+			this.controls.mode_debug = false;
+			
+		}
+		
+	}
+	
+	/**
+	 * Handles debug mode processes that update every frame.
+	 */
+	handleDebugMode()
+	{
+		
+		// Check if debug mode is enabled
 		if (this.controls.mode_debug)
 		{
 			
-			// Output debug info
-			$("#debug-text").html("terrain.height		 = " + world.detectObjectSurfaceBelowPlayer(this) + "<br />" + 
-								  "player.jump_gravity   = " + this.jump_gravity + "<br />" + 
-								  "player.jump_velocity  = " + this.jump_velocity + "<br />" + 
-								  "player.jump_height    = " + this.jump_height + "<br />" + 
-								  "player.position.y     = " + this.position.y + "<br />");
+			// Handle debug mode output
+			this.handleDebugModeOutput();
 			
 		}
+		
+		// Do the following regardless of whether debug mode is enabled
+		//
+		//	NOTE: These method calls may or may not have their own debug mode checks.
+		
+		// Do nothing.
+		
+	}
+	
+	/**
+	 * Handles debug mode UI output.
+	 */
+	handleDebugModeOutput()
+	{
+		
+		// Output debug info to UI
+		$("#debug-text").html("terrain.height		 = " + world.detectObjectSurfaceBelowPlayer(this) + "<br />" + 
+							  "player.jump_gravity   = " + this.jump_gravity + "<br />" + 
+							  "player.jump_velocity  = " + this.jump_velocity + "<br />" + 
+							  "player.jump_height    = " + this.jump_height + "<br />" + 
+							  "player.position.y     = " + this.position.y + "<br />");
 		
 	}
 	
