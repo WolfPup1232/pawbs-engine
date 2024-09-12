@@ -11,9 +11,10 @@
 	
 	<!-- Third-Party Imports - Bootstrap & jQuery -->
 	
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<link href="./libraries/bootstrap/bootstrap.min.css" rel="stylesheet">
+	<link href="./libraries/bootstrap/bootstrap-icons.min.css" rel="stylesheet">
+	<script src="./libraries/bootstrap/bootstrap.bundle.min.js"></script>
+	<script src="./libraries/jquery/jquery-3.7.1.min.js"></script>
 	
 </head>
 <body>
@@ -52,25 +53,81 @@
 			</div>
 		</div>
 		<div id="editor-selected-object" class="row" style="display: none;">
-			<div class="col-6 col-sm-5 col-md-4 col-lg-3 col-xl-2">
+			<div class="col-6 col-md-5 col-lg-4 col-xl-2">
 				<div class="card p-2 mt-3 shadow-sm">
 					<div class="card-title small-important fw-bold input-group-text w-100">
 						Selected Object
 					</div>
 					<div class="mb-1">
 						<label class="form-label small">Position</label>
-						<div class="d-flex justify-content-center">
-							<input id="editor-selected-object-position-x" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="X">
-							<input id="editor-selected-object-position-y" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Y">
-							<input id="editor-selected-object-position-z" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Z">
+						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">X: </label>
+								<input id="editor-selected-object-position-x" class="form-control form-control-sm" type="text" placeholder="X">
+							</div>
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">Y: </label>
+								<input id="editor-selected-object-position-y" class="form-control form-control-sm" type="text" placeholder="Y">
+							</div>
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">Z: </label>
+								<input id="editor-selected-object-position-z" class="form-control form-control-sm" type="text" placeholder="Z">
+							</div>
 						</div>
 					</div>
 					<div class="mb-1">
 						<label class="form-label small">Size</label>
-						<div class="d-flex justify-content-center">
-							<input id="editor-selected-object-width" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Width">
-							<input id="editor-selected-object-height" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Height">
-							<input id="editor-selected-object-depth" class="form-control form-control-sm w-25 mx-1 mb-1" type="text" placeholder="Depth">
+						<div id="editor-selected-object-plane-size" style="display: none;">
+							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
+								<div class="flex-fill mx-1">
+									<label class="mt-1 small">Width: </label>
+									<input id="editor-selected-object-plane-width" class="form-control form-control-sm" type="text">
+								</div>
+								<div class="flex-fill mx-1">
+									<label class="mt-1 small">Height: </label>
+									<input id="editor-selected-object-plane-height" class="form-control form-control-sm" type="text">
+								</div>
+							</div>
+						</div>
+						<div id="editor-selected-object-box-size" style="display: none;">
+							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
+								<div class="flex-fill mx-1">
+									<label class="mt-1 small">Width: </label>
+									<input id="editor-selected-object-box-width" class="form-control form-control-sm" type="text">
+								</div>
+								<div class="flex-fill mx-1">
+									<label class="mt-1 small">Height: </label>
+									<input id="editor-selected-object-box-height" class="form-control form-control-sm" type="text">
+								</div>
+								<div class="flex-fill mx-1">
+									<label class="mt-1 small">Depth: </label>
+									<input id="editor-selected-object-box-depth" class="form-control form-control-sm" type="text">
+								</div>
+							</div>
+						</div>
+						<div id="editor-selected-object-cylinder-size" style="display: none;">
+							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
+								<div class="flex-fill mx-1">
+								<label class="mt-1 small">Top: </label>
+								<input id="editor-selected-object-cylinder-radius-top" class="form-control form-control-sm" type="text">
+								</div>
+								<div class="flex-fill mx-1">
+								<label class="mt-1 small">Bottom: </label>
+								<input id="editor-selected-object-cylinder-radius-bottom" class="form-control form-control-sm" type="text">
+								</div>
+								<div class="flex-fill mx-1">
+								<label class="mt-1 small">Height: </label>
+								<input id="editor-selected-object-cylinder-height" class="form-control form-control-sm" type="text">
+								</div>
+							</div>
+						</div>
+						<div id="editor-selected-object-sphere-size" style="display: none;">
+							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
+								<div class="flex-fill mx-1">
+									<label class="mt-1 small">Radius: </label>
+									<input id="editor-selected-object-sphere-radius" class="form-control form-control-sm" type="text">
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -121,8 +178,8 @@
 		// Game Imports
 		
 		// three.js Import
-		import * as THREE from './three.js/three.js';
-		import { PointerLockControls } from './three.js/modules/PointerLockControls.js';
+		import * as THREE from './libraries/threejs/three.js';
+		import { PointerLockControls } from './libraries/threejs/modules/PointerLockControls.js';
 		
 		// Class Imports
 		import Player from './classes/player.class.js';

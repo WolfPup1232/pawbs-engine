@@ -1,6 +1,6 @@
 // three.js Import
-import * as THREE from '../three.js/three.js';
-import { PointerLockControls } from '../three.js/modules/PointerLockControls.js';
+import * as THREE from '../libraries/threejs/three.js';
+import { PointerLockControls } from '../libraries/threejs/modules/PointerLockControls.js';
 
 /**
  * A controls object which provides mouse/keyboard controls to a player.

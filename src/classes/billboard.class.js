@@ -1,5 +1,5 @@
 // three.js Import
-import * as THREE from '../three.js/three.js';
+import * as THREE from '../libraries/threejs/three.js';
 
 /**
  * A billboard object in the game world, which is always oriented facing the player.
