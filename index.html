@@ -121,15 +121,15 @@
 		// Game Imports
 		
 		// three.js Import
-		import * as THREE from './Three.js/three.js';
-		import { PointerLockControls } from './Three.js/Modules/PointerLockControls.js';
+		import * as THREE from './three.js/three.js';
+		import { PointerLockControls } from './three.js/modules/PointerLockControls.js';
 		
 		// Class Imports
-		import Player from './Classes/player.class.js';
-		import World from './Classes/world.class.js';
+		import Player from './classes/player.class.js';
+		import World from './classes/world.class.js';
 		
 		// Game World Imports
-		import * as Worlds from './Worlds/worlds.js';
+		import * as Worlds from './worlds/worlds.js';
 		
 		
 		// Game Declarations
@@ -143,23 +143,115 @@
 		// Game World
 		let worlds, selected_world;
 		
+		// Game Textures
+		let textures, texture_loader;
+		
 		
 		// Game Functions
 		
 		/**
-		 * Game Initialization - Initializes the renderer/player/world, then starts the game loop.
+		 * Game Initialization - Initializes the game renderer/textures/world/player, then starts the game loop.
 		 */
 		function init()
 		{
 			
+			// --------------------------------------------------------------------------------
+			// Game Initialization Flow:
+			//
+			// init() -> loadTextures() -> loadWorlds() -> animate()
+			// --------------------------------------------------------------------------------
+			//
+			//	init()
+			//
+			//	Sets up the three.js renderer and starts to
+			//	initialize textures.
+			// --------------------------------------------------------------------------------
+			//
+			//	loadTextures()
+			//
+			//	Loads textures from "textures.json" in the textures folder. Loading textures
+			//	takes time, and loading worlds can only happen when all textures are loaded,
+			//	so loading worlds happens afterward in a callback.
+			// --------------------------------------------------------------------------------
+			//
+			//	loadWorlds()
+			//
+			//	Right now this function sucks. This will soon load worlds from "worlds.json"
+			//	in the worlds folder. This will also have a callback which starts the
+			//	game loop.
+			// --------------------------------------------------------------------------------
+			//
+			//	animate()
+			//
+			//	This is the game loop.
+			// --------------------------------------------------------------------------------
+			
 			// Initialize three.js renderer
 			renderer = new THREE.WebGLRenderer();
 			renderer.setSize(window.innerWidth, window.innerHeight);
-			
 			render_once = false;
 			stop_animating = false;
-			
 			$('#renderer').append(renderer.domElement);
+			
+			// Initialize textures
+			textures = {};
+			texture_loader = new THREE.TextureLoader();
+			
+			// Load textures, the load worlds
+			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { loadTextures(texture_paths, loadWorlds); }).catch(error => {
+				
+				// Error loading textures
+				console.error("Error loading texture paths:", error);
+				
+			});
+			
+		}
+		
+		/**
+		 * Load Textures - Initializes game textures according to the list of textures in the textures.json file.
+		 */
+		function loadTextures(texture_paths, load_worlds_callback)
+		{
+			
+			let texture_count = 0;
+			
+			// Get all keys (texture names) from the list of texture paths
+			const texture_keys = Object.keys(texture_paths);
+			
+			// Load each texture
+			texture_keys.forEach((key) => {
+				texture_loader.load(texture_paths[key], (texture) => {
+					
+					// Store each loaded texture by name
+					textures[key] = texture;
+					
+					// Increment the texture count to check if all textures are loaded
+					texture_count++;
+					if (texture_count === texture_keys.length)
+					{
+						
+						// All textures are loaded, now load worlds using the callback function
+						load_worlds_callback();
+						
+					}
+				},
+				undefined, // No onProgress callback
+				(error) => {
+					
+					// Error loading texture
+					console.error("Error loading texture:", error);
+					
+				});
+				
+			});
+			
+		}
+		
+		/**
+		 * Load Worlds - Initializes game worlds using the Worlds class (this will be modified later).
+		 */
+		function loadWorlds()
+		{
 			
 			// Initialize worlds
 			worlds = [];
@@ -167,7 +259,7 @@
 			// Initialize custom game worlds from Worlds class
 			for (const world_class in Worlds)
 			{
-				const game_world = new Worlds[world_class];
+				const game_world = new Worlds[world_class](textures);
 				if (game_world.world)
 				{
 					worlds.push(game_world.world);
@@ -196,7 +288,7 @@
 		}
 		
 		/**
-		 * Game Loop - Handles processes that update every frame, then renders the frame.
+		 * Game Loop - Handles game processes that update every frame, then renders the frame.
 		 */
 		function animate()
 		{
@@ -211,7 +303,7 @@
 			if (render_once)
 			{
 				
-				// Handle player movement and collision detection
+				// Handle player movement, collision detection, and other object movement in direct relation to the player's movement
 				player.handlePlayerMovement(selected_world);
 				
 				// Handle editor mode processes that update every frame
@@ -253,7 +345,7 @@
             $('#menu').hide();
             init();
 			
-			player.toggleEditorMode(selected_world);
+			//player.toggleEditorMode(selected_world);
 		}
 		
 		/**

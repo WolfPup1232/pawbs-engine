@@ -1,5 +1,8 @@
 // three.js Import
-import * as THREE from '../Three.js/three.js';
+import * as THREE from '../three.js/three.js';
+
+// Class Imports
+import Billboard from './billboard.class.js';
 
 /**
  * A game world containing a scene which can be rendered, in which objects can be placed and the player can navigate.
@@ -141,6 +144,87 @@ class World
 		
 		// Add object to scene
 		this.scene.add(object);
+		
+	}
+	
+	/**
+	 * Handles rotating billboard objects so that they're always facing the player.
+	 *
+	 * @param {player} player The player which the billboard objects will be facing.
+	 */
+	handleBillboards(player)
+	{
+		
+		// Iterate through each world object to handle only billboard objects
+		for (let i = 0; i < this.objects.length; i++)
+		{
+			if (this.objects[i] instanceof Billboard)
+			{
+				
+				// Get the current billboard
+				let billboard = this.objects[i];
+				
+				// Get the billboard's position
+				const billboard_position = new THREE.Vector3();
+				billboard.getWorldPosition(billboard_position);
+				
+				// Get the billboard's direction
+				const billboard_direction = billboard_position.sub(player.camera.position).normalize();
+				
+				// Get the player's direction
+				const player_direction = new THREE.Vector3();
+				player.camera.getWorldDirection(player_direction);
+				
+				// Rotate the billboard to look at the player
+				billboard.lookAt(player.camera.position);
+				
+				// Get the angle between the player's direction and the billboard's direction
+				const angle = player_direction.angleTo(billboard_direction);
+				
+				// Get the cross product of the player and billboard direction (the vector that is at right angles to both) to determine if the player is on the left or right side
+				const cross_product = new THREE.Vector3();
+				cross_product.crossVectors(player_direction, billboard_direction);
+				
+				// Adjust the texture based on the angle and the cross product (whether the player is on the left or right side)
+				if (angle < Math.PI / 4)
+				{
+					
+					// Front view (uses default texture)
+					billboard.material.map = billboard.texture;
+					
+				}
+				else if (billboard.texture_back != null && angle > 3 * Math.PI / 4)
+				{
+					
+					// Back view
+					billboard.material.map = billboard.texture_back;
+					
+				}
+				else
+				{
+					
+					if (billboard.texture_left != null && cross_product.y > 0)
+					{
+						
+						// Left side
+						billboard.material.map = billboard.texture_left;
+						
+					}
+					else if (billboard.texture_right != null)
+					{
+						
+						// Right side
+						billboard.material.map = billboard.texture_right;
+						
+					}
+					
+				}
+				
+				// Update the billboard's material
+				billboard.material.needsUpdate = true;
+				
+			}
+		}
 		
 	}
 	
@@ -398,6 +482,18 @@ class World
 			// Create world object's bounding box
 			let object_box = new THREE.Box3().setFromObject(this.objects[i]);
 			
+			// Handle billboard collision
+			if (this.objects[i] instanceof Billboard)
+			{
+				
+				// Add some extra height to billboard bounding boxes
+				//
+				//	NOTE: I gave up trying to keep billboards perfectly upright
+				//		  on their own, so screw it, this is my workaround.
+				object_box.max.y += 5;
+				
+			}
+			
 			// Check for intersection between player and object
 			if (player_box.intersectsBox(object_box))
 			{
@@ -422,7 +518,9 @@ class World
 					// Player collides with object
 					collision_detected = true;
 				}
+				
 			}
+			
 		}
 		
 		return collision_detected;

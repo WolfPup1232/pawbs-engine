@@ -1,5 +1,5 @@
 // three.js Import
-import * as THREE from '../Three.js/three.js';
+import * as THREE from '../three.js/three.js';
 
 // Class Imports
 import Controls from './controls.class.js';
@@ -135,7 +135,7 @@ class Player
 	}
 	
 	/**
-	 * Handles player movement and collision detection.
+	 * Handles player movement, collision detection, and other object movement in direct relation to the player's movement.
 	 *
 	 * @param {world} world The game world in which the player exists.
 	 */
@@ -216,6 +216,12 @@ class Player
 			this.position.copy(intended_position);
 			
 		}
+		
+		
+		// World Object Movement (in direct relation to the player's movement)
+		
+		// Handle billboard object rotations
+		world.handleBillboards(this);
 		
 		
 		// Player Movement Cont'd
@@ -430,7 +436,7 @@ class Player
 	/**
 	 * Handles debug mode processes that update every frame.
 	 */
-	handleDebugMode()
+	handleDebugMode(world)
 	{
 		
 		// Check if debug mode is enabled
@@ -438,7 +444,7 @@ class Player
 		{
 			
 			// Handle debug mode output
-			this.handleDebugModeOutput();
+			this.handleDebugModeOutput(world);
 			
 		}
 		
@@ -453,15 +459,15 @@ class Player
 	/**
 	 * Handles debug mode UI output.
 	 */
-	handleDebugModeOutput()
+	handleDebugModeOutput(world)
 	{
 		
 		// Output debug info to UI
-		$("#debug-text").html("terrain.height		 = " + world.detectObjectSurfaceBelowPlayer(this) + "<br />" + 
-							  "player.jump_gravity   = " + this.jump_gravity + "<br />" + 
-							  "player.jump_velocity  = " + this.jump_velocity + "<br />" + 
-							  "player.jump_height    = " + this.jump_height + "<br />" + 
-							  "player.position.y     = " + this.position.y + "<br />");
+		// $("#debug-text").html("billboard.rotation.x		 = " + world.objects[0].rotation.x + "<br />" + 
+							  // "billboard.rotation.y   = " + world.objects[0].rotation.y + "<br />" + 
+							  // "billboard.rotation.z  = " + world.objects[0].rotation.z + "<br />" + 
+							  // "player.jump_height    = " + this.jump_height + "<br />" + 
+							  // "player.position.y     = " + this.position.y + "<br />");
 		
 	}
 	
