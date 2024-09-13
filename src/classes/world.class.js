@@ -556,47 +556,21 @@ class World
 					$("#editor-selected-object-position-y").val(this.editor_selected_object.position.y);
 					$("#editor-selected-object-position-z").val(this.editor_selected_object.position.z);
 					
-					$("#editor-selected-object-plane-size").hide();
-					$("#editor-selected-object-box-size").hide();
-					$("#editor-selected-object-cylinder-size").hide();
-					$("#editor-selected-object-sphere-size").hide();
+					$("#editor-selected-object-scale-x").val((this.editor_selected_object.scale.x / 1) * 100);
+					$("#editor-selected-object-scale-y").val((this.editor_selected_object.scale.y / 1) * 100);
+					$("#editor-selected-object-scale-z").val((this.editor_selected_object.scale.z / 1) * 100);
 					
-					if (this.editor_selected_object.geometry instanceof THREE.PlaneGeometry)
+					if (this.editor_selected_object instanceof Billboard)
 					{
-						
-						$("#editor-selected-object-plane-size").show();
-					
-						$("#editor-selected-object-plane-width").val(this.editor_selected_object.geometry.parameters.width);
-						$("#editor-selected-object-plane-height").val(this.editor_selected_object.geometry.parameters.height);
-					
+						$("#editor-selected-object-rotation").hide();
 					}
-					else if (this.editor_selected_object.geometry instanceof THREE.BoxGeometry)
+					else
 					{
+						$("#editor-selected-object-rotation").show();
 						
-						$("#editor-selected-object-box-size").show();
-					
-						$("#editor-selected-object-box-width").val(this.editor_selected_object.geometry.parameters.width);
-						$("#editor-selected-object-box-height").val(this.editor_selected_object.geometry.parameters.height);
-						$("#editor-selected-object-box-depth").val(this.editor_selected_object.geometry.parameters.depth);
-					
-					}
-					else if (this.editor_selected_object.geometry instanceof THREE.CylinderGeometry)
-					{
-						
-						$("#editor-selected-object-cylinder-size").show();
-					
-						$("#editor-selected-object-cylinder-radius-top").val(this.editor_selected_object.geometry.parameters.radiusTop);
-						$("#editor-selected-object-cylinder-radius-bottom").val(this.editor_selected_object.geometry.parameters.radiusBottom);
-						$("#editor-selected-object-cylinder-height").val(this.editor_selected_object.geometry.parameters.height);
-					
-					}
-					else if (this.editor_selected_object.geometry instanceof THREE.SphereGeometry)
-					{
-						
-						$("#editor-selected-object-sphere-size").show();
-					
-						$("#editor-selected-object-sphere-radius").val(this.editor_selected_object.geometry.parameters.radius);
-					
+						$("#editor-selected-object-rotation-x").val(this.editor_selected_object.rotation.x * (180 / Math.PI));
+						$("#editor-selected-object-rotation-y").val(this.editor_selected_object.rotation.y * (180 / Math.PI));
+						$("#editor-selected-object-rotation-z").val(this.editor_selected_object.rotation.z * (180 / Math.PI));
 					}
 					
 					// Show selected object UI

@@ -64,14 +64,20 @@ class Controls
 		
 		// Player Mouse/Keyboard Control Event Listeners
 		
+		// Pointer lock event listeners
+		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onMouseLock());
+		this.pointer_lock_controls.addEventListener('unlock', () => player.controls.onMouseUnlock());
+		$(renderer.domElement).on('click', () => player.controls.pointer_lock_controls.lock());
+		
+		// Editor UI pointer lock event listener
+    	$('#editor').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".editor-window", player); });
+		
+		// Debug UI pointer lock event listener
+    	$('#debug').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".debug-window", player); });
+		
 		// Mouse event listeners
 		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, world, player));
 		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, world, player));
-		
-		$(renderer.domElement).on('click', () => player.controls.pointer_lock_controls.lock());
-		
-		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onMouseLock());
-		this.pointer_lock_controls.addEventListener('unlock', () => player.controls.onMouseUnlock());
 		
 		// Keyboard event listeners
 		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player));
@@ -279,6 +285,58 @@ class Controls
 			}
 			
 		};
+		
+	}
+	
+	
+	// Functions
+	
+	/**
+	 * Locks the mouse pointer to the renderer when any UI element's whitespace is clicked. Whitespace is defined as whatever HTML elements are within the element calling this function that do not have the "window_class" CSS class applied to them or their children.
+	 *
+	 * @param {event} event The event object passed by the event handler.
+	 * @param {jquery} element_clicked The element which was clicked and is subsequently calling the event handler.
+	 * @param {string} window_class The name of the CSS class applied to HTML elements which, along with their children, will not constitute whitespace.
+	 * @param {player} player The player whose mouse pointer will be locked to the renderer.
+	 */
+	pointerLockOnUIWhitespaceClick(event, element_clicked, window_class, player)
+	{
+		
+		let is_whitespace_clicked = true;
+		
+		// Calculate the offset within the HTML element which was clicked
+		const offset = $(element_clicked).offset();
+		const relative_x = event.pageX - offset.left;
+		const relative_y = event.pageY - offset.top;
+		
+		// Check if any of the HTML element's children with the specified CSS class applied were clicked
+		$(element_clicked).find(window_class).each(function()
+		{
+			
+			// Calculate the child HTML element's offset
+			const child_offset = $(this).offset();
+			const child_width = $(this).outerWidth();
+			const child_height = $(this).outerHeight();
+			
+			// Determine if the child HTML element was clicked
+			if (relative_x >= (child_offset.left - offset.left) && relative_x <= (child_offset.left - offset.left + child_width) && relative_y >= (child_offset.top - offset.top) && relative_y <= (child_offset.top - offset.top + child_height))
+			{
+				
+				// The child HTML was clicked instead of whitespace
+				is_whitespace_clicked = false;
+				
+				// Exit the function
+				return false;
+				
+			}
+			
+		});
+		
+		// Lock the mouse pointer if whitespace was clicked
+		if (is_whitespace_clicked)
+		{
+			player.controls.pointer_lock_controls.lock()
+		}
 		
 	}
 	

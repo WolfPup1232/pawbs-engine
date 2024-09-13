@@ -28,7 +28,7 @@
 	
 	<div id="debug" class="mx-3" style="display: none;">
 		<div class="row">
-			<div class="col">
+			<div class="debug-window col">
 				<div class="card mt-3 shadow-sm">
 					<div class="card-body">
 						<p class="card-title small fw-bold">Debug Info</p>
@@ -44,7 +44,7 @@
 	
 	<div id="editor" class="mx-3" style="display: none;">
 		<div id="editor-title" class="row">
-			<div class="col-12 col-lg-7 col-xl-5">
+			<div class="editor-window col-12 col-lg-7 col-xl-5">
 				<div class="card p-2 mt-3 shadow-sm">
 					<div class="input-group">
 						<div class="card-title fw-bold input-group-text w-100 m-0">
@@ -72,92 +72,68 @@
 			</div>
 		</div>
 		<div id="editor-selected-object" class="row" style="display: none;">
-			<div class="col-6 col-md-5 col-lg-4 col-xl-2">
-				<div class="card p-2 mt-3 shadow-sm">
+			<div class="editor-window col-6 col-md-5 col-lg-4 col-xl-2">
+				<div class="card pt-2 ps-2 pe-2 pb-3 mt-3 shadow-sm">
 					<div class="card-title small-important fw-bold input-group-text w-100">
 						Selected Object
 					</div>
-					<div class="mb-1">
+					<div id="editor-selected-object-position" class="mb-1">
 						<label class="form-label small">Position</label>
 						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">X: </label>
 								<input id="editor-selected-object-position-x" class="form-control form-control-sm" placeholder="X" type="text"
-								data-bs-title="The object's X-axis position." data-bs-toggle="tooltip">
+								data-bs-title="The object's position on the X-axis." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Y: </label>
 								<input id="editor-selected-object-position-y" class="form-control form-control-sm" placeholder="Y" type="text"
-								data-bs-title="The object's Y-axis position." data-bs-toggle="tooltip">
+								data-bs-title="The object's position on the Y-axis." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Z: </label>
 								<input id="editor-selected-object-position-z" class="form-control form-control-sm" placeholder="Z" type="text"
-								data-bs-title="The object's Z-axis position." data-bs-toggle="tooltip">
+								data-bs-title="The object's position on the Z-axis." data-bs-toggle="tooltip">
 							</div>
 						</div>
 					</div>
-					<div class="mb-1">
-						<label class="form-label small">Size</label>
-						<div id="editor-selected-object-plane-size" style="display: none;">
-							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
-								<div class="flex-fill mx-1">
-									<label class="mt-1 small">Width: </label>
-									<input id="editor-selected-object-plane-width" class="form-control form-control-sm" type="text"
-									data-bs-title="The plane's width." data-bs-toggle="tooltip">
-								</div>
-								<div class="flex-fill mx-1">
-									<label class="mt-1 small">Height: </label>
-									<input id="editor-selected-object-plane-height" class="form-control form-control-sm" type="text"
-									data-bs-title="The plane's height." data-bs-toggle="tooltip">
-								</div>
+					<div id="editor-selected-object-scale" class="mb-1">
+						<label class="form-label small mt-2 mb-0">Scale</label>
+						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">X: </label>
+								<input id="editor-selected-object-scale-x" class="form-control form-control-sm" placeholder="X" type="text"
+								data-bs-title="The object's size on the X-axis as a percentage." data-bs-toggle="tooltip">
+							</div>
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">Y: </label>
+								<input id="editor-selected-object-scale-y" class="form-control form-control-sm" placeholder="Y" type="text"
+								data-bs-title="The object's size on the Y-axis as a percentage." data-bs-toggle="tooltip">
+							</div>
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">Z: </label>
+								<input id="editor-selected-object-scale-z" class="form-control form-control-sm" placeholder="Z" type="text"
+								data-bs-title="The object's size on the Z-axis as a percentage." data-bs-toggle="tooltip">
 							</div>
 						</div>
-						<div id="editor-selected-object-box-size" style="display: none;">
-							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
-								<div class="flex-fill mx-1">
-									<label class="mt-1 small">Width: </label>
-									<input id="editor-selected-object-box-width" class="form-control form-control-sm" type="text"
-									data-bs-title="The box's width." data-bs-toggle="tooltip">
-								</div>
-								<div class="flex-fill mx-1">
-									<label class="mt-1 small">Height: </label>
-									<input id="editor-selected-object-box-height" class="form-control form-control-sm" type="text"
-									data-bs-title="The box's height." data-bs-toggle="tooltip">
-								</div>
-								<div class="flex-fill mx-1">
-									<label class="mt-1 small">Depth: </label>
-									<input id="editor-selected-object-box-depth" class="form-control form-control-sm" type="text"
-									data-bs-title="The box's depth." data-bs-toggle="tooltip">
-								</div>
+					</div>
+					<div id="editor-selected-object-rotation" class="mb-1">
+						<label class="form-label small mt-2 mb-0">Rotation</label>
+						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">X: </label>
+								<input id="editor-selected-object-rotation-x" class="form-control form-control-sm" placeholder="X" type="text"
+								data-bs-title="The object's X-axis rotation in degrees." data-bs-toggle="tooltip">
 							</div>
-						</div>
-						<div id="editor-selected-object-cylinder-size" style="display: none;">
-							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
-								<div class="flex-fill mx-1">
-								<label class="mt-1 small">Top: </label>
-								<input id="editor-selected-object-cylinder-radius-top" class="form-control form-control-sm" type="text"
-								data-bs-title="The radius width of the cylinder's top." data-bs-toggle="tooltip">
-								</div>
-								<div class="flex-fill mx-1">
-								<label class="mt-1 small">Bottom: </label>
-								<input id="editor-selected-object-cylinder-radius-bottom" class="form-control form-control-sm" type="text"
-								data-bs-title="The radius width of the cylinder's bottom." data-bs-toggle="tooltip">
-								</div>
-								<div class="flex-fill mx-1">
-								<label class="mt-1 small">Height: </label>
-								<input id="editor-selected-object-cylinder-height" class="form-control form-control-sm" type="text"
-								data-bs-title="The cylinder's height." data-bs-toggle="tooltip">
-								</div>
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">Y: </label>
+								<input id="editor-selected-object-rotation-y" class="form-control form-control-sm" placeholder="Y" type="text"
+								data-bs-title="The object's Y-axis rotation in degrees." data-bs-toggle="tooltip">
 							</div>
-						</div>
-						<div id="editor-selected-object-sphere-size" style="display: none;">
-							<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
-								<div class="flex-fill mx-1">
-									<label class="mt-1 small">Radius: </label>
-									<input id="editor-selected-object-sphere-radius" class="form-control form-control-sm" type="text"
-									data-bs-title="The radius of the sphere." data-bs-toggle="tooltip">
-								</div>
+							<div class="flex-fill mx-1">
+								<label class="mt-1 small">Z: </label>
+								<input id="editor-selected-object-rotation-z" class="form-control form-control-sm" placeholder="Z" type="text"
+								data-bs-title="The object's Z-axis rotation in degrees." data-bs-toggle="tooltip">
 							</div>
 						</div>
 					</div>
@@ -458,16 +434,147 @@
 		
 		// Editor UI Events
 		
+		// Editor Title Window
+		
 		/**
 		 * Editor world name text changed event.
 		 */
-		$("editor-world-name").change(function()
+		$("#editor-world-name").change(function()
 		{
-			if (this.controls.mode_editor)
+			if (player.controls.mode_editor)
 			{
 				
-				// Set world ame
-				world.name = $("editor-world-name").val();
+				// Set world name
+				selected_world.name = $("#editor-world-name").val();
+				
+			}
+		});
+		
+		
+		// Editor Selected Object Window
+		
+		/**
+		 * Editor selected object X-axis position
+		 */
+		 $("#editor-selected-object-position-x").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object X-axis position 
+				selected_world.editor_selected_object.position.x = $("#editor-selected-object-position-x").val();
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object Y-axis position
+		 */
+		 $("#editor-selected-object-position-y").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object Y-axis position 
+				selected_world.editor_selected_object.position.y = $("#editor-selected-object-position-y").val();
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object Z-axis position
+		 */
+		 $("#editor-selected-object-position-z").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object Z-axis position 
+				selected_world.editor_selected_object.position.z = $("#editor-selected-object-position-z").val();
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object X-axis scale
+		 */
+		 $("#editor-selected-object-scale-x").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object X-axis scale 
+				selected_world.editor_selected_object.scale.x = $("#editor-selected-object-scale-x").val() / 100;
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object Y-axis scale
+		 */
+		 $("#editor-selected-object-scale-y").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object Y-axis scale 
+				selected_world.editor_selected_object.scale.y = $("#editor-selected-object-scale-y").val() / 100;
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object Z-axis scale
+		 */
+		 $("#editor-selected-object-scale-z").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object Z-axis scale 
+				selected_world.editor_selected_object.scale.z = $("#editor-selected-object-scale-z").val() / 100;
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object X-axis rotation
+		 */
+		 $("#editor-selected-object-rotation-x").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object X-axis rotation by converting the input degrees to radians
+				selected_world.editor_selected_object.rotation.x = $("#editor-selected-object-rotation-x").val() * (Math.PI / 180);
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object Y-axis rotation
+		 */
+		 $("#editor-selected-object-rotation-y").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object Y-axis rotation by converting the input degrees to radians
+				selected_world.editor_selected_object.rotation.y = $("#editor-selected-object-rotation-y").val()  * (Math.PI / 180);
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object Z-axis rotation
+		 */
+		 $("#editor-selected-object-rotation-z").change(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Set selected object Z-axis rotation by converting the input degrees to radians
+				selected_world.editor_selected_object.rotation.z = $("#editor-selected-object-rotation-z").val()  * (Math.PI / 180);
 				
 			}
 		});
