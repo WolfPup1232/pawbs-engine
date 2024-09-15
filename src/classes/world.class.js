@@ -74,7 +74,7 @@ class World
 		this.editor_highlighted_object_original_materials = new WeakMap();
 		
 		// The colour of selected objects in the editor
-		this.editor_selected_object_colour = 0xff0000;
+		this.editor_selected_object_colour = 0xffff00;
 		
 		// The object selected in the editor
 		this.editor_selected_object = null;
@@ -110,7 +110,12 @@ class World
 	 */
 	get all_objects()
 	{
-		return this.objects.concat(this.terrain);
+		let all_objects = [];
+		
+		all_objects = all_objects.concat(this.objects);
+		all_objects = all_objects.concat(this.terrain);
+		
+		return all_objects;
 	}
 	
 	
@@ -415,7 +420,7 @@ class World
 			player.raycaster.far = Infinity;
 			
 			// Check intersections with all world objects
-			const intersects = player.raycaster.intersectObjects(this.all_objects);
+			const intersects = player.raycaster.intersectObjects(this.objects);
 			if (intersects.length > 0)
 			{
 				
@@ -482,11 +487,16 @@ class World
 	editorResetHighlightedObject()
 	{
 		
-		// Reset the highlighted object
+		// If an object is highlighted...
 		if (this.editor_highlighted_object)
 		{
+			
+			// Reset the highlighted object's material
 			this.editor_highlighted_object.material = this.editor_highlighted_object_original_materials.get(this.editor_highlighted_object);
+			
+			// Reset the highlighted object
 			this.editor_highlighted_object = null;
+			
 		}
 		
 	}
@@ -506,6 +516,9 @@ class World
 			// Initialize potential new selected object
 			let new_selected_object = null;
 			
+			// Detatch transform controls if they're attached to anything
+			player.controls.transform_controls.detach();
+			
 			// Cast a ray from the player's position in the direction the player is looking
 			player.raycaster.ray.origin.copy(player.position);
 			player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
@@ -513,7 +526,7 @@ class World
 			player.raycaster.far = Infinity;
 			
 			// Check intersections with all world objects
-			const intersects = player.raycaster.intersectObjects(this.all_objects);
+			const intersects = player.raycaster.intersectObjects(this.objects);
 			if (intersects.length > 0)
 			{
 				
@@ -545,11 +558,14 @@ class World
 							this.editor_selected_object_original_materials.set(new_selected_object, new_selected_object.material);
 						}
 						
-						new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.editor_selected_object_colour });
+						new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.editor_selected_object_colour, transparent: true,  opacity: 0.75 });
 					}
 					
 					// Get the new selected object
 					this.editor_selected_object = new_selected_object;
+					
+					// Attach transform controls to new selected object
+					player.controls.transform_controls.attach(this.editor_selected_object);
 					
 					// Initialize selected object UI elements
 					$("#editor-selected-object-position-x").val(this.editor_selected_object.position.x);
@@ -582,7 +598,7 @@ class World
 				{
 					
 					// Reset the selected object
-					this.editorResetSelectedObject();
+					this.editorResetSelectedObject(player);
 					
 				}
 				
@@ -592,7 +608,7 @@ class World
 			{
 				
 				// Reset the selected object
-				this.editorResetSelectedObject();
+				this.editorResetSelectedObject(player);
 				
 			}
 			
@@ -602,7 +618,7 @@ class World
 		{
 			
 			// Reset the selected object
-			this.editorResetSelectedObject();
+			this.editorResetSelectedObject(player);
 			
 		}
 		
@@ -611,14 +627,21 @@ class World
 	/**
 	 * Resets the selected object in the editor mode.
 	 */
-	editorResetSelectedObject()
+	editorResetSelectedObject(player)
 	{
 		
-		// Reset the selected object
+		// If an object is selected...
 		if (this.editor_selected_object)
 		{
+			
+			// Reset the selected object's material
 			this.editor_selected_object.material = this.editor_selected_object_original_materials.get(this.editor_selected_object);
+			
+			// Reset the selected object
 			this.editor_selected_object = null;
+			
+			// Detatch transform controls if they're attached to anything
+			player.controls.transform_controls.detach();
 		}
 		
 		// Hide selected object UI

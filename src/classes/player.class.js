@@ -119,17 +119,33 @@ class Player
 	// Methods
 	
 	/**
-	 * Handles player mouse left-click.
+	 * Handles player left mouse down.
 	 */
-	handlePlayerLeftClick()
+	handlePlayerLeftMouseDown()
 	{
 		// Do nothing.
 	}
 	
 	/**
-	 * Handles player mouse left-click.
+	 * Handles player left mouse up.
 	 */
-	handlePlayerRightClick()
+	handlePlayerLeftMouseUp()
+	{
+		// Do nothing.
+	}
+	
+	/**
+	 * Handles player right mouse down.
+	 */
+	handlePlayerRightMouseDown()
+	{
+		// Do nothing.
+	}
+	
+	/**
+	 * Handles player right mouse up.
+	 */
+	handlePlayerRightMouseUp()
 	{
 		// Do nothing.
 	}
@@ -320,7 +336,7 @@ class Player
 			
 			// Reset any highlighted or selected objects
 			world.editorResetHighlightedObject();
-			world.editorResetSelectedObject();
+			world.editorResetSelectedObject(this);
 			
 			// Disable editor mode
 			this.controls.mode_editor = false;
@@ -341,11 +357,25 @@ class Player
 		if (this.controls.mode_editor)
 		{
 			
-			// Do nothing.
-
+			// If the player is dragging with the left mouse button...
+			if (this.controls.is_mouse_left_down && this.controls.is_mouse_dragging)
+			{
+				
+				// Handle transform controls mouse move event
+				this.controls.transform_controls.mouseMove(this);
+				
+			}
+			else
+			{
+				
+				// Handle transform controls mouse hover event
+				this.controls.transform_controls.mouseHover(this);
+				
+			}
+			
 		}
 		
-		// Do the following regardless of whether editor mode is enabled
+		// Do the following regardless of whether editor mode is enabled...
 		//
 		//	NOTE: These method calls may or may not have their own editor mode checks.
 		
@@ -355,21 +385,55 @@ class Player
 	}
 	
 	/**
-	 * Handles player left-click in editor mode.
+	 * Handles player left mouse down editor mode.
 	 */
-	handleEditorModeLeftClick(world)
+	handleEditorLeftMouseDown()
 	{
 		
 		// Check if editor mode is enabled
 		if (this.controls.mode_editor)
 		{
 			
-			// If the mouse is locked to the renderer
+			// Handle transform controls mouse down event
+			this.controls.transform_controls.mouseDown(this);
+			
+		}
+		
+	}
+	
+	/**
+	 * Handles player left mouse up in editor mode.
+	 */
+	handleEditorLeftMouseUp(world)
+	{
+		
+		// Check if editor mode is enabled
+		if (this.controls.mode_editor)
+		{
+			
+			// If the mouse is locked to the renderer...
 			if (this.controls.is_mouse_locked)
 			{
 				
-				// Select the object the player is facing
-				world.editorSelectObject(this);
+				// If the mouse is currently dragging...
+				if (this.controls.is_mouse_dragging)
+				{
+					
+					// The mouse is no longer dragging
+					this.controls.is_mouse_dragging = false;
+					
+					// Handle transform controls mouse up event
+					this.controls.transform_controls.mouseUp(this);
+					
+					
+				} // Otherwise, if the mouse is not currently dragging...
+				else
+				{
+					
+					// Select the object the player is facing
+					world.editorSelectObject(this);
+					
+				}
 				
 			}
 			
@@ -378,21 +442,29 @@ class Player
 	}
 	
 	/**
-	 * Handles player right-click in editor mode.
+	 * Handles player right mouse down in editor mode.
 	 */
-	handleEditorModeRightClick(world)
+	handleEditorRightMouseDown()
+	{
+		// Do nothing.
+	}
+	
+	/**
+	 * Handles player right mouse up in editor mode.
+	 */
+	handleEditorRightMouseUp(world)
 	{
 		
 		// Check if editor mode is enabled
 		if (this.controls.mode_editor)
 		{
 			
-			// If the mouse is locked to the renderer
+			// If the mouse is locked to the renderer...
 			if (this.controls.is_mouse_locked)
 			{
 				
 				// Attempt to reset the selected object
-				world.editorResetSelectedObject();
+				world.editorResetSelectedObject(this);
 				
 			}
 			

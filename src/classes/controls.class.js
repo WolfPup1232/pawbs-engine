@@ -1,6 +1,6 @@
 // three.js Import
-import * as THREE from '../libraries/threejs/three.js';
 import { PointerLockControls } from '../libraries/threejs/modules/PointerLockControls.js';
+import { TransformControls } from '../libraries/threejs/modules/TransformControls.js';
 
 /**
  * A controls object which provides mouse/keyboard controls to a player.
@@ -34,14 +34,26 @@ class Controls
 		this.mode_editor = false;
 		
 		
-		// three.js Pointer Lock Controls (Mouse Controls)
+		// Player Mouse Controls
 		
 		// Initialize mouse controls
-		this.is_mouse_locked = false;
+		this.is_mouse_left_down = false;
+		this.is_mouse_right_down = false;
+		
+		this.is_mouse_dragging = false;
+		
+		// three.js pointer lock controls
 		this.pointer_lock_controls = new PointerLockControls(player.camera, dom_document.body);
 		
+		this.is_mouse_locked = false;
 		
-		// Player Movement Keys (Keyboard Controls)
+		// three.js transform controls
+		this.transform_controls = new TransformControls(player.camera, renderer.domElement);
+		this.transform_controls.setMode('translate'); // 'translate', 'rotate', 'scale'
+		world.scene.add(this.transform_controls);
+		
+		
+		// Player Keyboard Controls
 		
 		// Player movement (W/S/A/D)
 		this.is_player_moving_forward = false;
@@ -53,7 +65,7 @@ class Controls
 		this.is_player_jumping = false;
 		
 		
-		// Modifier Keys
+		// Player Keyboard Modifier Keys
 		
 		// Left Shift modifier key
 		this.modifier_shift_left_pressed = false;
@@ -64,9 +76,17 @@ class Controls
 		
 		// Player Mouse/Keyboard Control Event Listeners
 		
-		// Pointer lock event listeners
-		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onMouseLock());
-		this.pointer_lock_controls.addEventListener('unlock', () => player.controls.onMouseUnlock());
+		// Mouse event listeners
+		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, world, player));
+		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, world, player));
+		
+		// Keyboard event listeners
+		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player));
+		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, world, player));
+		
+		// Pointer lock controls event listeners
+		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onPointerLockControlsLock());
+		this.pointer_lock_controls.addEventListener('unlock', () => player.controls.onPointerLockControlsUnlock());
 		$(renderer.domElement).on('click', () => player.controls.pointer_lock_controls.lock());
 		
 		// Editor UI pointer lock event listener
@@ -75,13 +95,8 @@ class Controls
 		// Debug UI pointer lock event listener
     	$('#debug').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".debug-window", player); });
 		
-		// Mouse event listeners
-		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, world, player));
-		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, world, player));
-		
-		// Keyboard event listeners
-		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player));
-		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, world, player));
+		// Transform controls event listeners
+		this.transform_controls.addEventListener('draggingChanged', (event) => player.controls.onTransformControlsDraggingChanged(player));
 		
 		
 		// Mouse Control Events
@@ -98,13 +113,21 @@ class Controls
 				case 0:
 					// Left-click
 					
-					// Do nothing.
+					// Left mouse button is down
+					player.controls.is_mouse_left_down = true;
+					
+					// Handle player left mouse down
+					player.handlePlayerLeftMouseDown();
+					
+					// Handle player left mouse down in editor mode
+					player.handleEditorLeftMouseDown(world);
 					
 					break;
 				case 2:
 					// Right-click
 					
-					// Do nothing.
+					// Right mouse button is down
+					player.controls.is_mouse_right_down = true;
 					
 					break;
 			}
@@ -122,21 +145,27 @@ class Controls
 				case 0:
 					// Left-click
 					
-					// Handle player left-click
-					player.handlePlayerLeftClick();
+					// Left mouse button is no longer down
+					player.controls.is_mouse_left_down = false;
 					
-					// Handle editor mode left-click
-					player.handleEditorModeLeftClick(world);
+					// Handle player left mouse up
+					player.handlePlayerLeftMouseUp();
+					
+					// Handle player left mouse up in editor mode
+					player.handleEditorLeftMouseUp(world);
 					
 					break;
 				case 2:
 					// Right-click
 					
-					// Handle player right-click
-					player.handlePlayerRightClick();
+					// Right mouse button is no longer down
+					player.controls.is_mouse_right_down = false;
 					
-					// Handle editor mode right-click
-					player.handleEditorModeRightClick(world);
+					// Handle player right mouse up
+					player.handlePlayerRightMouseUp();
+					
+					// Handle player right mouse up in editor mode
+					player.handleEditorRightMouseUp(world);
 					
 					break;
 			}
@@ -144,24 +173,35 @@ class Controls
 		};
 		
 		/**
-		 * Mouse lock event, used by three.js PointerLockControls to lock the mouse to the renderer.
+		 * PointerLockControls mouse lock event, used by PointerLockControls to lock the mouse to the renderer.
 		 */
-		this.onMouseLock = function()
+		this.onPointerLockControlsLock = function()
 		{
 			
 			// Mouse is now locked to the renderer
-			this.is_mouse_locked = true;
+			player.controls.is_mouse_locked = true;
 			
 		};
 		
 		/**
-		 * Mouse unlock event, used by three.js PointerLockControls to unlock the mouse from the renderer.
+		 * PointerLockControls mouse unlock event, used by PointerLockControls to unlock the mouse from the renderer.
 		 */
-		this.onMouseUnlock = function()
+		this.onPointerLockControlsUnlock = function()
 		{
 			
 			// Mouse is now unlocked from the renderer
-			this.is_mouse_locked = false;
+			player.controls.is_mouse_locked = false;
+			
+		};
+		
+		/**
+		 * TransformControls mouse dragging event, used by three.js TransformControls when the mouse is dragging the gizmo.
+		 */
+		this.onTransformControlsDraggingChanged = function(player)
+		{
+			
+			// Mouse is now dragging the gizmo
+			player.controls.is_mouse_dragging = true;
 			
 		};
 		

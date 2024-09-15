@@ -58,12 +58,12 @@ class World1
 		// Campfire1
 		const campfire1 = new Billboard(1.5, 1.5, textures.campfire);
 		campfire1.position.set(-5, 0.75, -10);
-		this.world.addObject(campfire1);
+		//this.world.addObject(campfire1);
 		
 		// Campfire2
 		const campfire2 = new Billboard(1.5, 1.5, textures.campfire);
 		campfire2.position.set(3, 0.75, -10);
-		this.world.addObject(campfire2);
+		//this.world.addObject(campfire2);
 
 		// Step1
 		const step1Geometry = new THREE.BoxGeometry(3, 0.4, 3);
