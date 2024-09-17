@@ -1,9 +1,8 @@
 // three.js Import
-import * as THREE from '../libraries/threejs/three.js';
+import * as THREE from 'https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/libraries/threejs/three.js';
 
 // Class Imports
-import World from './world.class.js';
-import Billboard from './billboard.class.js';
+import Billboard from 'https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/billboard.class.js';
 
 /**
  * The in-game world editor.

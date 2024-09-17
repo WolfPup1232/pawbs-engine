@@ -1,5 +1,5 @@
 {
-	"campfire": "./textures/campfire-front.png",
-	"moon_whale": "./textures/moon_whale.png",
-	"rock": "./textures/rock.jpg"
+	"campfire": "https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/textures/campfire-front.png",
+	"moon_whale": "https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/textures/moon_whale.png",
+	"rock": "https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/textures/rock.jpg"
 }
