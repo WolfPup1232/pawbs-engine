@@ -13,6 +13,9 @@ class Billboard extends THREE.Mesh
 	 * @param {width} float The billboard object's width.
 	 * @param {height} float The billboard object's height.
 	 * @param {texture} three.texture The billboard's texture. This is also explicitly the billboard's front-facing texture if side and rear textures are provided.
+	 * @param {texture_back} three.texture The billboard's back-facing texture.
+	 * @param {texture_left} three.texture The billboard's left-facing texture.
+	 * @param {texture_right} three.texture The billboard's right-facing texture.
 	 */
 	constructor(width, height, texture, texture_back = null, texture_left = null, texture_right = null)
 	{

@@ -11,12 +11,13 @@ class Controls
 	/**
 	 * Initializes a new controls object to provide mouse/keyboard controls to a player.
 	 *
-	 * @param {document} dom_document A reference to the browser window's DOM document. The document listens for mouse/keyboard input.
-	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element. This is required for mouse controls.
-	 * @param {world} world The game world which can be affected by the mouse/keyboard controls.
-	 * @param {player} player The player being controlled by the mouse/keyboard controls.
+	 * @param {document} dom_document A reference to the browser window's DOM document.
+	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element.
+	 * @param {world} world The current game world.
+	 * @param {editor} editor The in-game world editor.
+	 * @param {player} player The player being controlled by the mouse/keyboard.
 	 */
-	constructor(dom_document, renderer, world, player)
+	constructor(dom_document, renderer, world, editor, player)
 	{
 		
 		// Class Declarations/Initialization
@@ -71,12 +72,12 @@ class Controls
 		// Player Mouse/Keyboard Control Event Listeners
 		
 		// Mouse event listeners
-		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, world, player));
-		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, world, player));
+		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, world, editor, player));
+		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, world, editor, player));
 		
 		// Keyboard event listeners
-		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player));
-		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, world, player));
+		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, debug, dom_document, world, editor, player));
+		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, debug, dom_document, world, editor, player));
 		
 		// Pointer lock controls event listeners
 		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onPointerLockControlsLock());
@@ -98,7 +99,7 @@ class Controls
 		/**
 		 * Mouse button click event.
 		 */
-		this.onMouseDown = function(event, world, player)
+		this.onMouseDown = function(event, world, editor, player)
 		{
 			
 			// Handle mouse button click event
@@ -107,21 +108,17 @@ class Controls
 				case 0:
 					// Left-click
 					
-					// Left mouse button is down
-					player.controls.is_mouse_left_down = true;
-					
 					// Handle player left mouse down
-					player.handlePlayerLeftMouseDown();
+					player.handleLeftMouseDown();
 					
-					// Handle player left mouse down in editor mode
-					player.handleEditorLeftMouseDown(world);
+					// Handle editor left mouse down
+					editor.handleLeftMouseDown(player);
 					
 					break;
 				case 2:
 					// Right-click
 					
-					// Right mouse button is down
-					player.controls.is_mouse_right_down = true;
+					// Do nothing.
 					
 					break;
 			}
@@ -130,7 +127,7 @@ class Controls
 		/**
 		 * Mouse button release event.
 		 */
-		this.onMouseUp = function(event, world, player)
+		this.onMouseUp = function(event, world, editor, player)
 		{
 			
 			// Handle mouse button release event
@@ -139,27 +136,21 @@ class Controls
 				case 0:
 					// Left-click
 					
-					// Left mouse button is no longer down
-					player.controls.is_mouse_left_down = false;
-					
 					// Handle player left mouse up
-					player.handlePlayerLeftMouseUp();
+					player.handleLeftMouseUp();
 					
-					// Handle player left mouse up in editor mode
-					player.handleEditorLeftMouseUp(world);
+					// Handle editor left mouse up
+					editor.handleLeftMouseUp(world, player);
 					
 					break;
 				case 2:
 					// Right-click
 					
-					// Right mouse button is no longer down
-					player.controls.is_mouse_right_down = false;
-					
 					// Handle player right mouse up
-					player.handlePlayerRightMouseUp();
+					player.handleRightMouseUp();
 					
-					// Handle player right mouse up in editor mode
-					player.handleEditorRightMouseUp(world);
+					// Handle editor right mouse up
+					editor.handleRightMouseUp(world, player);
 					
 					break;
 			}
@@ -205,7 +196,7 @@ class Controls
 		/**
 		 * Keyboard key press event.
 		 */
-		this.onKeyDown = function(event, dom_document, world, player)
+		this.onKeyDown = function(event, debug, dom_document, world, editor, player)
 		{
 			
 			// Ignore key presses if a text box or text area is being edited
@@ -256,7 +247,7 @@ class Controls
 		/**
 		 * Keyboard key release event.
 		 */
-		this.onKeyUp = function(event, dom_document, world, player)
+		this.onKeyUp = function(event, debug, dom_document, world, editor, player)
 		{
 			
 			// Ignore key releases if a text box or text area is being edited
@@ -282,8 +273,8 @@ class Controls
 					{
 						// ShiftLeft + KeyD
 						
-						// Toggle debug mode on/off
-						player.toggleDebugMode();
+						// Toggle debug on/off
+						debug.toggle();
 					}
 					else
 					{
@@ -297,8 +288,8 @@ class Controls
 					{
 						// ShiftLeft + KeyE
 						
-						// Toggle editor mode on/off
-						player.toggleEditorMode(world);
+						// Toggle editor on/off
+						editor.toggle(world, player);
 					}
 					else
 					{

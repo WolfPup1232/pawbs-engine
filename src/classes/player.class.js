@@ -13,12 +13,13 @@ class Player
 	/**
 	 * Initializes a new player for use in the game world.
 	 *
-	 * @param {window} window_interface A reference to the web browser window, which contains the DOM document. This is required to size the camera.
-	 * @param {document} dom_document A reference to the DOM document within the web browser window. This is required for mouse/keyboard controls.
-	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element. This is also required for mouse controls.
-	 * @param {world} world The game world in which the player exists.
+	 * @param {window} window_interface A reference to the web browser window, which contains the DOM document.
+	 * @param {document} dom_document A reference to the DOM document within the web browser window
+	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element.
+	 * @param {world} world The current game world.
+	 * @param {editor} editor The in-game world editor.
 	 */
-	constructor(window_interface, dom_document, renderer, world)
+	constructor(window_interface, dom_document, renderer, world, editor)
 	{
 		
 		// Class Declarations/Initialization
@@ -85,7 +86,7 @@ class Player
 		// Player Controls
 		
 		// Initialize player's keyboard/mouse controls
-		this.controls = new Controls(dom_document, renderer, world, this);
+		this.controls = new Controls(dom_document, renderer, world, editor, this);
 		
 	}
 	
@@ -105,7 +106,19 @@ class Player
 	}
 	
 	/**
-	 * The player's quaternion. What the hell is a quaternion? ¯\_(ツ)_/¯
+	 * The player's rotation in the game world.
+	 */
+	get rotation()
+	{
+		return this.camera.rotation;
+	}
+	set rotation(new_rotation)
+	{
+		this.camera.rotation = new_rotation;
+	}
+	
+	/**
+	 * The player's quaternion. What the hell is a quaternion? Who cares. ¯\_(ツ)_/¯
 	 */
 	get quaternion()
 	{
@@ -117,44 +130,59 @@ class Player
 	}
 	
 	
-	// Methods
+	// Event Handlers
 	
 	/**
 	 * Handles player left mouse down.
 	 */
-	handlePlayerLeftMouseDown()
+	handleLeftMouseDown()
 	{
-		// Do nothing.
+		
+		// Left mouse button is down
+		this.controls.is_mouse_left_down = true;
+		
 	}
 	
 	/**
 	 * Handles player left mouse up.
 	 */
-	handlePlayerLeftMouseUp()
+	handleLeftMouseUp()
 	{
-		// Do nothing.
+		
+		// Left mouse button is no longer down
+		this.controls.is_mouse_left_down = false;
+		
 	}
 	
 	/**
 	 * Handles player right mouse down.
 	 */
-	handlePlayerRightMouseDown()
+	handleRightMouseDown()
 	{
-		// Do nothing.
+		
+		// Right mouse button is down
+		this.controls.is_mouse_right_down = true;
+		
 	}
 	
 	/**
 	 * Handles player right mouse up.
 	 */
-	handlePlayerRightMouseUp()
+	handleRightMouseUp()
 	{
-		// Do nothing.
+		
+		// Right mouse button is no longer down
+		this.controls.is_mouse_right_down = false;
+		
 	}
 	
+	
+	// Methods
+	
 	/**
-	 * Handles player movement, collision detection, and other object movement in direct relation to the player's movement.
+	 * Updates the player in the game world (movement, collision detection, etc).
 	 *
-	 * @param {world} world The game world in which the player exists.
+	 * @param {world} world The current game world.
 	 */
 	update(world)
 	{
@@ -182,7 +210,7 @@ class Player
 		
 		// Player Steps/Stairs/Ramp Movement
 		
-		// Handle player movement over steps/stairs/ramps in all movement directions
+		// Update player movement over steps/stairs/ramps in all movement directions
 		if (this.controls.is_player_moving_forward) this.stepInDirection(world, forward);
 		if (this.controls.is_player_moving_backward) this.stepInDirection(world, backward);
 		if (this.controls.is_player_moving_right) this.stepInDirection(world, right);
@@ -237,8 +265,8 @@ class Player
 		
 		// World Object Movement (in direct relation to the player's movement)
 		
-		// Handle billboard object rotations
-		world.handleBillboards(this);
+		// Update billboard object rotations
+		world.updateBillboards(this);
 		
 		
 		// Player Movement Cont'd
@@ -252,10 +280,10 @@ class Player
 	}
 	
 	/**
-	 * Handles player movement over steps or stairs and ramps.
+	 * Updates player movement over steps or stairs and ramps.
 	 *
-	 * @param {world} world The game world in which the player exists.
-	 * @param {direction} three.vector3 The direction in relation to the player, in which to check for steps/stairs/ramps to traverse.
+	 * @param {world} world The current game world.
+	 * @param {direction} three.vector3 The direction in which to check for steps/stairs/ramps to traverse.
 	 */
 	stepInDirection(world, direction)
 	{

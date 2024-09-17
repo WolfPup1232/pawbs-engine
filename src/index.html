@@ -208,9 +208,9 @@
 		// Class Imports
 		import Player from './classes/player.class.js';
 		import World from './classes/world.class.js';
-		
-		// Game World Imports
-		import * as Worlds from './worlds/worlds.js';
+		import Editor from './classes/editor.class.js';
+		import Debug from './classes/debug.class.js';
+		import Utilities from './classes/utilities.class.js';
 		
 		
 		// Game Declarations
@@ -222,50 +222,24 @@
 		let player;
 		
 		// Game World
-		let worlds, world, editor, debug;
+		let worlds, world, textures;
 		
-		// Game Textures
-		let textures, texture_loader;
+		// Game Utilities
+		let utilities, editor, debug;
 		
 		
 		// Game Functions
 		
 		/**
-		 * Game Initialization - Initializes the game renderer/textures/world/player, then starts the game loop.
+		 * Game Initialization - Initializes the game and starts the game loop.
 		 */
-		function Initialize()
+		function init()
 		{
 			
-			// --------------------------------------------------------------------------------
-			// Game Initialization Flow:
-			//
-			// init() -> loadTextures() -> loadWorlds() -> animate()
-			// --------------------------------------------------------------------------------
-			//
-			//	init()
-			//
-			//	Sets up the three.js renderer and starts to
-			//	initialize textures.
-			// --------------------------------------------------------------------------------
-			//
-			//	loadTextures()
-			//
-			//	Loads textures from "textures.json" in the textures folder. Loading textures
-			//	takes time, and loading worlds can only happen when all textures are loaded,
-			//	so loading worlds happens afterward in a callback.
-			// --------------------------------------------------------------------------------
-			//
-			//	loadWorlds()
-			//
-			//	Right now this function sucks. This will soon load worlds from "worlds.json"
-			//	in the worlds folder. This will also have a callback which starts the
-			//	game loop.
-			// --------------------------------------------------------------------------------
-			//
-			//	animate()
-			//
-			//	This is the game loop.
-			// --------------------------------------------------------------------------------
+			// Initialize utilities
+			utilities = new Utilities();
+			editor = new Editor();
+			debug = new Debug();
 			
 			// Initialize three.js renderer
 			renderer = new THREE.WebGLRenderer();
@@ -276,23 +250,33 @@
 			
 			// Initialize textures
 			textures = {};
-			texture_loader = new THREE.TextureLoader();
 			
 			// Initialize worlds
 			worlds = {};
-			world_loader = new THREE.ObjectLoader();
 			
 			// Load textures
-			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { loadTextures(texture_paths, function() {
-			
+			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { utilities.loadTextures(texture_paths, textures, function() {
+				
 				// Load worlds
-				fetch('./worlds/worlds.json').then(response => response.json()).then(world_paths => { loadWorlds(world_paths, animate); }).catch(error => {
+				fetch('./worlds/worlds.json').then(response => response.json()).then(worlds => {
+										
+					// Initialize world
+					world = new World();
+					world.load(worlds.TestWorld)
+					
+					// Initialize player
+					player = new Player(window, document, renderer, world, editor);
+					
+					// Start game loop
+					animate();
+					
+				}).catch(error => {
 					
 					// Error loading worlds
 					console.error("Error loading worlds.json: ", error);
 					
 				});
-			
+				
 			}); }).catch(error => {
 				
 				// Error loading textures
@@ -303,127 +287,7 @@
 		}
 		
 		/**
-		 * Load Textures - Initializes game textures according to the list of textures in the textures.json file.
-		 */
-		function loadTextures(texture_paths, callback)
-		{
-			
-			let count = 0;
-			
-			// Get all keys (texture names) from the list of texture paths
-			const texture_keys = Object.keys(texture_paths);
-			
-			// Load each texture
-			texture_keys.forEach((key) => {
-				texture_loader.load(texture_paths[key], (texture) => {
-					
-					// Store each loaded texture by name
-					textures[key] = texture;
-					
-					// Increment the texture count to check if all textures are loaded
-					count++;
-					if (count === texture_keys.length)
-					{
-						
-						// All textures are loaded, now perform the next step using the callback function
-						callback();
-						
-					}
-				},
-				undefined, // No onProgress callback
-				(error) => {
-					
-					// Error loading texture
-					console.error("Error loading texture: ", error);
-					
-				});
-				
-			});
-			
-		}
-		
-		/**
-		 * Load Worlds - Initializes game worlds according to the list of worlds in the worlds.json file.
-		 */
-		function loadWorlds(world_paths, callback)
-		{
-			
-			let count = 0;
-			
-			// Get all keys (world names) from the list of world paths
-			const world_keys = Object.keys(world_paths);
-			
-			// Load each world
-			world_keys.forEach((key) => {
-				texture_loader.load(world_paths[key], (texture) => {
-					
-					// Store each loaded texture by name
-					textures[key] = texture;
-					
-					// Increment the texture count to check if all textures are loaded
-					count++;
-					if (count === world_keys.length)
-					{
-						
-						// All textures are loaded, now perform the next step using the callback function
-						callback();
-						
-					}
-				},
-				undefined, // No onProgress callback
-				(error) => {
-					
-					// Error loading texture
-					console.error("Error loading texture: ", error);
-					
-				});
-				
-			});
-			
-		}
-		
-		/**
-		 * Load Worlds - Initializes game worlds using the Worlds class (this will be modified later).
-		 */
-		function loadWorlds()
-		{
-			
-			// Initialize worlds
-			worlds = [];
-			
-			// Initialize custom game worlds from Worlds class
-			for (const world_class in Worlds)
-			{
-				const game_world = new Worlds[world_class](textures);
-				if (game_world.world)
-				{
-					worlds.push(game_world.world);
-				}
-			}
-			
-			// Load game world
-			if (worlds.length > 0)
-			{
-				
-				// Select the first available game world by default
-				world = worlds[0];
-				
-				// Initialize player
-				player = new Player(window, document, renderer, world);
-				
-				// Start game loop
-				animate();
-				
-			}
-			else
-			{
-				// TODO: No game worlds loaded, crash the game? :(
-			}
-			
-		}
-		
-		/**
-		 * Game Loop - Handles game processes that update every frame, then renders the frame.
+		 * Game Loop - Updates game processes that update every frame, then renders the frame.
 		 */
 		function animate()
 		{
@@ -438,14 +302,14 @@
 			if (render_once)
 			{
 				
-				// Update player movement, collision detection, etc.
+				// Update the player (movement, collision detection, etc.)
 				player.update(world);
 				
 				// Update in-game editor
-				editor.update(world);
+				editor.update(world, player);
 				
 				// Update in-game debugger
-				debug.update(world);
+				debug.update(world, player);
 				
 			}
 			else
@@ -529,7 +393,7 @@
 			{
 				
 				// Create a new empty world
-				world.editor.newWorld(player);
+				editor.newWorld(world, textures, player);
 				
 			}
 		});
@@ -543,7 +407,7 @@
 			{
 				
 				// Load a world from a JSON file
-				world.loadWorld(player);
+				editor.loadWorld(world, player);
 				
 			}
 		});
@@ -557,7 +421,7 @@
 			{
 				
 				// Save the selected world as a JSON file
-				world.saveWorld(player);
+				editor.saveWorld(world, player);
 				
 			}
 		});
@@ -574,7 +438,7 @@
 			{
 				
 				// Set selected object X-axis position 
-				world.editor.selected_object.position.x = $("#editor-selected-object-position-x").val();
+				editor.selected_object.position.x = $("#editor-selected-object-position-x").val();
 				
 			}
 		});
@@ -588,7 +452,7 @@
 			{
 				
 				// Set selected object Y-axis position 
-				world.editor.selected_object.position.y = $("#editor-selected-object-position-y").val();
+				editor.selected_object.position.y = $("#editor-selected-object-position-y").val();
 				
 			}
 		});
@@ -602,7 +466,7 @@
 			{
 				
 				// Set selected object Z-axis position 
-				world.editor.selected_object.position.z = $("#editor-selected-object-position-z").val();
+				editor.selected_object.position.z = $("#editor-selected-object-position-z").val();
 				
 			}
 		});
@@ -616,7 +480,7 @@
 			{
 				
 				// Set selected object X-axis scale 
-				world.editor.selected_object.scale.x = $("#editor-selected-object-scale-x").val() / 100;
+				editor.selected_object.scale.x = $("#editor-selected-object-scale-x").val() / 100;
 				
 			}
 		});
@@ -630,7 +494,7 @@
 			{
 				
 				// Set selected object Y-axis scale 
-				world.editor.selected_object.scale.y = $("#editor-selected-object-scale-y").val() / 100;
+				editor.selected_object.scale.y = $("#editor-selected-object-scale-y").val() / 100;
 				
 			}
 		});
@@ -644,7 +508,7 @@
 			{
 				
 				// Set selected object Z-axis scale 
-				world.editor.selected_object.scale.z = $("#editor-selected-object-scale-z").val() / 100;
+				editor.selected_object.scale.z = $("#editor-selected-object-scale-z").val() / 100;
 				
 			}
 		});
@@ -658,7 +522,7 @@
 			{
 				
 				// Set selected object X-axis rotation by converting the input degrees to radians
-				world.editor.selected_object.rotation.x = $("#editor-selected-object-rotation-x").val() * (Math.PI / 180);
+				editor.selected_object.rotation.x = $("#editor-selected-object-rotation-x").val() * (Math.PI / 180);
 				
 			}
 		});
@@ -672,7 +536,7 @@
 			{
 				
 				// Set selected object Y-axis rotation by converting the input degrees to radians
-				world.editor.selected_object.rotation.y = $("#editor-selected-object-rotation-y").val()  * (Math.PI / 180);
+				editor.selected_object.rotation.y = $("#editor-selected-object-rotation-y").val()  * (Math.PI / 180);
 				
 			}
 		});
@@ -686,7 +550,7 @@
 			{
 				
 				// Set selected object Z-axis rotation by converting the input degrees to radians
-				world.editor.selected_object.rotation.z = $("#editor-selected-object-rotation-z").val()  * (Math.PI / 180);
+				editor.selected_object.rotation.z = $("#editor-selected-object-rotation-z").val()  * (Math.PI / 180);
 				
 			}
 		});

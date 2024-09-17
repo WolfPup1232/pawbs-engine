@@ -3,7 +3,6 @@ import * as THREE from '../libraries/threejs/three.js';
 
 // Class Imports
 import Billboard from './billboard.class.js';
-import Editor from './editor.class.js';
 
 /**
  * A game world containing a scene which can be rendered, in which objects can be placed and the player can navigate.
@@ -45,6 +44,7 @@ class World
 		this.name = "";
 		this.player_position = new THREE.Vector3(0, 0, 0)
 		
+		
 		// World Terrain
 		
 		// Initialize an array to hold terrain objects
@@ -61,12 +61,6 @@ class World
 		
 		// The maximum height an object which can be considered a traversible stair
 		this.stair_height = 0.75;
-		
-		
-		// Editor Mode
-		
-		// Initialize the in-game editor
-		this.editor = new Editor();
 		
 	}
 	
@@ -107,50 +101,36 @@ class World
 	
 	// Methods
 	
+	/**
+	 * Loads a world from a JSON file path.
+	 *
+	 * @param {string} path The file path of the JSON file to load.
+	 */
 	load(path)
 	{
 		
 		// Get a reference to this world to pass into the file load callback
 		let self = this;
 		
-		// Initialize a three.js object loader to convert JSON objects to valid three.js objects
-		let loader = new THREE.ObjectLoader();
-		
-		// Fetch the JSON file from the given file path
+		// Fetch the JSON file from the specified file path
 		fetch(path).then(response => {
-			if (!response.ok) {
-				throw new Error('Network response was not ok');
+		
+			// Error fetching world
+			if (!response.ok)
+			{
+				throw new Error('Error fetching world.');
 			}
+			
 			return response.json();
+			
 		})
 		.then(json => {
-			try {
-				// Initialize a new world to load file contents into
-				let world = new World();
+			
+			try
+			{
 				
-				// Get world properties
-				world.name = json.name;
-				world.player_position = new THREE.Vector3(json.player_position.x, json.player_position.y, json.player_position.z);
-				
-				// Get world objects and terrain
-				world.terrain = json.terrain.map(meshJSON => {
-					return loader.parse(meshJSON);
-				});
-				world.objects = json.objects.map(meshJSON => {
-					return loader.parse(meshJSON);
-				});
-				
-				// Add all world objects to the scene
-				for (let i = 0; i < world.all_objects.length; i++)
-				{
-					world.scene.add(world.all_objects[i]);
-				}
-				
-				// Add player transform controls to the scene
-				world.scene.add(player.controls.transform_controls);
-				
-				// Replace current world with new world
-				Object.assign(self, world);
+				// Load world from JSON object
+				self.loadFromJSON(json);
 				
 			}
 			catch (error)
@@ -158,12 +138,52 @@ class World
 				// Error loading world
 				console.error("Error loading world: ", error);
 			}
+			
 		})
 		.catch(error => {
-			// Handle fetch errors
-			console.error("Fetch error: ", error);
+			
+			// Error fetching world
+			console.error("Error fetching world: ", error);
+			
 		});
+		
+	}
 	
+	/**
+	 * Loads a world from a JSON object.
+	 *
+	 * @param {object} path The JSON object to load.
+	 */
+	loadFromJSON(json)
+	{
+		
+		// Initialize a three.js object loader to convert JSON objects to valid three.js objects
+		let loader = new THREE.ObjectLoader();
+		
+		// Initialize a new world
+		let world = new World();
+		
+		// Get world properties
+		world.name = json.name;
+		world.player_position = new THREE.Vector3(json.player_position.x, json.player_position.y, json.player_position.z);
+		
+		// Get world objects and terrain
+		world.terrain = json.terrain.map(meshJSON => {
+			return loader.parse(meshJSON);
+		});
+		world.objects = json.objects.map(meshJSON => {
+			return loader.parse(meshJSON);
+		});
+		
+		// Add all world objects to the scene
+		for (let i = 0; i < world.all_objects.length; i++)
+		{
+			world.scene.add(world.all_objects[i]);
+		}
+		
+		// Replace current world with new world
+		Object.assign(this, world);
+		
 	}
 	
 	/**
@@ -217,14 +237,14 @@ class World
 	}
 	
 	/**
-	 * Handles rotating billboard objects so that they're always facing the player.
+	 * Updates rotating billboard objects so that they're always facing the player.
 	 *
 	 * @param {player} player The player which the billboard objects will be facing.
 	 */
-	handleBillboards(player)
+	updateBillboards(player)
 	{
 		
-		// Iterate through each world object to handle only billboard objects
+		// Iterate through each world object to update only billboard objects
 		for (let i = 0; i < this.objects.length; i++)
 		{
 			if (this.objects[i] instanceof Billboard)
@@ -328,7 +348,7 @@ class World
 			// Create world object's bounding box
 			let object_box = new THREE.Box3().setFromObject(this.objects[i]);
 			
-			// Handle billboard collision
+			// Detect billboard collision
 			if (this.objects[i] instanceof Billboard)
 			{
 				
@@ -402,7 +422,7 @@ class World
 			const closest_intersection = intersects[0];
 			const closest_object = closest_intersection.object;
 			
-			// Handle PlaneGeometry objects specifically, otherwise just use the object's intersection point
+			// Detect PlaneGeometry objects specifically, otherwise just use the object's intersection point
 			if (closest_object.geometry instanceof THREE.PlaneGeometry)
 			{
 				
