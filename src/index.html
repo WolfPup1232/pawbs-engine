@@ -61,11 +61,27 @@
 							data-bs-title="Import world from JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-folder2-open"></i>
 							</button>
-							<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary mx-1"
+							<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-0"
 							data-bs-title="Export world to JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-floppy"></i>
 							</button>
-							
+							<div class="vr mx-3"></div>
+							<button id="editor-world-geometry-plane" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
+							data-bs-title="Spawn a new plane object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-square"></i>
+							</button>
+							<button id="editor-world-geometry-box" type="button" class="btn btn-sm btn-outline-secondary mx-1"
+							data-bs-title="Spawn a new box object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-box"></i>
+							</button>
+							<button id="editor-world-geometry-cylinder" type="button" class="btn btn-sm btn-outline-secondary mx-1"
+							data-bs-title="Spawn a new cylinder object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-database"></i>
+							</button>
+							<button id="editor-world-geometry-sphere" type="button" class="btn btn-sm btn-outline-secondary mx-1"
+							data-bs-title="Spawn a new sphere object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-globe"></i>
+							</button>
 						</div>
 					</div>
 				</div>
@@ -206,7 +222,7 @@
 		let player;
 		
 		// Game World
-		let worlds, selected_world;
+		let worlds, world, editor, debug;
 		
 		// Game Textures
 		let textures, texture_loader;
@@ -217,7 +233,7 @@
 		/**
 		 * Game Initialization - Initializes the game renderer/textures/world/player, then starts the game loop.
 		 */
-		function init()
+		function Initialize()
 		{
 			
 			// --------------------------------------------------------------------------------
@@ -262,8 +278,22 @@
 			textures = {};
 			texture_loader = new THREE.TextureLoader();
 			
-			// Load textures, the load worlds
-			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { loadTextures(texture_paths, loadWorlds); }).catch(error => {
+			// Initialize worlds
+			worlds = {};
+			world_loader = new THREE.ObjectLoader();
+			
+			// Load textures
+			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { loadTextures(texture_paths, function() {
+			
+				// Load worlds
+				fetch('./worlds/worlds.json').then(response => response.json()).then(world_paths => { loadWorlds(world_paths, animate); }).catch(error => {
+					
+					// Error loading worlds
+					console.error("Error loading worlds.json: ", error);
+					
+				});
+			
+			}); }).catch(error => {
 				
 				// Error loading textures
 				console.error("Error loading textures.json: ", error);
@@ -275,10 +305,10 @@
 		/**
 		 * Load Textures - Initializes game textures according to the list of textures in the textures.json file.
 		 */
-		function loadTextures(texture_paths, load_worlds_callback)
+		function loadTextures(texture_paths, callback)
 		{
 			
-			let texture_count = 0;
+			let count = 0;
 			
 			// Get all keys (texture names) from the list of texture paths
 			const texture_keys = Object.keys(texture_paths);
@@ -291,12 +321,52 @@
 					textures[key] = texture;
 					
 					// Increment the texture count to check if all textures are loaded
-					texture_count++;
-					if (texture_count === texture_keys.length)
+					count++;
+					if (count === texture_keys.length)
 					{
 						
-						// All textures are loaded, now load worlds using the callback function
-						load_worlds_callback();
+						// All textures are loaded, now perform the next step using the callback function
+						callback();
+						
+					}
+				},
+				undefined, // No onProgress callback
+				(error) => {
+					
+					// Error loading texture
+					console.error("Error loading texture: ", error);
+					
+				});
+				
+			});
+			
+		}
+		
+		/**
+		 * Load Worlds - Initializes game worlds according to the list of worlds in the worlds.json file.
+		 */
+		function loadWorlds(world_paths, callback)
+		{
+			
+			let count = 0;
+			
+			// Get all keys (world names) from the list of world paths
+			const world_keys = Object.keys(world_paths);
+			
+			// Load each world
+			world_keys.forEach((key) => {
+				texture_loader.load(world_paths[key], (texture) => {
+					
+					// Store each loaded texture by name
+					textures[key] = texture;
+					
+					// Increment the texture count to check if all textures are loaded
+					count++;
+					if (count === world_keys.length)
+					{
+						
+						// All textures are loaded, now perform the next step using the callback function
+						callback();
 						
 					}
 				},
@@ -336,10 +406,10 @@
 			{
 				
 				// Select the first available game world by default
-				selected_world = worlds[0];
+				world = worlds[0];
 				
 				// Initialize player
-				player = new Player(window, document, renderer, selected_world);
+				player = new Player(window, document, renderer, world);
 				
 				// Start game loop
 				animate();
@@ -368,14 +438,14 @@
 			if (render_once)
 			{
 				
-				// Handle player movement, collision detection, and other object movement in direct relation to the player's movement
-				player.handlePlayerMovement(selected_world);
+				// Update player movement, collision detection, etc.
+				player.update(world);
 				
-				// Handle editor mode processes that update every frame
-				player.handleEditorMode(selected_world);
+				// Update in-game editor
+				editor.update(world);
 				
-				// Handle debug mode processes that update every frame
-				player.handleDebugMode(selected_world);
+				// Update in-game debugger
+				debug.update(world);
 				
 			}
 			else
@@ -386,7 +456,7 @@
 			// Render the frame (or break game loop if flag is set)
 			if (!stop_animating)
 			{
-				renderer.render(selected_world.scene, player.camera);
+				renderer.render(world.scene, player.camera);
 			}
 			else
 			{
@@ -414,7 +484,6 @@
             $('#menu').hide();
             init();
 			
-			//player.toggleEditorMode(selected_world);
 			
 		}
 		
@@ -442,11 +511,11 @@
 		 */
 		$("#editor-world-name").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set world name
-				selected_world.name = $("#editor-world-name").val();
+				world.name = $("#editor-world-name").val();
 				
 			}
 		});
@@ -456,11 +525,11 @@
 		 */
 		$("#editor-world-new").click(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Create a new empty world
-				selected_world.editorWorldNew(player);
+				world.editor.newWorld(player);
 				
 			}
 		});
@@ -470,11 +539,11 @@
 		 */
 		$("#editor-world-load").click(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Load a world from a JSON file
-				selected_world.editorWorldLoad(player);
+				world.loadWorld(player);
 				
 			}
 		});
@@ -484,11 +553,11 @@
 		 */
 		$("#editor-world-save").click(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Save the selected world as a JSON file
-				selected_world.editorWorldSave(player);
+				world.saveWorld(player);
 				
 			}
 		});
@@ -501,11 +570,11 @@
 		 */
 		 $("#editor-selected-object-position-x").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis position 
-				selected_world.editor_selected_object.position.x = $("#editor-selected-object-position-x").val();
+				world.editor.selected_object.position.x = $("#editor-selected-object-position-x").val();
 				
 			}
 		});
@@ -515,11 +584,11 @@
 		 */
 		 $("#editor-selected-object-position-y").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis position 
-				selected_world.editor_selected_object.position.y = $("#editor-selected-object-position-y").val();
+				world.editor.selected_object.position.y = $("#editor-selected-object-position-y").val();
 				
 			}
 		});
@@ -529,11 +598,11 @@
 		 */
 		 $("#editor-selected-object-position-z").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis position 
-				selected_world.editor_selected_object.position.z = $("#editor-selected-object-position-z").val();
+				world.editor.selected_object.position.z = $("#editor-selected-object-position-z").val();
 				
 			}
 		});
@@ -543,11 +612,11 @@
 		 */
 		 $("#editor-selected-object-scale-x").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis scale 
-				selected_world.editor_selected_object.scale.x = $("#editor-selected-object-scale-x").val() / 100;
+				world.editor.selected_object.scale.x = $("#editor-selected-object-scale-x").val() / 100;
 				
 			}
 		});
@@ -557,11 +626,11 @@
 		 */
 		 $("#editor-selected-object-scale-y").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis scale 
-				selected_world.editor_selected_object.scale.y = $("#editor-selected-object-scale-y").val() / 100;
+				world.editor.selected_object.scale.y = $("#editor-selected-object-scale-y").val() / 100;
 				
 			}
 		});
@@ -571,11 +640,11 @@
 		 */
 		 $("#editor-selected-object-scale-z").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis scale 
-				selected_world.editor_selected_object.scale.z = $("#editor-selected-object-scale-z").val() / 100;
+				world.editor.selected_object.scale.z = $("#editor-selected-object-scale-z").val() / 100;
 				
 			}
 		});
@@ -585,11 +654,11 @@
 		 */
 		 $("#editor-selected-object-rotation-x").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis rotation by converting the input degrees to radians
-				selected_world.editor_selected_object.rotation.x = $("#editor-selected-object-rotation-x").val() * (Math.PI / 180);
+				world.editor.selected_object.rotation.x = $("#editor-selected-object-rotation-x").val() * (Math.PI / 180);
 				
 			}
 		});
@@ -599,11 +668,11 @@
 		 */
 		 $("#editor-selected-object-rotation-y").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis rotation by converting the input degrees to radians
-				selected_world.editor_selected_object.rotation.y = $("#editor-selected-object-rotation-y").val()  * (Math.PI / 180);
+				world.editor.selected_object.rotation.y = $("#editor-selected-object-rotation-y").val()  * (Math.PI / 180);
 				
 			}
 		});
@@ -613,11 +682,11 @@
 		 */
 		 $("#editor-selected-object-rotation-z").change(function()
 		{
-			if (player.controls.mode_editor)
+			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis rotation by converting the input degrees to radians
-				selected_world.editor_selected_object.rotation.z = $("#editor-selected-object-rotation-z").val()  * (Math.PI / 180);
+				world.editor.selected_object.rotation.z = $("#editor-selected-object-rotation-z").val()  * (Math.PI / 180);
 				
 			}
 		});

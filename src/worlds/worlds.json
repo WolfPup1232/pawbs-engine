@@ -1,4 +1,3 @@
 {
-	"world1": "./worlds/world1.json",
-	"world2": "./worlds/world2.json"
+	"Test World": "./worlds/Test World.json"
 }

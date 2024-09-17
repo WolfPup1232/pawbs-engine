@@ -156,7 +156,7 @@ class Player
 	 *
 	 * @param {world} world The game world in which the player exists.
 	 */
-	handlePlayerMovement(world)
+	update(world)
 	{
 		
 		// Player Movement
@@ -183,10 +183,10 @@ class Player
 		// Player Steps/Stairs/Ramp Movement
 		
 		// Handle player movement over steps/stairs/ramps in all movement directions
-		if (this.controls.is_player_moving_forward) this.handleStairsAndRampsInDirection(world, forward);
-		if (this.controls.is_player_moving_backward) this.handleStairsAndRampsInDirection(world, backward);
-		if (this.controls.is_player_moving_right) this.handleStairsAndRampsInDirection(world, right);
-		if (this.controls.is_player_moving_left) this.handleStairsAndRampsInDirection(world, left);
+		if (this.controls.is_player_moving_forward) this.stepInDirection(world, forward);
+		if (this.controls.is_player_moving_backward) this.stepInDirection(world, backward);
+		if (this.controls.is_player_moving_right) this.stepInDirection(world, right);
+		if (this.controls.is_player_moving_left) this.stepInDirection(world, left);
 		
 		
 		// Player Jumping
@@ -257,7 +257,7 @@ class Player
 	 * @param {world} world The game world in which the player exists.
 	 * @param {direction} three.vector3 The direction in relation to the player, in which to check for steps/stairs/ramps to traverse.
 	 */
-	handleStairsAndRampsInDirection(world, direction)
+	stepInDirection(world, direction)
 	{
 		
 		// Get the position the player's feet, plus half a stair's height, to cast a ray from
@@ -306,244 +306,6 @@ class Player
 			}
 			
 		}
-		
-	}
-	
-	
-	// Editor Mode Methods
-	
-	/**
-	 * Toggle editor mode on/off.
-	 */
-	toggleEditorMode(world)
-	{
-		
-		// Toggle editor mode
-		if (!this.controls.mode_editor)
-		{
-			
-			// Enable editor mode
-			this.controls.mode_editor = true;
-			
-			// Initialize UI elements
-			$("#editor-world-name").val(world.name);
-			
-			// Show editor mode UI
-			$("#editor").show();
-			
-		}
-		else
-		{
-			
-			// Hide editor mode UI
-			$("#editor").hide();
-			
-			// Reset any highlighted or selected objects
-			world.editorResetHighlightedObject();
-			world.editorResetSelectedObject(this);
-			
-			// Disable editor mode
-			this.controls.mode_editor = false;
-			
-		}
-		
-	}
-	
-	/**
-	 * Handles editor mode processes that update every frame.
-	 *
-	 * @param {world} world The game world in which the player exists.
-	 */
-	handleEditorMode(world)
-	{
-		
-		// Check if editor mode is enabled
-		if (this.controls.mode_editor)
-		{
-			
-			// If the player is dragging with the left mouse button...
-			if (this.controls.is_mouse_left_down && this.controls.is_mouse_dragging)
-			{
-				
-				// Handle transform controls mouse move event
-				this.controls.transform_controls.mouseMove(this);
-				
-			}
-			else
-			{
-				
-				// Handle transform controls mouse hover event
-				this.controls.transform_controls.mouseHover(this);
-				
-			}
-			
-		}
-		
-		// Do the following regardless of whether editor mode is enabled...
-		//
-		//	NOTE: These method calls may or may not have their own editor mode checks.
-		
-		// Handle editor mode object highlighting
-		world.editorHandleHighlightedObject(this);
-		
-	}
-	
-	/**
-	 * Handles player left mouse down editor mode.
-	 */
-	handleEditorLeftMouseDown()
-	{
-		
-		// Check if editor mode is enabled
-		if (this.controls.mode_editor)
-		{
-			
-			// Handle transform controls mouse down event
-			this.controls.transform_controls.mouseDown(this);
-			
-		}
-		
-	}
-	
-	/**
-	 * Handles player left mouse up in editor mode.
-	 */
-	handleEditorLeftMouseUp(world)
-	{
-		
-		// Check if editor mode is enabled
-		if (this.controls.mode_editor)
-		{
-			
-			// If the mouse is locked to the renderer...
-			if (this.controls.is_mouse_locked)
-			{
-				
-				// If the mouse is currently dragging...
-				if (this.controls.is_mouse_dragging)
-				{
-					
-					// The mouse is no longer dragging
-					this.controls.is_mouse_dragging = false;
-					
-					// Handle transform controls mouse up event
-					this.controls.transform_controls.mouseUp(this);
-					
-					
-				} // Otherwise, if the mouse is not currently dragging...
-				else
-				{
-					
-					// Select the object the player is facing
-					world.editorSelectObject(this);
-					
-				}
-				
-			}
-			
-		}
-		
-	}
-	
-	/**
-	 * Handles player right mouse down in editor mode.
-	 */
-	handleEditorRightMouseDown()
-	{
-		// Do nothing.
-	}
-	
-	/**
-	 * Handles player right mouse up in editor mode.
-	 */
-	handleEditorRightMouseUp(world)
-	{
-		
-		// Check if editor mode is enabled
-		if (this.controls.mode_editor)
-		{
-			
-			// If the mouse is locked to the renderer...
-			if (this.controls.is_mouse_locked)
-			{
-				
-				// Attempt to reset the selected object
-				world.editorResetSelectedObject(this);
-				
-			}
-			
-		}
-		
-	}
-	
-	
-	// Debug Mode Methods
-	
-	/**
-	 * Toggle debug mode on/off.
-	 */
-	toggleDebugMode()
-	{
-		
-		// Toggle debug mode
-		if (!this.controls.mode_debug)
-		{
-			
-			// Enable debug mode
-			this.controls.mode_debug = true;
-			
-			// Show debug mode UI
-			$("#debug").show();
-			
-		}
-		else
-		{
-			
-			// Hide debug mode UI
-			$("#debug").hide();
-			
-			// Disable debug mode
-			this.controls.mode_debug = false;
-			
-		}
-		
-	}
-	
-	/**
-	 * Handles debug mode processes that update every frame.
-	 */
-	handleDebugMode(world)
-	{
-		
-		// Check if debug mode is enabled
-		if (this.controls.mode_debug)
-		{
-			
-			// Handle debug mode output
-			this.handleDebugModeOutput(world);
-			
-		}
-		
-		// Do the following regardless of whether debug mode is enabled
-		//
-		//	NOTE: These method calls may or may not have their own debug mode checks.
-		
-		// Do nothing.
-		
-	}
-	
-	/**
-	 * Handles debug mode UI output.
-	 */
-	handleDebugModeOutput(world)
-	{
-		
-		// Output debug info to UI
-		// $("#debug-text").html("billboard.rotation.x		 = " + world.objects[0].rotation.x + "<br />" + 
-							  // "billboard.rotation.y   = " + world.objects[0].rotation.y + "<br />" + 
-							  // "billboard.rotation.z  = " + world.objects[0].rotation.z + "<br />" + 
-							  // "player.jump_height    = " + this.jump_height + "<br />" + 
-							  // "player.position.y     = " + this.position.y + "<br />");
 		
 	}
 	

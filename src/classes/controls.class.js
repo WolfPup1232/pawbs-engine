@@ -28,12 +28,6 @@ class Controls
 		this.mode_debug = false;
 		
 		
-		// Editor Mode
-		
-		// Enable/disable editor mode
-		this.mode_editor = false;
-		
-		
 		// Player Mouse Controls
 		
 		// Initialize mouse controls
