@@ -53,7 +53,7 @@
 							<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
 							data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
 							<div class="vr me-3"></div>
-							<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
+							<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
 							data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-file-earmark"></i>
 							</button>
@@ -184,7 +184,7 @@
 		
 		// Game Imports
 		
-		// three.js Import
+		// three.js Imports
 		import * as THREE from './libraries/threejs/three.js';
 		import { PointerLockControls } from './libraries/threejs/modules/PointerLockControls.js';
 		import { TransformControls } from './libraries/threejs/modules/TransformControls.js';
@@ -266,7 +266,7 @@
 			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { loadTextures(texture_paths, loadWorlds); }).catch(error => {
 				
 				// Error loading textures
-				console.error("Error loading texture paths:", error);
+				console.error("Error loading textures.json: ", error);
 				
 			});
 			
@@ -304,7 +304,7 @@
 				(error) => {
 					
 					// Error loading texture
-					console.error("Error loading texture:", error);
+					console.error("Error loading texture: ", error);
 					
 				});
 				
@@ -447,6 +447,48 @@
 				
 				// Set world name
 				selected_world.name = $("#editor-world-name").val();
+				
+			}
+		});
+		
+		/**
+		 * Editor world new button click event.
+		 */
+		$("#editor-world-new").click(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Create a new empty world
+				selected_world.editorWorldNew(player);
+				
+			}
+		});
+		
+		/**
+		 * Editor world load button click event.
+		 */
+		$("#editor-world-load").click(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Load a world from a JSON file
+				selected_world.editorWorldLoad(player);
+				
+			}
+		});
+		
+		/**
+		 * Editor world save button click event.
+		 */
+		$("#editor-world-save").click(function()
+		{
+			if (player.controls.mode_editor)
+			{
+				
+				// Save the selected world as a JSON file
+				selected_world.editorWorldSave(player);
 				
 			}
 		});

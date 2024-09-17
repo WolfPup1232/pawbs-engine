@@ -70,6 +70,7 @@ class Player
 		
 		// The player is actually just this camera
 		this.camera = new THREE.PerspectiveCamera(75, window_interface.innerWidth / window_interface.innerHeight, 0.1, 1000);
+		this.camera.name = "player";
 		
 		// Set the player's height
 		this.camera.position.y = this.height;
@@ -241,6 +242,9 @@ class Player
 		
 		
 		// Player Movement Cont'd
+		
+		// Track the player's last known position in the world
+		world.player_position = this.position;
 		
 		// Reduce player's velocity (smooths player's movement)
 		this.velocity.multiplyScalar(0.95);
