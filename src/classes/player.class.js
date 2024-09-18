@@ -1,8 +1,8 @@
 // three.js Import
-import * as THREE from 'https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/libraries/threejs/three.js';
+import * as THREE from '../libraries/threejs/three.js';
 
 // Class Imports
-import Controls from 'https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/controls.class.js';
+import Controls from './controls.class.js';
 
 /**
  * A player in the game world.

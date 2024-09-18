@@ -1,6 +1,6 @@
 // three.js Import
-import { PointerLockControls } from 'https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/libraries/threejs/modules/PointerLockControls.js';
-import { TransformControls } from 'https://cdn.jsdelivr.net/gh/WolfPup1232/paws-engine/src/libraries/threejs/modules/TransformControls.js';
+import { PointerLockControls } from '../libraries/threejs/modules/PointerLockControls.js';
+import { TransformControls } from '../libraries/threejs/modules/TransformControls.js';
 
 /**
  * A controls object which provides mouse/keyboard controls to a player.
