@@ -39,8 +39,6 @@ Build the game engine with Tauri to run it:
 npm run tauri dev
 ```
 
-Alternatively, open the `/src/index.html` folder in your web browser with Cross-Origin Request blocking disabled.
-
 ## (Optional) Run In Firefox
 
 Running the game engine in Firefox is really only helpful for rapid testing in a familliar environment.
