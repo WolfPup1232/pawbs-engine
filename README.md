@@ -1,4 +1,4 @@
-# 🏳️‍⚧️ Pawbs Engine
+# 🏳️‍⚧️ Pawbs Engine 🐾
 
 This is a basic first-person shooter game engine built using **three.js**, a convenient JavaScript library which provides a simple interface through which to make use of the WebGL API.
 
@@ -39,7 +39,11 @@ Build the game engine with Tauri to run it:
 npm run tauri dev
 ```
 
+Alternatively, open the `/src/index.html` folder in your web browser with Cross-Origin Request blocking disabled.
+
 ## (Optional) Run In Firefox
+
+Running the game engine in Firefox is really only helpful for rapid testing in a familliar environment.
 
 Tauri automatically rebuilds the application each time a modification to a source file is saved, and the changes are quickly reflected in the Tauri application window when running it with the command above.
 
