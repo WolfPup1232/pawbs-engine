@@ -1,4 +1,5 @@
 # 🏳️‍⚧️ Pawbs Engine 🐾
+[![Static Badge](https://img.shields.io/badge/License-MIT-green)](https://github.com/WolfPup1232/pawbs-engine?tab=MIT-1-ov-file#readme) [![Firefox version](https://img.shields.io/badge/Firefox-130.0-blue.svg?logo=firefoxbrowser)](https://www.mozilla.org/en-US/firefox/new/)
 
 This is a basic first-person shooter game engine built using **three.js**, a convenient JavaScript library which provides a simple interface through which to make use of the WebGL API.
 
