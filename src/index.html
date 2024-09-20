@@ -3,20 +3,17 @@
 <head>
 	
 	<!-- HTML Metadata -->
-	
     <meta charset="UTF-8">
     <title>Game</title>
 	
 	
 	<!-- Third-Party Imports - Bootstrap & jQuery -->
-	
 	<link href="./libraries/bootstrap/bootstrap.min.css" rel="stylesheet">
 	<link href="./libraries/bootstrap/bootstrap-icons.min.css" rel="stylesheet">
 	<script src="./libraries/bootstrap/bootstrap.bundle.min.js"></script>
 	<script src="./libraries/jquery/jquery-3.7.1.min.js"></script>
 	
 	<!-- Game CSS -->
-	
 	<link rel="stylesheet" href="./style.css">
 	
 </head>
@@ -25,7 +22,6 @@
 	<!-- Special UIs -->
 	
 	<!-- Debug UI -->
-	
 	<div id="debug" class="mx-3" style="display: none;">
 		<div class="row">
 			<div class="debug-window col">
@@ -41,18 +37,27 @@
 	
 	
 	<!-- Editor UI -->
-	
 	<div id="editor" class="mx-3" style="display: none;">
+		
+		<!-- Editor Title Window / Spawn Objects -->
 		<div id="editor-title" class="row">
 			<div class="editor-window col-12 col-lg-7 col-xl-5">
 				<div class="card p-2 mt-3 shadow-sm">
 					<div class="input-group">
 						<div class="card-title fw-bold input-group-text w-100 m-0">
+							
+							<!-- Editor Title -->
 							Edit World
+							
 							<div class="vr ms-3"></div>
+							
+							<!-- World Name -->
 							<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
 							data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							
 							<div class="vr me-3"></div>
+							
+							<!-- New/Load/Save World -->
 							<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
 							data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-file-earmark"></i>
@@ -65,8 +70,15 @@
 							data-bs-title="Export world to JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-floppy"></i>
 							</button>
+							
 							<div class="vr mx-3"></div>
-							<button id="editor-world-geometry-plane" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
+							
+							<!-- Spawn Objects -->
+							<button id="editor-world-geometry-billboard" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
+							data-bs-title="Spawn a new billboard object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-image"></i>
+							</button>
+							<button id="editor-world-geometry-plane" type="button" class="btn btn-sm btn-outline-secondary mx-1"
 							data-bs-title="Spawn a new plane object." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-square"></i>
 							</button>
@@ -82,87 +94,186 @@
 							data-bs-title="Spawn a new sphere object." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-globe"></i>
 							</button>
+							
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div id="editor-selected-object" class="row" style="display: none;">
+		
+		<!-- Selected Objects Window -->
+		<div id="editor-selected-objects" class="row" style="display: none;">
 			<div class="editor-window col-6 col-md-5 col-lg-4 col-xl-2">
 				<div class="card pt-2 ps-2 pe-2 pb-3 mt-3 shadow-sm">
+					
+					<!-- Selected Objects Title -->
 					<div class="card-title small-important fw-bold input-group-text w-100">
-						Selected Object
+						Selected Objects
 					</div>
-					<div id="editor-selected-object-position" class="mb-1">
-						<label class="form-label small">Position</label>
+					
+					<!-- Position Selected Objects -->
+					<div id="editor-selected-objects-position" class="mb-2">
+					
+						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-between">
+							<div class="text-start">
+								<input id="editor-selected-objects-position-radio" name="editor-selected-objects-transforms" class="btn-check" value="position" type="radio" checked>
+								<label for="editor-selected-objects-position-radio" class="btn btn-outline-secondary px-1 py-0"
+								data-bs-title="Move objects with the in-game arrows." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<i class="bi bi-arrows-move"></i>
+								</label>
+								<label class="small align-middle">Position</label>
+							</div>
+							
+							<!-- Position Snap-To-Grid -->
+							<div class="text-end">
+								<input id="editor-selected-objects-position-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
+								<label for="editor-selected-objects-position-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
+								data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<i class="bi bi-grid-3x3"></i>
+								</label>
+								<input id="editor-selected-objects-position-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
+								data-bs-title="Position snap-to-grid distance." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							</div>
+						</div>
+						
+						<!-- Position Inputs -->
 						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">X: </label>
-								<input id="editor-selected-object-position-x" class="form-control form-control-sm" placeholder="X" type="text"
+								<input id="editor-selected-objects-position-x" class="form-control form-control-sm" placeholder="X" type="text"
 								data-bs-title="The object's position on the X-axis." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Y: </label>
-								<input id="editor-selected-object-position-y" class="form-control form-control-sm" placeholder="Y" type="text"
+								<input id="editor-selected-objects-position-y" class="form-control form-control-sm" placeholder="Y" type="text"
 								data-bs-title="The object's position on the Y-axis." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Z: </label>
-								<input id="editor-selected-object-position-z" class="form-control form-control-sm" placeholder="Z" type="text"
+								<input id="editor-selected-objects-position-z" class="form-control form-control-sm" placeholder="Z" type="text"
 								data-bs-title="The object's position on the Z-axis." data-bs-toggle="tooltip">
 							</div>
 						</div>
+						
 					</div>
-					<div id="editor-selected-object-scale" class="mb-1">
-						<label class="form-label small mt-2 mb-0">Scale</label>
+					
+					<!-- Scale Selected Objects -->
+					<div id="editor-selected-objects-scale" class="my-2">
+						
+						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-between">
+							<div class="text-start">
+								<input id="editor-selected-objects-scale-radio" name="editor-selected-objects-transforms" class="btn-check" value="scale" type="radio">
+								<label for="editor-selected-objects-scale-radio" class="btn btn-outline-secondary px-1 py-0"
+								data-bs-title="Scale objects with the in-game arrows." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<i class="bi bi-arrows-angle-expand"></i>
+								</label>
+								<label class="small align-middle">Scale</label>
+							</div>
+							
+							<!-- Scale Snap-To-Grid -->
+							<div class="text-end">
+								<input id="editor-selected-objects-scale-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
+								<label for="editor-selected-objects-scale-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
+								data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<i class="bi bi-grid-3x3"></i>
+								</label>
+								<input id="editor-selected-objects-scale-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
+								data-bs-title="Scale snap-to-grid amount." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							</div>
+						</div>
+						
+						<!-- Scale Inputs -->
 						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">X: </label>
-								<input id="editor-selected-object-scale-x" class="form-control form-control-sm" placeholder="X" type="text"
+								<input id="editor-selected-objects-scale-x" class="form-control form-control-sm" placeholder="X" type="text"
 								data-bs-title="The object's size on the X-axis as a percentage." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Y: </label>
-								<input id="editor-selected-object-scale-y" class="form-control form-control-sm" placeholder="Y" type="text"
+								<input id="editor-selected-objects-scale-y" class="form-control form-control-sm" placeholder="Y" type="text"
 								data-bs-title="The object's size on the Y-axis as a percentage." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Z: </label>
-								<input id="editor-selected-object-scale-z" class="form-control form-control-sm" placeholder="Z" type="text"
+								<input id="editor-selected-objects-scale-z" class="form-control form-control-sm" placeholder="Z" type="text"
 								data-bs-title="The object's size on the Z-axis as a percentage." data-bs-toggle="tooltip">
 							</div>
 						</div>
+						
 					</div>
-					<div id="editor-selected-object-rotation" class="mb-1">
-						<label class="form-label small mt-2 mb-0">Rotation</label>
+					
+					<!-- Rotate Selected Objects -->
+					<div id="editor-selected-objects-rotation" class="my-2">
+						
+						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-between">
+							<div class="text-start">
+								<input id="editor-selected-objects-rotation-radio" name="editor-selected-objects-transforms" class="btn-check" value="rotation" type="radio">
+								<label for="editor-selected-objects-rotation-radio" class="btn btn-outline-secondary px-1 py-0"
+								data-bs-title="Rotate objects with the in-game arrows." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<i class="bi bi-arrow-clockwise"></i>
+								</label>
+								<label class="small align-middle">Rotation</label>
+							</div>
+							
+							<!-- Rotation Snap-To-Grid -->
+							<div class="text-end">
+								<input id="editor-selected-objects-rotation-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
+								<label for="editor-selected-objects-rotation-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
+								data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<i class="bi bi-grid-3x3"></i>
+								</label>
+								<input id="editor-selected-objects-rotation-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
+								data-bs-title="Rotation snap-to-grid amount." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							</div>
+						</div>
+						
+						<!-- Rotation Inputs -->
 						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">X: </label>
-								<input id="editor-selected-object-rotation-x" class="form-control form-control-sm" placeholder="X" type="text"
+								<input id="editor-selected-objects-rotation-x" class="form-control form-control-sm" placeholder="X" type="text"
 								data-bs-title="The object's X-axis rotation in degrees." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Y: </label>
-								<input id="editor-selected-object-rotation-y" class="form-control form-control-sm" placeholder="Y" type="text"
+								<input id="editor-selected-objects-rotation-y" class="form-control form-control-sm" placeholder="Y" type="text"
 								data-bs-title="The object's Y-axis rotation in degrees." data-bs-toggle="tooltip">
 							</div>
 							<div class="flex-fill mx-1">
 								<label class="mt-1 small">Z: </label>
-								<input id="editor-selected-object-rotation-z" class="form-control form-control-sm" placeholder="Z" type="text"
+								<input id="editor-selected-objects-rotation-z" class="form-control form-control-sm" placeholder="Z" type="text"
 								data-bs-title="The object's Z-axis rotation in degrees." data-bs-toggle="tooltip">
 							</div>
 						</div>
+						
 					</div>
+					
+					<!-- Materials Title -->
+					<div class="card-title small-important fw-bold input-group-text w-100 mt-2">
+						Materials
+					</div>
+					
+					<!-- Material Colour Picker -->
+					<div id="editor-selected-objects-materials" class="mb-2">
+						<div id="editor-selected-objects-materials-colour-picker">
+							<div class="editor-selected-objects-materials-colour-grid mt-1 mb-2"></div>
+							<div class="editor-selected-objects-materials-colour-info">
+								<input id="editor-selected-objects-materials-selected-colour" class="form-control form-control-color" value="#CCCCCC" type="color">
+							</div>
+						</div>
+					</div>
+					
 				</div>
 			</div>
 		</div>
+		
 	</div>
 	
 	
 	<!-- Menu UIs -->
 	
 	<!-- Main Menu -->
-	
 	<div id="menu" class="modal modal-sheet bg-body-secondary p-4 py-md-5">
 		<div class="modal-dialog">
 			<div class="modal-content rounded-4 shadow">
@@ -171,10 +282,10 @@
 						<h2 class="fw-bold mb-3">Main Menu</h2>
 					</div>
 					<div class="d-flex mb-3 justify-content-center">
-						<button id="startGame" type="button" class="btn btn-lg btn-primary w-100">Start</button>
+						<button id="start-game" type="button" class="btn btn-lg btn-secondary w-100">Start</button>
 					</div>
 					<div class="d-flex justify-content-center">
-						<button id="exitGame" type="button" class="btn btn-lg btn-primary w-100">Exit</button>
+						<button id="exit-game" type="button" class="btn btn-lg btn-secondary w-100">Exit</button>
 					</div>
 				</div>
 			</div>
@@ -185,17 +296,14 @@
 	<!-- Game UI Elements -->
 	
 	<!-- Player Crosshair -->
-	
 	<div class="crosshair"></div>
 	
 	
 	<!-- three.js Renderer -->
-	
 	<div id="renderer"></div>
 	
 	
 	<!-- Game JS -->
-	
     <script type="module">
 		
 		// Game Imports
@@ -211,6 +319,7 @@
 		import Editor from './classes/editor.class.js';
 		import Debug from './classes/debug.class.js';
 		import Utilities from './classes/utilities.class.js';
+		import Billboard from './classes/billboard.class.js';
 		
 		
 		// Game Declarations
@@ -265,7 +374,7 @@
 					world.load(worlds.TestWorld)
 					
 					// Initialize player
-					player = new Player(window, document, renderer, world, editor);
+					player = new Player(window, document, renderer, world, editor, debug);
 					
 					// Start game loop
 					animate();
@@ -343,11 +452,13 @@
 			// Initialize bootstrap tooltips
 			const tooltipList = $('[data-bs-toggle="tooltip"]').each(function() { new bootstrap.Tooltip($(this)); });
 			
-			// ---------------- TODO: REMOVE EVERYTHING BELOW THIS LINE  ----------------
+			// ---------------- TODO: REMOVE EVERYTHING BETWEEN THESE LINES  ----------------
 			
             $('#menu').hide();
             init();
+			setTimeout(function() { editor.toggle(world, player); }, 500)
 			
+			// ---------------- TODO: REMOVE EVERYTHING BETWEEN THESE LINES  ----------------
 			
 		}
 		
@@ -371,7 +482,7 @@
 		// Editor Title Window
 		
 		/**
-		 * Editor world name text changed event.
+		 * Editor world name text change event.
 		 */
 		$("#editor-world-name").change(function()
 		{
@@ -383,6 +494,8 @@
 				
 			}
 		});
+		
+		// Editor New/Load/Save World
 		
 		/**
 		 * Editor world new button click event.
@@ -426,131 +539,384 @@
 			}
 		});
 		
+		// Editor Spawn Objects
+		
+		/**
+		 * Editor world spawn billboard button click event.
+		 */
+		$("#editor-world-geometry-billboard").click(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Spawn a new billboard
+				editor.spawn(Billboard, world, player, textures)
+				
+			}
+		});
+		
+		/**
+		 * Editor world spawn plane button click event.
+		 */
+		$("#editor-world-geometry-plane").click(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Spawn a new plane
+				editor.spawn(THREE.PlaneGeometry, world, player)
+				
+			}
+		});
+		
+		/**
+		 * Editor world spawn box button click event.
+		 */
+		$("#editor-world-geometry-box").click(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Spawn a new box
+				editor.spawn(THREE.BoxGeometry, world, player)
+				
+			}
+		});
+		
+		/**
+		 * Editor world spawn cylinder button click event.
+		 */
+		$("#editor-world-geometry-cylinder").click(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Spawn a new cylinder
+				editor.spawn(THREE.CylinderGeometry, world, player)
+				
+			}
+		});
+		
+		/**
+		 * Editor world spawn sphere button click event.
+		 */
+		$("#editor-world-geometry-sphere").click(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Spawn a new sphere
+				editor.spawn(THREE.SphereGeometry, world, player)
+				
+			}
+		});
+		
 		
 		// Editor Selected Object Window
 		
 		/**
-		 * Editor selected object X-axis position
+		 * Editor selected object transform type selected radio button change event.
 		 */
-		 $("#editor-selected-object-position-x").change(function()
+		$('input[type="radio"][name="editor-selected-objects-transforms"]').change(function()
+		{
+			
+			// Get editor selected object transform type selected radio button value
+			let selectedValue = $(this).val();
+
+			// Change player transform controls mode based on selected radio button value
+			if (selectedValue === 'position')
+			{
+				
+				// Translate mode
+				player.controls.transform_controls.setMode('translate');
+				
+			}
+			else if (selectedValue === 'scale')
+			{
+				
+				// Scale mode
+				player.controls.transform_controls.setMode('scale');
+				
+			}
+			else if (selectedValue === 'rotation')
+			{
+				
+				// Rotate mode
+				player.controls.transform_controls.setMode('rotate');
+				
+			}
+			
+		});
+		
+		// Editor Selected Object Position
+		
+		/**
+		 * Editor selected object position grid snap change event.
+		 */
+		 $("#editor-selected-objects-position-snap").change(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Check if position grid snap is enabled
+				if ($("#editor-selected-objects-position-snap-checkbox").prop("checked"))
+				{
+					
+					// Set position grid snap
+					player.controls.transform_controls.translationSnap = $("#editor-selected-objects-position-snap").val();
+					
+				}
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object position grid snap checkbox change event.
+		 */
+		 $("#editor-selected-objects-position-snap-checkbox").change(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Check if position grid snap is enabled
+				if ($(this).prop("checked"))
+				{
+					
+					// Set position grid snap
+					player.controls.transform_controls.translationSnap = $("#editor-selected-objects-position-snap").val();
+					
+				}
+				else
+				{
+					
+					// Disable position grid snap
+					player.controls.transform_controls.translationSnap = null;
+					
+				}
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object position X-axis change event.
+		 */
+		 $("#editor-selected-objects-position-x").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis position 
-				editor.selected_object.position.x = $("#editor-selected-object-position-x").val();
+				editor.selected_object.position.x = $("#editor-selected-objects-position-x").val();
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object Y-axis position
+		 * Editor selected object position Y-axis change event.
 		 */
-		 $("#editor-selected-object-position-y").change(function()
+		 $("#editor-selected-objects-position-y").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis position 
-				editor.selected_object.position.y = $("#editor-selected-object-position-y").val();
+				editor.selected_object.position.y = $("#editor-selected-objects-position-y").val();
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object Z-axis position
+		 * Editor selected object position Z-axis change event.
 		 */
-		 $("#editor-selected-object-position-z").change(function()
+		 $("#editor-selected-objects-position-z").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis position 
-				editor.selected_object.position.z = $("#editor-selected-object-position-z").val();
+				editor.selected_object.position.z = $("#editor-selected-objects-position-z").val();
+				
+			}
+		});
+		
+		// Editor Selected Object Scale
+		
+		/**
+		 * Editor selected object scale grid snap change event.
+		 */
+		 $("#editor-selected-objects-scale-snap").change(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Check if scale grid snap is enabled
+				if ($("#editor-selected-objects-scale-snap-checkbox").prop("checked"))
+				{
+					
+					// Set scale grid snap
+					player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-scale-snap").val();
+					
+				}
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object X-axis scale
+		 * Editor selected object scale grid snap checkbox change event.
 		 */
-		 $("#editor-selected-object-scale-x").change(function()
+		 $("#editor-selected-objects-scale-snap-checkbox").change(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Check if scale grid snap is enabled
+				if ($(this).prop("checked"))
+				{
+					
+					// Set scale grid snap
+					player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-scale-snap").val();
+					
+				}
+				else
+				{
+					
+					// Disable scale grid snap
+					player.controls.transform_controls.scaleSnap = null;
+					
+				}
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object scale X-axis change event.
+		 */
+		 $("#editor-selected-objects-scale-x").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis scale 
-				editor.selected_object.scale.x = $("#editor-selected-object-scale-x").val() / 100;
+				editor.selected_object.scale.x = $("#editor-selected-objects-scale-x").val() / 100;
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object Y-axis scale
+		 * Editor selected object scale Y-axis change event.
 		 */
-		 $("#editor-selected-object-scale-y").change(function()
+		 $("#editor-selected-objects-scale-y").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis scale 
-				editor.selected_object.scale.y = $("#editor-selected-object-scale-y").val() / 100;
+				editor.selected_object.scale.y = $("#editor-selected-objects-scale-y").val() / 100;
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object Z-axis scale
+		 * Editor selected object scale Z-axis change event.
 		 */
-		 $("#editor-selected-object-scale-z").change(function()
+		 $("#editor-selected-objects-scale-z").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis scale 
-				editor.selected_object.scale.z = $("#editor-selected-object-scale-z").val() / 100;
+				editor.selected_object.scale.z = $("#editor-selected-objects-scale-z").val() / 100;
+				
+			}
+		});
+		
+		// Editor Selected Object Rotation
+		
+		/**
+		 * Editor selected object rotation grid snap change event.
+		 */
+		 $("#editor-selected-objects-rotation-snap").change(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Check if rotation grid snap is enabled
+				if ($("#editor-selected-objects-rotation-snap-checkbox").prop("checked"))
+				{
+					
+					// Set rotation grid snap
+					player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-rotation-snap").val();
+					
+				}
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object X-axis rotation
+		 * Editor selected object rotation grid snap checkbox change event.
 		 */
-		 $("#editor-selected-object-rotation-x").change(function()
+		 $("#editor-selected-objects-rotation-snap-checkbox").change(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Check if rotation grid snap is enabled
+				if ($(this).prop("checked"))
+				{
+					
+					// Set rotation grid snap
+					player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-rotation-snap").val();
+					
+				}
+				else
+				{
+					
+					// Disable rotation grid snap
+					player.controls.transform_controls.rotationSnap = null;
+					
+				}
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object rotation X-axis change event.
+		 */
+		 $("#editor-selected-objects-rotation-x").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.x = $("#editor-selected-object-rotation-x").val() * (Math.PI / 180);
+				editor.selected_object.rotation.x = $("#editor-selected-objects-rotation-x").val() * (Math.PI / 180);
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object Y-axis rotation
+		 * Editor selected object rotation Y-axis change event.
 		 */
-		 $("#editor-selected-object-rotation-y").change(function()
+		 $("#editor-selected-objects-rotation-y").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.y = $("#editor-selected-object-rotation-y").val()  * (Math.PI / 180);
+				editor.selected_object.rotation.y = $("#editor-selected-objects-rotation-y").val()  * (Math.PI / 180);
 				
 			}
 		});
 		
 		/**
-		 * Editor selected object Z-axis rotation
+		 * Editor selected object rotation Z-axis change event.
 		 */
-		 $("#editor-selected-object-rotation-z").change(function()
+		 $("#editor-selected-objects-rotation-z").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.z = $("#editor-selected-object-rotation-z").val()  * (Math.PI / 180);
+				editor.selected_object.rotation.z = $("#editor-selected-objects-rotation-z").val()  * (Math.PI / 180);
 				
 			}
 		});
@@ -561,7 +927,7 @@
 		/**
 		 * Start button click event.
 		 */
-        $("#startGame").click(function()
+        $("#start-game").click(function()
 		{
 			
 			// Hide main menu UI
@@ -575,7 +941,7 @@
 		/**
 		 * Exit button click event.
 		 */
-		 $("#exitGame").click(function()
+		 $("#exit-game").click(function()
 		{
 			
 			// Close browser

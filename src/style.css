@@ -64,9 +64,53 @@ button {
 }
 
 
+/* Editor UI Elements */
+
+/* Colour Picker */
+#editor-selected-objects-materials-colour-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.editor-selected-objects-materials-colour-grid {
+    display: grid;
+    grid-template-columns: repeat(14, 16px);
+    grid-gap: 5px;
+}
+
+.editor-selected-objects-materials-colour-cell {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    border: 1px solid #000;
+}
+
+.editor-selected-objects-materials-colour-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#editor-selected-objects-materials-selected-colour {
+    padding: 5px;
+    text-align: center;
+    width: 150px;
+    border: 1px solid #000;
+}
+
+
 /* Utility */
 .small-important {
 	font-size: .875em !important;
+}
+
+.mt-2px {
+	margin-top: 2px;
+}
+
+.w-36px {
+	width: 36px;
 }
 
 

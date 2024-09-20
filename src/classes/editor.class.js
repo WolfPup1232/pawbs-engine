@@ -29,7 +29,7 @@ class Editor
 		this.highlighted_object = null;
 		
 		// The colour of highlighted objects
-		this.highlighted_object_colour = 0xffff00;
+		this.highlighted_object_colour = 0xffffff;
 		
 		// The original colour/materials of the highlighted object
 		this.highlighted_object_original_materials = new WeakMap();
@@ -41,10 +41,16 @@ class Editor
 		this.selected_object = null;
 		
 		// The colour of selected objects
-		this.selected_object_colour = 0xffff00;
+		this.selected_object_colour = 0xffffff;
 		
 		// The original colour/materials of the selected object
 		this.selected_object_original_materials = new WeakMap();
+		
+		
+		// Spawned objects
+		
+		// The colour of spawned objects
+		this.spawned_object_colour = 0xd3d3d3;
 		
 	}
 	
@@ -62,9 +68,15 @@ class Editor
 		// Check if editor is enabled
 		if (this.enabled)
 		{
+		
+			// If the mouse is locked to the renderer...
+			if (player.controls.is_mouse_locked)
+			{
 			
-			// Handle transform controls mouse down event
-			player.controls.transform_controls.mouseDown(player);
+				// Handle transform controls mouse down event
+				player.controls.transform_controls.mouseDown(player);
+			
+			}
 			
 		}
 		
@@ -109,6 +121,9 @@ class Editor
 				
 			}
 			
+			// The mouse is no longer dragging
+			player.controls.is_mouse_dragging = false;
+			
 		}
 		
 	}
@@ -132,10 +147,11 @@ class Editor
 	/**
 	 * Handles player right mouse up.
 	 *
+	 * @param {document} dom_document A reference to the DOM document within the web browser window.
 	 * @param {world} world The current game world.
 	 * @param {player} player The player to handle mouse input for.
 	 */
-	handleRightMouseUp(world, player)
+	handleRightMouseUp(dom_document, world, player)
 	{
 		
 		// Check if editor is enabled
@@ -146,8 +162,15 @@ class Editor
 			if (player.controls.is_mouse_locked)
 			{
 				
-				// Reset the selected object
-				this.resetSelectedObject(player);
+				// Unlock the mouse from the renderer
+				player.controls.pointer_lock_controls.unlock();
+				player.controls.is_mouse_dragging = false;
+				
+				// Disable right-click menu
+				$(dom_document).one('contextmenu', function(event)
+				{
+					event.preventDefault();
+				});
 				
 			}
 			
@@ -179,7 +202,7 @@ class Editor
 				player.controls.transform_controls.mouseMove(player);
 				
 				// Update selected object UI elements
-				this.updateSelectedObjectUI();
+				this.updateSelectedObjectUI(player);
 				
 			}
 			else
@@ -236,6 +259,9 @@ class Editor
 			// Initialize UI elements
 			$("#editor-world-name").val(world.name);
 			
+			// Initialize selected object material colours UI
+			this.updateSelectedObjectMaterialColoursUI();
+			
 			// Show editor UI
 			$("#editor").show();
 			
@@ -268,9 +294,9 @@ class Editor
 			world.name = "";
 			
 			// Initialize default terrain
-			const planeGeometry = new THREE.PlaneGeometry(100, 100);
-			const planeMaterial = new THREE.MeshBasicMaterial({ color: 0x302400 });
-			const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+			const plane_geometry = new THREE.plane_geometry(100, 100);
+			const plane_material = new THREE.MeshBasicMaterial({ color: 0x302400 });
+			const plane = new THREE.Mesh(plane_geometry, plane_material);
 			plane.rotation.x = -Math.PI / 2;
 			plane.position.y = 0;
 			plane.position.z = 0;
@@ -414,6 +440,148 @@ class Editor
 		
 	}
 	
+	/**
+	 * Spawns a new object into the world at the location the player is facing.
+	 *
+	 * @param {Geometry} three.mesh The class of geometry to be spawned.
+	 * @param {world} world The current game world.
+	 * @param {player} player The player editing the game world.
+	 * @param {textures} textures The textures loaded by the game.
+	 */
+	spawn(Geometry, world, player, textures = null)
+	{
+		
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+			
+			// Cast a ray from the player's position in the direction the player is looking
+			player.raycaster.ray.origin.copy(player.position);
+			player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+			player.raycaster.near = 0;
+			player.raycaster.far = Infinity;
+			
+			// Check intersections with world objects
+			const intersects = player.raycaster.intersectObjects(world.all_objects);
+			if (intersects.length > 0)
+			{
+			
+				// Get the first object object that the player is looking at
+				let intersect_object = intersects[0].object;
+				let intended_position = intersects[0].point;
+				
+				// Initialize object to be spawned
+				let spawn_object = new Geometry();
+				let spawn_object_material = new THREE.MeshBasicMaterial({ color: this.spawned_object_colour });
+				
+				// Re-initialize object to be spawned by specified type
+				if (spawn_object instanceof Billboard)
+				{
+					
+					// Spawn Billboard
+					spawn_object = new Billboard(1, 1, textures.campfire);
+					
+				}
+				else if (spawn_object instanceof THREE.PlaneGeometry)
+				{
+					
+					// Spawn Plane
+					spawn_object = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), spawn_object_material);
+					
+				}
+				else if (spawn_object instanceof THREE.BoxGeometry)
+				{
+					
+					// Spawn Box
+					spawn_object = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), spawn_object_material);
+					
+				}
+				if (spawn_object instanceof THREE.CylinderGeometry)
+				{
+					
+					// Spawn Cylinder
+					spawn_object = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1), spawn_object_material);
+					
+				}
+				if (spawn_object instanceof THREE.SphereGeometry)
+				{
+					
+					// Spawn Sphere
+					spawn_object = new THREE.Mesh(new THREE.SphereGeometry(0.5), spawn_object_material);
+					
+				}
+				
+				// Get the spawn object's bounding box
+				let spawn_object_box = new THREE.Box3();
+				let spawn_object_size = new THREE.Vector3();
+				
+				spawn_object.geometry.computeBoundingBox();
+				spawn_object.geometry.boundingBox.getSize(spawn_object_size);
+				
+				spawn_object_box.setFromCenterAndSize(intended_position, spawn_object_size);
+					
+				// Get the intersect object's bounding box
+				let intersect_object_box = new THREE.Box3().setFromObject(intersect_object);
+					
+				intersect_object.updateMatrixWorld();
+				intersect_object_box.applyMatrix4(intersect_object.matrixWorld);
+				
+				// Check for intersection between the object being spawned and the intersect object
+				if (spawn_object_box.intersectsBox(intersect_object_box))
+				{
+					
+					// Check for horizontal collision between the object being spawned and the intersect object
+					if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.max.y)
+					{
+						
+						// Adjust horizontal axis to avoid collision
+						let overlap_x = Math.min(spawn_object_box.max.x - intersect_object_box.min.x, intersect_object_box.max.x - spawn_object_box.min.x);
+						let overlap_z = Math.min(spawn_object_box.max.z - intersect_object_box.min.z, intersect_object_box.max.z - spawn_object_box.min.z);
+						
+						// Adjust spawned object's horizontal intended position
+						if (overlap_x < overlap_z)
+						{
+							intended_position.x -= (spawn_object_box.min.x < intersect_object_box.min.x) ? overlap_x : -overlap_x;
+						}
+						else
+						{
+							intended_position.z -= (spawn_object_box.min.z < intersect_object_box.min.z) ? overlap_z : -overlap_z;
+						}
+						
+					}
+					
+					// Check for vertical collision between the object being spawned and the intersect object's upper surface
+					if (spawn_object_box.min.y < intersect_object_box.max.y && spawn_object_box.max.y > intersect_object_box.max.y)
+					{
+						
+						// Adjust spawned object's vertical intended position
+						intended_position.y += (intersect_object_box.max.y - spawn_object_box.min.y);
+						
+					}
+					
+					// Check for vertical collision between the object being spawned and the intersect object's lower surface
+					if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.min.y)
+					{
+						
+						// Adjust spawned object's vertical intended position
+						intended_position.y -= (spawn_object_box.max.y - intersect_object_box.min.y);
+						
+					}
+				}
+				
+				// Set the position of the object being spawned
+				spawn_object.position.x = intended_position.x;
+				spawn_object.position.y = intended_position.y + ((spawn_object_box.max.y - spawn_object_box.min.y) / 2);
+				spawn_object.position.z = intended_position.z;
+				
+				// Spawn the object
+				world.addObject(spawn_object);
+				
+			}
+			
+		}
+		
+	}
 	
 	/**
 	 * Updates highlighting whichever object the player is looking at.
@@ -463,7 +631,7 @@ class Editor
 							this.highlighted_object_original_materials.set(new_highlighted_object, new_highlighted_object.material);
 						}
 						
-						new_highlighted_object.material = new THREE.MeshBasicMaterial({ color: this.highlighted_object_colour });
+						new_highlighted_object.material = new THREE.MeshBasicMaterial({ color: new_highlighted_object.material.color.getHex(), transparent: true, opacity: 0.5 });
 					}
 					
 					// Get the new highlighted object
@@ -579,7 +747,7 @@ class Editor
 							this.selected_object_original_materials.set(new_selected_object, new_selected_object.material);
 						}
 						
-						new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, transparent: true,  opacity: 0.75 });
+						new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
 					}
 					
 					// Get the new selected object
@@ -589,10 +757,10 @@ class Editor
 					player.controls.transform_controls.attach(this.selected_object);
 					
 					// Initialize selected object UI elements
-					this.updateSelectedObjectUI();
+					this.updateSelectedObjectUI(player);
 					
 					// Show selected object UI
-					$("#editor-selected-object").show();
+					$("#editor-selected-objects").show();
 					
 					
 				} // Otherwise, if the new selected object is the same as the current selected object...
@@ -649,14 +817,16 @@ class Editor
 		}
 		
 		// Hide selected object UI
-		$("#editor-selected-object").hide();
+		$("#editor-selected-objects").hide();
 		
 	}
 	
 	/**
 	 * Updates the selected object UI elements.
+	 *
+	 * @param {player} player The player editing the game world.
 	 */
-	updateSelectedObjectUI()
+	updateSelectedObjectUI(player)
 	{
 		
 		// Check if editor is enabled
@@ -667,39 +837,102 @@ class Editor
 			if (this.selected_object)
 			{
 				
+				// Update grid snaps
+				if ($("#editor-selected-objects-position-snap-checkbox").is(':checked'))
+				{
+					$("#editor-selected-objects-position-snap").val(player.controls.transform_controls.translationSnap);
+				}
+				if ($("#editor-selected-objects-scale-snap-checkbox").is(':checked'))
+				{
+					$("#editor-selected-objects-scale-snap").val(player.controls.transform_controls.scaleSnap);
+				}
+				if ($("#editor-selected-objects-rotation-snap-checkbox").is(':checked'))
+				{
+					$("#editor-selected-objects-rotation-snap").val(player.controls.transform_controls.rotationSnap);
+				}
+				
 				// Update position
-				$("#editor-selected-object-position-x").val(this.selected_object.position.x);
-				$("#editor-selected-object-position-y").val(this.selected_object.position.y);
-				$("#editor-selected-object-position-z").val(this.selected_object.position.z);
+				$("#editor-selected-objects-position-x").val(this.selected_object.position.x);
+				$("#editor-selected-objects-position-y").val(this.selected_object.position.y);
+				$("#editor-selected-objects-position-z").val(this.selected_object.position.z);
 				
 				// Update scale
-				$("#editor-selected-object-scale-x").val((this.selected_object.scale.x / 1) * 100);
-				$("#editor-selected-object-scale-y").val((this.selected_object.scale.y / 1) * 100);
-				$("#editor-selected-object-scale-z").val((this.selected_object.scale.z / 1) * 100);
+				$("#editor-selected-objects-scale-x").val((this.selected_object.scale.x / 1) * 100);
+				$("#editor-selected-objects-scale-y").val((this.selected_object.scale.y / 1) * 100);
+				$("#editor-selected-objects-scale-z").val((this.selected_object.scale.z / 1) * 100);
 				
 				// Check if object is billboard
 				if (this.selected_object instanceof Billboard)
 				{
 					
 					// Hide rotation for billboards
-					$("#editor-selected-object-rotation").hide();
+					$("#editor-selected-objects-rotation").hide();
 					
 				}
 				else
 				{
 					
 					// Update rotation
-					$("#editor-selected-object-rotation").show();
+					$("#editor-selected-objects-rotation").show();
 					
-					$("#editor-selected-object-rotation-x").val(this.selected_object.rotation.x * (180 / Math.PI));
-					$("#editor-selected-object-rotation-y").val(this.selected_object.rotation.y * (180 / Math.PI));
-					$("#editor-selected-object-rotation-z").val(this.selected_object.rotation.z * (180 / Math.PI));
+					$("#editor-selected-objects-rotation-x").val(this.selected_object.rotation.x * (180 / Math.PI));
+					$("#editor-selected-objects-rotation-y").val(this.selected_object.rotation.y * (180 / Math.PI));
+					$("#editor-selected-objects-rotation-z").val(this.selected_object.rotation.z * (180 / Math.PI));
 					
 				}
 				
 			}
 			
 		}
+		
+	}
+	
+	/**
+	 * Updates the selected object material colours UI elements.
+	 */
+	updateSelectedObjectMaterialColoursUI()
+	{
+		
+		// Get a reference to this editor to pass into the colour cell click event
+		let self = this;
+		
+		// Initialize list of classic MSPaint colours
+		const ms_paint_colours = [
+			"#000000", "#800000", "#008000", "#808000", "#000080", "#800080", "#008080", "#C0C0C0", "#FF0000", "#00FF00", "#FFFF00", "#0000FF", "#FF00FF", "#00FFFF",
+			"#FFFFFF", "#FFC0C0", "#C0FFC0", "#FFFFC0", "#C0C0FF", "#FFC0FF", "#C0FFFF", "#808080", "#804000", "#FF8040", "#808040", "#4080FF", "#FF80FF", "#80FFFF"
+		];
+		
+		// Reset the colour grid
+		$('.editor-selected-objects-materials-colour-grid').empty();
+		
+		// Initialize the colour grid using the MSPaint colours
+		ms_paint_colours.forEach(color => {
+			
+			const cell = $('<div class="editor-selected-objects-materials-colour-cell"></div>');
+			cell.css('background-color', color);
+			
+			$('.editor-selected-objects-materials-colour-grid').append(cell);
+			
+		});
+		
+		// Editor selected object materials colour cell click event
+		$('.editor-selected-objects-materials-colour-cell').click(function()
+		{
+			
+			// Get the background colour of the selected colour cell
+			const selected_colour = $(this).css('background-color');
+			
+			// Set the selected object materials colour
+			$('#editor-selected-objects-materials-colour-input').css('background-color', selected_colour);
+			if (self.selected_object)
+			{
+				self.selected_object.material = self.selected_object_original_materials.get(self.selected_object);
+				self.selected_object.material.color.set(new THREE.Color(selected_colour));
+				self.selected_object_original_materials.set(self.selected_object, self.selected_object.material);
+				self.selected_object.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+			}
+			
+		});
 		
 	}
     

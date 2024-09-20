@@ -16,8 +16,9 @@ class Controls
 	 * @param {world} world The current game world.
 	 * @param {editor} editor The in-game world editor.
 	 * @param {player} player The player being controlled by the mouse/keyboard.
+	 * @param {editor} editor The in-game debugger.
 	 */
-	constructor(dom_document, renderer, world, editor, player)
+	constructor(dom_document, renderer, world, editor, player, debug)
 	{
 		
 		// Class Declarations/Initialization
@@ -44,7 +45,10 @@ class Controls
 		
 		// three.js transform controls
 		this.transform_controls = new TransformControls(player.camera, renderer.domElement);
-		this.transform_controls.setMode('translate'); // 'translate', 'rotate', 'scale'
+		this.transform_controls.setMode('translate');
+		this.transform_controls.translationSnap = 0.1;
+		this.transform_controls.scaleSnap = 0.25;
+		this.transform_controls.rotationSnap = 0.5;
 		world.scene.add(this.transform_controls);
 		
 		
@@ -72,8 +76,8 @@ class Controls
 		// Player Mouse/Keyboard Control Event Listeners
 		
 		// Mouse event listeners
-		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, world, editor, player));
-		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, world, editor, player));
+		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, debug, dom_document, world, editor, player));
+		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, debug, dom_document, world, editor, player));
 		
 		// Keyboard event listeners
 		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, debug, dom_document, world, editor, player));
@@ -99,7 +103,7 @@ class Controls
 		/**
 		 * Mouse button click event.
 		 */
-		this.onMouseDown = function(event, world, editor, player)
+		this.onMouseDown = function(event, debug, dom_document, world, editor, player)
 		{
 			
 			// Handle mouse button click event
@@ -127,7 +131,7 @@ class Controls
 		/**
 		 * Mouse button release event.
 		 */
-		this.onMouseUp = function(event, world, editor, player)
+		this.onMouseUp = function(event, debug, dom_document, world, editor, player)
 		{
 			
 			// Handle mouse button release event
@@ -150,7 +154,7 @@ class Controls
 					player.handleRightMouseUp();
 					
 					// Handle editor right mouse up
-					editor.handleRightMouseUp(world, player);
+					editor.handleRightMouseUp(dom_document, world, player);
 					
 					break;
 			}
@@ -360,7 +364,7 @@ class Controls
 		// Lock the mouse pointer if whitespace was clicked
 		if (is_whitespace_clicked)
 		{
-			player.controls.pointer_lock_controls.lock()
+			player.controls.pointer_lock_controls.lock();
 		}
 		
 	}

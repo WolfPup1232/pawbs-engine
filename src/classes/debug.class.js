@@ -78,11 +78,9 @@ class Debug
 	{
 		
 		// Output debug info to UI
-		$("#debug-text").html("billboard.rotation.x		 = " + world.objects[0].rotation.x + "<br />" + 
-								"billboard.rotation.y   = " + world.objects[0].rotation.y + "<br />" + 
-								"billboard.rotation.z  = " + world.objects[0].rotation.z + "<br />" + 
-								"player.jump_height    = " + player.jump_height + "<br />" + 
-								"player.position.y     = " + player.position.y + "<br />");
+		$("#debug-text").html("player.controls.is_mouse_left_down    = " + player.controls.is_mouse_left_down + "<br />" + 
+							  "player.controls.is_mouse_dragging     = " + player.controls.is_mouse_dragging + "<br />" +
+							  "player.controls.transform_controls.dragging    = " + player.controls.transform_controls.dragging + "<br />");
 		
 	}
 	
