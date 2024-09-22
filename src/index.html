@@ -105,165 +105,195 @@
 		<div id="editor-selected-objects" class="row" style="display: none;">
 			<div class="editor-window col-6 col-md-5 col-lg-4 col-xl-2">
 				<div class="card pt-2 ps-2 pe-2 pb-3 mt-3 shadow-sm">
-					
-					<!-- Selected Objects Title -->
-					<div class="card-title small-important fw-bold input-group-text w-100">
-						Selected Objects
-					</div>
-					
-					<!-- Position Selected Objects -->
-					<div id="editor-selected-objects-position" class="mb-2">
-					
-						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-between">
-							<div class="text-start">
-								<input id="editor-selected-objects-position-radio" name="editor-selected-objects-transforms" class="btn-check" value="position" type="radio" checked>
-								<label for="editor-selected-objects-position-radio" class="btn btn-outline-secondary px-1 py-0"
-								data-bs-title="Move objects with the in-game arrows." data-bs-toggle="tooltip" data-bs-placement="bottom">
-									<i class="bi bi-arrows-move"></i>
-								</label>
-								<label class="small align-middle">Position</label>
+					<div class="accordion">
+						
+						<!-- Transform -->
+						<div class="accordion-item">
+							
+							<!-- Transform Title -->
+							<div class="card-title accordion-title w-100 mt-2 mb-0">
+								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-transform" aria-expanded="true" aria-controls="editor-selected-objects-transform">
+									<span data-bs-title="Move/scale/rotate objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										Transform
+									</span>
+								</button>
 							</div>
 							
-							<!-- Position Snap-To-Grid -->
-							<div class="text-end">
-								<input id="editor-selected-objects-position-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
-								<label for="editor-selected-objects-position-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
-								data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
-									<i class="bi bi-grid-3x3"></i>
-								</label>
-								<input id="editor-selected-objects-position-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
-								data-bs-title="Position snap-to-grid distance." data-bs-toggle="tooltip" data-bs-placement="bottom">
-							</div>
-						</div>
-						
-						<!-- Position Inputs -->
-						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">X: </label>
-								<input id="editor-selected-objects-position-x" class="form-control form-control-sm" placeholder="X" type="text"
-								data-bs-title="The object's position on the X-axis." data-bs-toggle="tooltip">
-							</div>
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">Y: </label>
-								<input id="editor-selected-objects-position-y" class="form-control form-control-sm" placeholder="Y" type="text"
-								data-bs-title="The object's position on the Y-axis." data-bs-toggle="tooltip">
-							</div>
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">Z: </label>
-								<input id="editor-selected-objects-position-z" class="form-control form-control-sm" placeholder="Z" type="text"
-								data-bs-title="The object's position on the Z-axis." data-bs-toggle="tooltip">
-							</div>
-						</div>
-						
-					</div>
-					
-					<!-- Scale Selected Objects -->
-					<div id="editor-selected-objects-scale" class="my-2">
-						
-						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-between">
-							<div class="text-start">
-								<input id="editor-selected-objects-scale-radio" name="editor-selected-objects-transforms" class="btn-check" value="scale" type="radio">
-								<label for="editor-selected-objects-scale-radio" class="btn btn-outline-secondary px-1 py-0"
-								data-bs-title="Scale objects with the in-game arrows." data-bs-toggle="tooltip" data-bs-placement="bottom">
-									<i class="bi bi-arrows-angle-expand"></i>
-								</label>
-								<label class="small align-middle">Scale</label>
+							<div id="editor-selected-objects-transform" class="accordion-collapse collapse show p-2">
+								
+								<!-- Transform Modes -->
+								<div id="editor-selected-objects-transform-modes" class="mb-2">
+									<div class="d-flex">
+										<div class="mx-1">
+											<input id="editor-selected-objects-transform-position-radio" name="editor-selected-objects-transforms" class="btn-check" value="position" type="radio" checked>
+											<label for="editor-selected-objects-transform-position-radio" class="btn btn-outline-secondary px-1 py-0"
+											data-bs-title="Move selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<i class="bi bi-arrows-move"></i>
+											</label>
+										</div>
+										
+										<div class="mx-1">
+											<input id="editor-selected-objects-transform-scale-radio" name="editor-selected-objects-transforms" class="btn-check" value="scale" type="radio">
+											<label for="editor-selected-objects-transform-scale-radio" class="btn btn-outline-secondary px-1 py-0"
+											data-bs-title="Scale selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<i class="bi bi-arrows-angle-expand"></i>
+											</label>
+										</div>
+										
+										<div class="mx-1">
+											<input id="editor-selected-objects-transform-rotation-radio" name="editor-selected-objects-transforms" class="btn-check" value="rotation" type="radio">
+											<label for="editor-selected-objects-transform-rotation-radio" class="btn btn-outline-secondary px-1 py-0"
+											data-bs-title="Rotate selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<i class="bi bi-arrow-clockwise"></i>
+											</label>
+										</div>
+									</div>
+								</div>
+									
+								<!-- Transform Position -->
+								<div id="editor-selected-objects-transform-position" class="mb-2">
+									
+									<!-- Transform Position Inputs -->
+									<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-3">
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">X: </label>
+											<input id="editor-selected-objects-transform-position-x" class="number-input form-control form-control-sm" placeholder="X" type="text"
+											data-bs-title="X-axis position." data-bs-toggle="tooltip">
+										</div>
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">Y: </label>
+											<input id="editor-selected-objects-transform-position-y" class="number-input form-control form-control-sm" placeholder="Y" type="text"
+											data-bs-title="Y-axis position." data-bs-toggle="tooltip">
+										</div>
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">Z: </label>
+											<input id="editor-selected-objects-transform-position-z" class="number-input form-control form-control-sm" placeholder="Z" type="text"
+											data-bs-title="Z-axis position." data-bs-toggle="tooltip">
+										</div>
+									</div>
+									
+									<!-- Transform Position Snap-To-Grid -->
+									<div class="d-flex flex-row-reverse">
+										<div class="text-end">
+											<input id="editor-selected-objects-transform-position-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
+											<label for="editor-selected-objects-transform-position-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
+											data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<i class="bi bi-grid-3x3"></i>
+											</label>
+											<input id="editor-selected-objects-transform-position-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
+											data-bs-title="Snap-to-grid distance." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										</div>
+									</div>
+									
+								</div>
+								
+								<!-- Transform Scale -->
+								<div id="editor-selected-objects-transform-scale" class="my-2" style="display: none;">
+									
+									<!-- Transform Scale Inputs -->
+									<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-3">
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">X: </label>
+											<input id="editor-selected-objects-transform-scale-x" class="percent-input form-control form-control-sm" placeholder="X" type="text"
+											data-bs-title="X-axis scale." data-bs-toggle="tooltip">
+										</div>
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">Y: </label>
+											<input id="editor-selected-objects-transform-scale-y" class="percent-input form-control form-control-sm" placeholder="Y" type="text"
+											data-bs-title="Y-axis scale." data-bs-toggle="tooltip">
+										</div>
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">Z: </label>
+											<input id="editor-selected-objects-transform-scale-z" class="percent-input form-control form-control-sm" placeholder="Z" type="text"
+											data-bs-title="Z-axis scale." data-bs-toggle="tooltip">
+										</div>
+									</div>
+									
+									<!-- Transform Scale Snap-To-Grid -->
+									<div class="d-flex flex-row-reverse">
+										<div class="text-end">
+											<input id="editor-selected-objects-transform-scale-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
+											<label for="editor-selected-objects-transform-scale-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
+											data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<i class="bi bi-grid-3x3"></i>
+											</label>
+											<input id="editor-selected-objects-transform-scale-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
+											data-bs-title="Scale snap-to-grid amount." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										</div>
+									</div>
+									
+								</div>
+								
+								<!-- Transform Rotation -->
+								<div id="editor-selected-objects-transform-rotation" class="my-2" style="display: none;">
+									
+									<!-- Transform Rotation Inputs -->
+									<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-3">
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">X: </label>
+											<input id="editor-selected-objects-transform-rotation-x" class="degree-input form-control form-control-sm" placeholder="X" type="text"
+											data-bs-title="X-axis rotation." data-bs-toggle="tooltip">
+										</div>
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">Y: </label>
+											<input id="editor-selected-objects-transform-rotation-y" class="degree-input form-control form-control-sm" placeholder="Y" type="text"
+											data-bs-title="Y-axis rotation." data-bs-toggle="tooltip">
+										</div>
+										<div class="flex-fill mx-1">
+											<label class="mt-1 small">Z: </label>
+											<input id="editor-selected-objects-transform-rotation-z" class="degree-input form-control form-control-sm" placeholder="Z" type="text"
+											data-bs-title="Z-axis rotation." data-bs-toggle="tooltip">
+										</div>
+									</div>
+									
+									<!-- Transform Rotation Snap-To-Grid -->
+									<div class="d-flex flex-row-reverse">
+										<div class="text-end">
+											<input id="editor-selected-objects-transform-rotation-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
+											<label for="editor-selected-objects-transform-rotation-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
+											data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<i class="bi bi-grid-3x3"></i>
+											</label>
+											<input id="editor-selected-objects-transform-rotation-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
+											data-bs-title="Rotation snap-to-grid amount." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										</div>
+									</div>
+									
+								</div>
+								
 							</div>
 							
-							<!-- Scale Snap-To-Grid -->
-							<div class="text-end">
-								<input id="editor-selected-objects-scale-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
-								<label for="editor-selected-objects-scale-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
-								data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
-									<i class="bi bi-grid-3x3"></i>
-								</label>
-								<input id="editor-selected-objects-scale-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
-								data-bs-title="Scale snap-to-grid amount." data-bs-toggle="tooltip" data-bs-placement="bottom">
-							</div>
 						</div>
 						
-						<!-- Scale Inputs -->
-						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">X: </label>
-								<input id="editor-selected-objects-scale-x" class="form-control form-control-sm" placeholder="X" type="text"
-								data-bs-title="The object's size on the X-axis as a percentage." data-bs-toggle="tooltip">
-							</div>
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">Y: </label>
-								<input id="editor-selected-objects-scale-y" class="form-control form-control-sm" placeholder="Y" type="text"
-								data-bs-title="The object's size on the Y-axis as a percentage." data-bs-toggle="tooltip">
-							</div>
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">Z: </label>
-								<input id="editor-selected-objects-scale-z" class="form-control form-control-sm" placeholder="Z" type="text"
-								data-bs-title="The object's size on the Z-axis as a percentage." data-bs-toggle="tooltip">
-							</div>
-						</div>
+						<!-- Materials -->
+						<div class="accordion-item">
 						
-					</div>
-					
-					<!-- Rotate Selected Objects -->
-					<div id="editor-selected-objects-rotation" class="my-2">
-						
-						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-between">
-							<div class="text-start">
-								<input id="editor-selected-objects-rotation-radio" name="editor-selected-objects-transforms" class="btn-check" value="rotation" type="radio">
-								<label for="editor-selected-objects-rotation-radio" class="btn btn-outline-secondary px-1 py-0"
-								data-bs-title="Rotate objects with the in-game arrows." data-bs-toggle="tooltip" data-bs-placement="bottom">
-									<i class="bi bi-arrow-clockwise"></i>
-								</label>
-								<label class="small align-middle">Rotation</label>
+							<!-- Materials Title -->
+							<div class="card-title accordion-title w-100 mt-2 mb-0">
+								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-materials" aria-expanded="true" aria-controls="editor-selected-objects-materials">
+									<span data-bs-title="Change colours/textures." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										Materials
+									</span>
+								</button>
 							</div>
 							
-							<!-- Rotation Snap-To-Grid -->
-							<div class="text-end">
-								<input id="editor-selected-objects-rotation-snap-checkbox" class="btn-check float-end" type="checkbox" checked>
-								<label for="editor-selected-objects-rotation-snap-checkbox" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
-								data-bs-title="Enable/disable snap-to-grid." data-bs-toggle="tooltip" data-bs-placement="bottom">
-									<i class="bi bi-grid-3x3"></i>
-								</label>
-								<input id="editor-selected-objects-rotation-snap" class="form-control form-control-sm w-36px px-1 mx-1 float-end" type="text"
-								data-bs-title="Rotation snap-to-grid amount." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<div id="editor-selected-objects-materials" class="accordion-collapse collapse p-2">
+								
+								<!-- Material Colour Picker -->
+								<div id="" class="mb-2">
+									<div id="editor-selected-objects-materials-colour-picker">
+										<div class="editor-selected-objects-materials-colour-grid mt-1 mb-2"></div>
+										<div class="editor-selected-objects-materials-colour-info">
+											<input id="editor-selected-objects-materials-selected-colour" class="form-control form-control-color" value="#CCCCCC" type="color">
+										</div>
+									</div>
+								</div>
+								
 							</div>
-						</div>
-						
-						<!-- Rotation Inputs -->
-						<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center">
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">X: </label>
-								<input id="editor-selected-objects-rotation-x" class="form-control form-control-sm" placeholder="X" type="text"
-								data-bs-title="The object's X-axis rotation in degrees." data-bs-toggle="tooltip">
-							</div>
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">Y: </label>
-								<input id="editor-selected-objects-rotation-y" class="form-control form-control-sm" placeholder="Y" type="text"
-								data-bs-title="The object's Y-axis rotation in degrees." data-bs-toggle="tooltip">
-							</div>
-							<div class="flex-fill mx-1">
-								<label class="mt-1 small">Z: </label>
-								<input id="editor-selected-objects-rotation-z" class="form-control form-control-sm" placeholder="Z" type="text"
-								data-bs-title="The object's Z-axis rotation in degrees." data-bs-toggle="tooltip">
-							</div>
+							
 						</div>
 						
 					</div>
-					
-					<!-- Materials Title -->
-					<div class="card-title small-important fw-bold input-group-text w-100 mt-2">
-						Materials
-					</div>
-					
-					<!-- Material Colour Picker -->
-					<div id="editor-selected-objects-materials" class="mb-2">
-						<div id="editor-selected-objects-materials-colour-picker">
-							<div class="editor-selected-objects-materials-colour-grid mt-1 mb-2"></div>
-							<div class="editor-selected-objects-materials-colour-info">
-								<input id="editor-selected-objects-materials-selected-colour" class="form-control form-control-color" value="#CCCCCC" type="color">
-							</div>
-						</div>
-					</div>
-					
 				</div>
 			</div>
 		</div>
@@ -622,6 +652,11 @@
 			
 			// Get editor selected object transform type selected radio button value
 			let selectedValue = $(this).val();
+			
+			// Hide all transform controls
+			$("#editor-selected-objects-transform-position").hide();
+			$("#editor-selected-objects-transform-scale").hide();
+			$("#editor-selected-objects-transform-rotation").hide();
 
 			// Change player transform controls mode based on selected radio button value
 			if (selectedValue === 'position')
@@ -630,12 +665,18 @@
 				// Translate mode
 				player.controls.transform_controls.setMode('translate');
 				
+				// Show translate controls
+				$("#editor-selected-objects-transform-position").show();
+				
 			}
 			else if (selectedValue === 'scale')
 			{
 				
 				// Scale mode
 				player.controls.transform_controls.setMode('scale');
+				
+				// Show scale controls
+				$("#editor-selected-objects-transform-scale").show();
 				
 			}
 			else if (selectedValue === 'rotation')
@@ -644,7 +685,13 @@
 				// Rotate mode
 				player.controls.transform_controls.setMode('rotate');
 				
+				// Show rotation controls
+				$("#editor-selected-objects-transform-rotation").show();
+				
 			}
+			
+			// Update the editor selected object UI
+			editor.updateSelectedObjectUI(player);
 			
 		});
 		
@@ -653,17 +700,17 @@
 		/**
 		 * Editor selected object position grid snap change event.
 		 */
-		 $("#editor-selected-objects-position-snap").change(function()
+		 $("#editor-selected-objects-transform-position-snap").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Check if position grid snap is enabled
-				if ($("#editor-selected-objects-position-snap-checkbox").prop("checked"))
+				if ($("#editor-selected-objects-transform-position-snap-checkbox").prop("checked"))
 				{
 					
 					// Set position grid snap
-					player.controls.transform_controls.translationSnap = $("#editor-selected-objects-position-snap").val();
+					player.controls.transform_controls.translationSnap = $("#editor-selected-objects-transform-position-snap").val();
 					
 				}
 				
@@ -673,7 +720,7 @@
 		/**
 		 * Editor selected object position grid snap checkbox change event.
 		 */
-		 $("#editor-selected-objects-position-snap-checkbox").change(function()
+		 $("#editor-selected-objects-transform-position-snap-checkbox").change(function()
 		{
 			if (editor.enabled)
 			{
@@ -683,7 +730,7 @@
 				{
 					
 					// Set position grid snap
-					player.controls.transform_controls.translationSnap = $("#editor-selected-objects-position-snap").val();
+					player.controls.transform_controls.translationSnap = $("#editor-selected-objects-transform-position-snap").val();
 					
 				}
 				else
@@ -700,13 +747,13 @@
 		/**
 		 * Editor selected object position X-axis change event.
 		 */
-		 $("#editor-selected-objects-position-x").change(function()
+		 $("#editor-selected-objects-transform-position-x").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis position 
-				editor.selected_object.position.x = $("#editor-selected-objects-position-x").val();
+				editor.selected_object.position.x = $("#editor-selected-objects-transform-position-x").val();
 				
 			}
 		});
@@ -714,13 +761,13 @@
 		/**
 		 * Editor selected object position Y-axis change event.
 		 */
-		 $("#editor-selected-objects-position-y").change(function()
+		 $("#editor-selected-objects-transform-position-y").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis position 
-				editor.selected_object.position.y = $("#editor-selected-objects-position-y").val();
+				editor.selected_object.position.y = $("#editor-selected-objects-transform-position-y").val();
 				
 			}
 		});
@@ -728,13 +775,13 @@
 		/**
 		 * Editor selected object position Z-axis change event.
 		 */
-		 $("#editor-selected-objects-position-z").change(function()
+		 $("#editor-selected-objects-transform-position-z").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis position 
-				editor.selected_object.position.z = $("#editor-selected-objects-position-z").val();
+				editor.selected_object.position.z = $("#editor-selected-objects-transform-position-z").val();
 				
 			}
 		});
@@ -744,17 +791,17 @@
 		/**
 		 * Editor selected object scale grid snap change event.
 		 */
-		 $("#editor-selected-objects-scale-snap").change(function()
+		 $("#editor-selected-objects-transform-scale-snap").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Check if scale grid snap is enabled
-				if ($("#editor-selected-objects-scale-snap-checkbox").prop("checked"))
+				if ($("#editor-selected-objects-transform-scale-snap-checkbox").prop("checked"))
 				{
 					
 					// Set scale grid snap
-					player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-scale-snap").val();
+					player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-transform-scale-snap").val();
 					
 				}
 				
@@ -764,7 +811,7 @@
 		/**
 		 * Editor selected object scale grid snap checkbox change event.
 		 */
-		 $("#editor-selected-objects-scale-snap-checkbox").change(function()
+		 $("#editor-selected-objects-transform-scale-snap-checkbox").change(function()
 		{
 			if (editor.enabled)
 			{
@@ -774,7 +821,7 @@
 				{
 					
 					// Set scale grid snap
-					player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-scale-snap").val();
+					player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-transform-scale-snap").val();
 					
 				}
 				else
@@ -791,13 +838,13 @@
 		/**
 		 * Editor selected object scale X-axis change event.
 		 */
-		 $("#editor-selected-objects-scale-x").change(function()
+		 $("#editor-selected-objects-transform-scale-x").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis scale 
-				editor.selected_object.scale.x = $("#editor-selected-objects-scale-x").val() / 100;
+				editor.selected_object.scale.x = $("#editor-selected-objects-transform-scale-x").val().slice(0, -1) / 100;
 				
 			}
 		});
@@ -805,13 +852,13 @@
 		/**
 		 * Editor selected object scale Y-axis change event.
 		 */
-		 $("#editor-selected-objects-scale-y").change(function()
+		 $("#editor-selected-objects-transform-scale-y").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis scale 
-				editor.selected_object.scale.y = $("#editor-selected-objects-scale-y").val() / 100;
+				editor.selected_object.scale.y = $("#editor-selected-objects-transform-scale-y").val().slice(0, -1) / 100;
 				
 			}
 		});
@@ -819,13 +866,13 @@
 		/**
 		 * Editor selected object scale Z-axis change event.
 		 */
-		 $("#editor-selected-objects-scale-z").change(function()
+		 $("#editor-selected-objects-transform-scale-z").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis scale 
-				editor.selected_object.scale.z = $("#editor-selected-objects-scale-z").val() / 100;
+				editor.selected_object.scale.z = $("#editor-selected-objects-transform-scale-z").val().slice(0, -1) / 100;
 				
 			}
 		});
@@ -835,17 +882,17 @@
 		/**
 		 * Editor selected object rotation grid snap change event.
 		 */
-		 $("#editor-selected-objects-rotation-snap").change(function()
+		 $("#editor-selected-objects-transform-rotation-snap").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Check if rotation grid snap is enabled
-				if ($("#editor-selected-objects-rotation-snap-checkbox").prop("checked"))
+				if ($("#editor-selected-objects-transform-rotation-snap-checkbox").prop("checked"))
 				{
 					
 					// Set rotation grid snap
-					player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-rotation-snap").val();
+					player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-transform-rotation-snap").val();
 					
 				}
 				
@@ -855,7 +902,7 @@
 		/**
 		 * Editor selected object rotation grid snap checkbox change event.
 		 */
-		 $("#editor-selected-objects-rotation-snap-checkbox").change(function()
+		 $("#editor-selected-objects-transform-rotation-snap-checkbox").change(function()
 		{
 			if (editor.enabled)
 			{
@@ -865,7 +912,7 @@
 				{
 					
 					// Set rotation grid snap
-					player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-rotation-snap").val();
+					player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-transform-rotation-snap").val();
 					
 				}
 				else
@@ -882,13 +929,13 @@
 		/**
 		 * Editor selected object rotation X-axis change event.
 		 */
-		 $("#editor-selected-objects-rotation-x").change(function()
+		 $("#editor-selected-objects-transform-rotation-x").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object X-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.x = $("#editor-selected-objects-rotation-x").val() * (Math.PI / 180);
+				editor.selected_object.rotation.x = $("#editor-selected-objects-transform-rotation-x").val().slice(0, -1) * (Math.PI / 180);
 				
 			}
 		});
@@ -896,13 +943,13 @@
 		/**
 		 * Editor selected object rotation Y-axis change event.
 		 */
-		 $("#editor-selected-objects-rotation-y").change(function()
+		 $("#editor-selected-objects-transform-rotation-y").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Y-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.y = $("#editor-selected-objects-rotation-y").val()  * (Math.PI / 180);
+				editor.selected_object.rotation.y = $("#editor-selected-objects-transform-rotation-y").val().slice(0, -1)  * (Math.PI / 180);
 				
 			}
 		});
@@ -910,15 +957,177 @@
 		/**
 		 * Editor selected object rotation Z-axis change event.
 		 */
-		 $("#editor-selected-objects-rotation-z").change(function()
+		 $("#editor-selected-objects-transform-rotation-z").change(function()
 		{
 			if (editor.enabled)
 			{
 				
 				// Set selected object Z-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.z = $("#editor-selected-objects-rotation-z").val()  * (Math.PI / 180);
+				editor.selected_object.rotation.z = $("#editor-selected-objects-transform-rotation-z").val().slice(0, -1)  * (Math.PI / 180);
 				
 			}
+		});
+		
+		// Editor Utility Events
+		
+		/**
+		 * Letter input textbox text input event.
+		 */
+		$('.letter-input').on('input', function()
+		{
+			
+			// Get just the letters from the element
+			let value = $(this).val().replace(/[^a-zA-Z]/g, '');
+			
+			// Set the input to the text value
+			$(this).val(value);
+			
+		});
+		
+		/**
+		 * Number input textbox text input event.
+		 */
+		$('.number-input').on('input', function()
+		{
+			
+			// Get just the numeric value from the element allowing a single decimal place
+			let value = $(this).val().replace(/[^0-9.]/g, '');
+			
+			// Remove any extra decimal places
+			if ((value.match(/\./g) || []).length > 1)
+			{
+				value = value.replace(/\.$/, '');
+			}
+			
+			// Set the input to the numeric value
+			$(this).val(value);
+			
+		});
+		
+		/**
+		 * Percentage input textbox text input event.
+		 */
+		$('.percent-input').on('input', function()
+		{
+			
+			// Get the input element
+			let input = $(this)[0];
+			
+			// Get just the numeric value from the element
+			let value = $(this).val().replace(/[^\d]/g, '');
+			
+			// Check the input for a value...
+			if (value !== '')
+			{
+				
+				// Add % to end of the input
+				$(this).val(value + '%');
+				input.setSelectionRange(value.length, value.length);
+				
+			}
+			else
+			{
+				
+				// Clear the input
+				$(this).val('');
+				
+			}
+			
+		});
+		
+		/**
+		 * Percentage input textbox focus event.
+		 */
+		$('.percent-input').on('focus', function()
+		{
+			
+			// Remove the % when the input is clicked
+			let value = $(this).val().replace('%', '');
+			$(this).val(value);
+			
+		});
+		
+		/**
+		 * Percentage input textbox un-focus event.
+		 */
+		$('.percent-input').on('blur', function()
+		{
+			
+			// Get just the numeric value from the element
+			let value = $(this).val().replace(/[^\d]/g, '');
+			
+			// Check the input for a value...
+			if (value !== '')
+			{
+				
+				// Add the % when the input is un-focused
+				$(this).val(value + '%');
+				
+			}
+			
+		});
+		
+		/**
+		 * Degree input textbox text input event.
+		 */
+		$('.degree-input').on('input', function()
+		{
+			
+			// Get the input element
+			let input = $(this)[0];
+			
+			// Get just the numeric value from the element
+			let value = $(this).val().replace(/[^\d]/g, '');
+			
+			// Check the input for a value...
+			if (value !== '')
+			{
+				
+				// Add ° to end of the input
+				$(this).val(value + '°');
+				input.setSelectionRange(value.length, value.length);
+				
+			}
+			else
+			{
+				
+				// Clear the input
+				$(this).val('');
+				
+			}
+			
+		});
+		
+		/**
+		 * Degree input textbox focus event.
+		 */
+		$('.degree-input').on('focus', function()
+		{
+			
+			// Remove the ° when the input is clicked
+			let value = $(this).val().replace('°', '');
+			$(this).val(value);
+			
+		});
+		
+		/**
+		 * Degree input textbox un-focus event.
+		 */
+		$('.degree-input').on('blur', function()
+		{
+			
+			// Get just the numeric value from the element
+			let value = $(this).val().replace(/[^\d]/g, '');
+			
+			// Check the input for a value...
+			if (value !== '')
+			{
+				
+				// Add the ° when the input is un-focused
+				$(this).val(value + '°');
+				
+			}
+			
 		});
 		
 		

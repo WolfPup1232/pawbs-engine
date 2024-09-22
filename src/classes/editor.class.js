@@ -838,46 +838,52 @@ class Editor
 			{
 				
 				// Update grid snaps
-				if ($("#editor-selected-objects-position-snap-checkbox").is(':checked'))
+				if ($("#editor-selected-objects-transform-position-snap-checkbox").is(':checked'))
 				{
-					$("#editor-selected-objects-position-snap").val(player.controls.transform_controls.translationSnap);
+					$("#editor-selected-objects-transform-position-snap").val(player.controls.transform_controls.translationSnap);
 				}
-				if ($("#editor-selected-objects-scale-snap-checkbox").is(':checked'))
+				if ($("#editor-selected-objects-transform-scale-snap-checkbox").is(':checked'))
 				{
-					$("#editor-selected-objects-scale-snap").val(player.controls.transform_controls.scaleSnap);
+					$("#editor-selected-objects-transform-scale-snap").val(player.controls.transform_controls.scaleSnap);
 				}
-				if ($("#editor-selected-objects-rotation-snap-checkbox").is(':checked'))
+				if ($("#editor-selected-objects-transform-rotation-snap-checkbox").is(':checked'))
 				{
-					$("#editor-selected-objects-rotation-snap").val(player.controls.transform_controls.rotationSnap);
+					$("#editor-selected-objects-transform-rotation-snap").val(player.controls.transform_controls.rotationSnap);
 				}
 				
 				// Update position
-				$("#editor-selected-objects-position-x").val(this.selected_object.position.x);
-				$("#editor-selected-objects-position-y").val(this.selected_object.position.y);
-				$("#editor-selected-objects-position-z").val(this.selected_object.position.z);
+				$("#editor-selected-objects-transform-position-x").val(this.selected_object.position.x);
+				$("#editor-selected-objects-transform-position-y").val(this.selected_object.position.y);
+				$("#editor-selected-objects-transform-position-z").val(this.selected_object.position.z);
 				
 				// Update scale
-				$("#editor-selected-objects-scale-x").val((this.selected_object.scale.x / 1) * 100);
-				$("#editor-selected-objects-scale-y").val((this.selected_object.scale.y / 1) * 100);
-				$("#editor-selected-objects-scale-z").val((this.selected_object.scale.z / 1) * 100);
+				$("#editor-selected-objects-transform-scale-x").val(((this.selected_object.scale.x / 1) * 100) + "%");
+				$("#editor-selected-objects-transform-scale-y").val(((this.selected_object.scale.y / 1) * 100) + "%");
+				$("#editor-selected-objects-transform-scale-z").val(((this.selected_object.scale.z / 1) * 100) + "%");
 				
-				// Check if object is billboard
-				if (this.selected_object instanceof Billboard)
+				// If transform controls rotation mode is selected...
+				if (player.controls.transform_controls.mode == "rotate")
 				{
 					
-					// Hide rotation for billboards
-					$("#editor-selected-objects-rotation").hide();
-					
-				}
-				else
-				{
-					
-					// Update rotation
-					$("#editor-selected-objects-rotation").show();
-					
-					$("#editor-selected-objects-rotation-x").val(this.selected_object.rotation.x * (180 / Math.PI));
-					$("#editor-selected-objects-rotation-y").val(this.selected_object.rotation.y * (180 / Math.PI));
-					$("#editor-selected-objects-rotation-z").val(this.selected_object.rotation.z * (180 / Math.PI));
+					// Check if selected object is billboard
+					if (this.selected_object instanceof Billboard)
+					{
+						
+						// Hide rotation for billboards
+						$("#editor-selected-objects-transform-rotation").hide();
+						
+					}
+					else
+					{
+						
+						// Update rotation
+						$("#editor-selected-objects-transform-rotation").show();
+						
+						$("#editor-selected-objects-transform-rotation-x").val((this.selected_object.rotation.x * (180 / Math.PI)) + "°");
+						$("#editor-selected-objects-transform-rotation-y").val((this.selected_object.rotation.y * (180 / Math.PI)) + "°");
+						$("#editor-selected-objects-transform-rotation-z").val((this.selected_object.rotation.z * (180 / Math.PI)) + "°");
+						
+					}
 					
 				}
 				
@@ -898,8 +904,10 @@ class Editor
 		
 		// Initialize list of classic MSPaint colours
 		const ms_paint_colours = [
-			"#000000", "#800000", "#008000", "#808000", "#000080", "#800080", "#008080", "#C0C0C0", "#FF0000", "#00FF00", "#FFFF00", "#0000FF", "#FF00FF", "#00FFFF",
-			"#FFFFFF", "#FFC0C0", "#C0FFC0", "#FFFFC0", "#C0C0FF", "#FFC0FF", "#C0FFFF", "#808080", "#804000", "#FF8040", "#808040", "#4080FF", "#FF80FF", "#80FFFF"
+			"#000000", "#800000", "#008000", "#000080", "#800080", "#008080", "#808000", "#402000",
+			"#808080", "#FF0000", "#00FF00", "#0000FF", "#FF00FF", "#00FFFF", "#FFFF00", "#804000",
+			"#C0C0C0", "#FF8080", "#00FF80", "#4080FF", "#FF80FF", "#80FFFF", "#FFFF80", "#FF8000",
+			"#FFFFFF", "#FFC0C0", "#C0FFC0", "#C0C0FF", "#FFC0FF", "#C0FFFF", "#FFFFC0", "#FFC080"
 		];
 		
 		// Reset the colour grid
@@ -923,7 +931,7 @@ class Editor
 			const selected_colour = $(this).css('background-color');
 			
 			// Set the selected object materials colour
-			$('#editor-selected-objects-materials-colour-input').css('background-color', selected_colour);
+			$('#editor-selected-objects-materials-selected-colour').val('#' + selected_colour.match(/\d+/g).map(function(value) { return ('0' + parseInt(value).toString(16)).slice(-2); }).join(''));
 			if (self.selected_object)
 			{
 				self.selected_object.material = self.selected_object_original_materials.get(self.selected_object);

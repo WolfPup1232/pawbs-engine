@@ -72,26 +72,22 @@ button {
     flex-direction: column;
     align-items: center;
 }
-
 .editor-selected-objects-materials-colour-grid {
     display: grid;
-    grid-template-columns: repeat(14, 16px);
+    grid-template-columns: repeat(8, 16px);
     grid-gap: 5px;
 }
-
 .editor-selected-objects-materials-colour-cell {
     width: 16px;
     height: 16px;
     cursor: pointer;
     border: 1px solid #000;
 }
-
 .editor-selected-objects-materials-colour-info {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
 #editor-selected-objects-materials-selected-colour {
     padding: 5px;
     text-align: center;
@@ -116,6 +112,7 @@ button {
 
 /* Third-Party Library Overrides */
 
+/* Bootstrap Tooltip */
 .tooltip-inner {
 	color: #ffffff;
 	background-color: #6c757d;
@@ -133,4 +130,45 @@ button {
 }
 .tooltip.bs-tooltip-top .tooltip-arrow::before {
 	border-top-color: #6c757d !important;
+}
+
+/* Bootstrap Accordion */
+.accordion-title {
+	display: flex;
+	align-items: center;
+	padding: .375rem .75rem;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: var(--bs-body-color);
+	text-align: center;
+	white-space: nowrap;
+	background-color: var(--bs-tertiary-bg);
+	border-top: var(--bs-border-width) solid var(--bs-border-color);
+	border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+}
+.accordion-button {
+	color: #000;
+	background-color:#f8f9fa;
+}
+.accordion-button:focus {
+	box-shadow: none;
+}
+.accordion-button:not(.collapsed) {
+	color: #000;
+	background-color:#f8f9fa;
+	box-shadow: none;
+}
+.accordion-item {
+	border-top-left-radius: 0px !important;
+	border-top-right-radius: 0px !important;
+	border-bottom-left-radius: 0px !important;
+	border-bottom-right-radius: 0px !important;
+	border-top: none;
+	border-bottom: none;
+	border-left: var(--bs-accordion-border-width) solid var(--bs-accordion-border-color);
+	border-right: var(--bs-accordion-border-width) solid var(--bs-accordion-border-color);
+}
+.accordion-collapse.show {
+	border-bottom: var(--bs-accordion-border-width) solid var(--bs-accordion-border-color) !important;
 }
