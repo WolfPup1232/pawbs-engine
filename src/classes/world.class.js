@@ -219,6 +219,28 @@ class World
 	}
 	
 	/**
+	 * Removes an object from the world.
+	 *
+	 * @param {object} object The object to be removed from the world.
+	 */
+	removeObject(object)
+	{
+		
+		// Get object's index from object array
+		let index = this.objects.indexOf(object);
+		
+		// Remove object from object array
+		if (index > -1)
+		{
+			this.objects.splice(index, 1);
+		}
+		
+		// Remove object from scene
+		this.scene.remove(object);
+		
+	}
+	
+	/**
 	 * Removed all objects from the world.
 	 */
 	removeAllObjects()

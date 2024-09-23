@@ -13,12 +13,13 @@ class Controls
 	 *
 	 * @param {document} dom_document A reference to the browser window's DOM document.
 	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element.
+	 * @param {textures} textures The list of game textures.
 	 * @param {world} world The current game world.
 	 * @param {editor} editor The in-game world editor.
 	 * @param {player} player The player being controlled by the mouse/keyboard.
-	 * @param {editor} editor The in-game debugger.
+	 * @param {editor} debug The in-game debugger.
 	 */
-	constructor(dom_document, renderer, world, editor, player, debug)
+	constructor(dom_document, renderer, textures, world, editor, player, debug)
 	{
 		
 		// Class Declarations/Initialization
@@ -76,12 +77,12 @@ class Controls
 		// Player Mouse/Keyboard Control Event Listeners
 		
 		// Mouse event listeners
-		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, debug, dom_document, world, editor, player));
-		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, debug, dom_document, world, editor, player));
+		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, debug, dom_document, textures, world, editor, player));
+		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, debug, dom_document, textures, world, editor, player));
 		
 		// Keyboard event listeners
-		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, debug, dom_document, world, editor, player));
-		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, debug, dom_document, world, editor, player));
+		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, debug, dom_document, textures, world, editor, player));
+		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, debug, dom_document, textures, world, editor, player));
 		
 		// Pointer lock controls event listeners
 		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onPointerLockControlsLock());
@@ -103,7 +104,7 @@ class Controls
 		/**
 		 * Mouse button click event.
 		 */
-		this.onMouseDown = function(event, debug, dom_document, world, editor, player)
+		this.onMouseDown = function(event, debug, dom_document, textures, world, editor, player)
 		{
 			
 			// Handle mouse button click event
@@ -131,7 +132,7 @@ class Controls
 		/**
 		 * Mouse button release event.
 		 */
-		this.onMouseUp = function(event, debug, dom_document, world, editor, player)
+		this.onMouseUp = function(event, debug, dom_document, textures, world, editor, player)
 		{
 			
 			// Handle mouse button release event
@@ -200,7 +201,7 @@ class Controls
 		/**
 		 * Keyboard key press event.
 		 */
-		this.onKeyDown = function(event, debug, dom_document, world, editor, player)
+		this.onKeyDown = function(event, debug, dom_document, textures, world, editor, player)
 		{
 			
 			// Ignore key presses if a text box or text area is being edited
@@ -251,7 +252,7 @@ class Controls
 		/**
 		 * Keyboard key release event.
 		 */
-		this.onKeyUp = function(event, debug, dom_document, world, editor, player)
+		this.onKeyUp = function(event, debug, dom_document, textures, world, editor, player)
 		{
 			
 			// Ignore key releases if a text box or text area is being edited
@@ -293,7 +294,7 @@ class Controls
 						// ShiftLeft + KeyE
 						
 						// Toggle editor on/off
-						editor.toggle(world, player);
+						editor.toggle(textures, world, player);
 					}
 					else
 					{
@@ -304,6 +305,12 @@ class Controls
 					break;
 				case 'Space':
 					player.controls.is_player_jumping = false;
+					break;
+				case 'Delete':
+					
+					// Delete editor selected object
+					editor.deleteSelectedObject(world, player);
+					
 					break;
 				case 'ShiftLeft':
 					player.controls.modifier_shift_left_pressed = false;
@@ -347,16 +354,32 @@ class Controls
 			const child_width = $(this).outerWidth();
 			const child_height = $(this).outerHeight();
 			
-			// Determine if the child HTML element was clicked
-			if (relative_x >= (child_offset.left - offset.left) && relative_x <= (child_offset.left - offset.left + child_width) && relative_y >= (child_offset.top - offset.top) && relative_y <= (child_offset.top - offset.top + child_height))
+			// Check if any <select> elements are open
+			if ($('select').is(':focus'))
 			{
 				
-				// The child HTML was clicked instead of whitespace
+				// A <select> element dropdown was clicked or closed
 				is_whitespace_clicked = false;
 				
 				// Exit the function
 				return false;
 				
+			}
+			else
+			{
+			
+				// Determine if the child HTML element was clicked
+				if (relative_x >= (child_offset.left - offset.left) && relative_x <= (child_offset.left - offset.left + child_width) && relative_y >= (child_offset.top - offset.top) && relative_y <= (child_offset.top - offset.top + child_height))
+				{
+					
+					// The child HTML was clicked instead of whitespace
+					is_whitespace_clicked = false;
+					
+					// Exit the function
+					return false;
+					
+				}
+			
 			}
 			
 		});

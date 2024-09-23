@@ -182,6 +182,62 @@ class Editor
     // Methods
 	
 	/**
+	 * Toggle editor on/off.
+	 *
+	 * @param {textures} textures The list of game textures.
+	 * @param {world} world The current game world.
+	 * @param {player} player The player editing the game world.
+	 */
+	toggle(textures, world, player)
+	{
+		
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+			
+			// Hide editor UI
+			$("#editor").hide();
+			
+			// Reset any highlighted or selected objects
+			this.resetHighlightedObject();
+			this.resetSelectedObject(player);
+			
+			// Remove player transform controls from the world
+			world.scene.remove(player.controls.transform_controls);
+			
+			// Disable editor
+			this.enabled = false;
+			
+		}
+		else
+		{
+			
+			// Enable editor
+			this.enabled = true;
+			
+			// Add player transform controls to the world
+			world.scene.add(player.controls.transform_controls);
+			
+			// Initialize UI elements
+			$("#editor-world-name").val(world.name);
+			
+			// Update selected object material colours UI
+			this.updateSelectedObjectMaterialColoursUI();
+			
+			// Updated selected object material textures UI
+			this.updateSelectedObjectMaterialTextureFolders(textures);
+			
+			// Resize UI elements
+			this.resize();
+			
+			// Show editor UI
+			$("#editor").show();
+			
+		}
+		
+	}
+	
+	/**
 	 * Updates editor processes every frame.
 	 *
 	 * @param {world} world The current game world.
@@ -219,51 +275,19 @@ class Editor
 		this.updateHighlightedObject(world, player);
 		
 	}
-    
-    /**
-	 * Toggle editor on/off.
-	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	
+	/**
+	 * Resized editor UI elements.
 	 */
-	toggle(world, player)
+	resize()
 	{
 		
 		// Check if editor is enabled
 		if (this.enabled)
 		{
-			
-			// Hide editor UI
-			$("#editor").hide();
-			
-			// Reset any highlighted or selected objects
-			this.resetHighlightedObject();
-			this.resetSelectedObject(player);
-			
-			// Remove player transform controls from the world
-			world.scene.remove(player.controls.transform_controls);
-			
-			// Disable editor
-			this.enabled = false;
-			
-		}
-        else
-		{
-			
-			// Enable editor
-			this.enabled = true;
-			
-			// Add player transform controls to the world
-			world.scene.add(player.controls.transform_controls);
-			
-			// Initialize UI elements
-			$("#editor-world-name").val(world.name);
-			
-			// Initialize selected object material colours UI
-			this.updateSelectedObjectMaterialColoursUI();
-			
-			// Show editor UI
-			$("#editor").show();
+		
+			// Set selected objects window maximum height
+			$("#editor-selected-objects-inner").css({"max-height": "calc(" + ($('#renderer').height() - $('#editor-title').height()) + "px - 2rem)"});
 			
 		}
 		
@@ -272,11 +296,11 @@ class Editor
 	/**
 	 * Resets the current world using some hard-coded defaults.
 	 *
-	 * @param {world} world The current game world.
 	 * @param {textures} textures The list of game textures.
+	 * @param {world} world The current game world.
 	 * @param {player} player The player editing the game world.
 	 */
-	newWorld(world, textures, player)
+	newWorld(textures, world, player)
 	{
 	
 		// Check if editor is enabled
@@ -294,7 +318,7 @@ class Editor
 			world.name = "";
 			
 			// Initialize default terrain
-			const plane_geometry = new THREE.plane_geometry(100, 100);
+			const plane_geometry = new THREE.PlaneGeometry(100, 100);
 			const plane_material = new THREE.MeshBasicMaterial({ color: 0x302400 });
 			const plane = new THREE.Mesh(plane_geometry, plane_material);
 			plane.rotation.x = -Math.PI / 2;
@@ -444,11 +468,11 @@ class Editor
 	 * Spawns a new object into the world at the location the player is facing.
 	 *
 	 * @param {Geometry} three.mesh The class of geometry to be spawned.
+	 * @param {textures} textures The list of game textures.
 	 * @param {world} world The current game world.
 	 * @param {player} player The player editing the game world.
-	 * @param {textures} textures The textures loaded by the game.
 	 */
-	spawn(Geometry, world, player, textures = null)
+	spawn(Geometry, textures, world, player)
 	{
 		
 		// Check if editor is enabled
@@ -822,6 +846,53 @@ class Editor
 	}
 	
 	/**
+	 * Cuts the selected object.
+	 */
+	cutSelectedObject()
+	{
+	}
+	
+	/**
+	 * Copies the selected object.
+	 */
+	copySelectedObject()
+	{
+	}
+	
+	/**
+	 * Pastes the selected object.
+	 */
+	pasteSelectedObject()
+	{
+	}
+	
+	/**
+	 * Deletes the selected object.
+	 */
+	deleteSelectedObject(world, player)
+	{
+		
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+			
+			// If an object is selected...
+			if (this.selected_object)
+			{
+				
+				// Detatch transform controls from object
+				player.controls.transform_controls.detach();
+				
+				// Remove the object
+				world.removeObject(this.selected_object);
+				
+			}
+			
+		}
+		
+	}
+	
+	/**
 	 * Updates the selected object UI elements.
 	 *
 	 * @param {player} player The player editing the game world.
@@ -916,21 +987,28 @@ class Editor
 		// Initialize the colour grid using the MSPaint colours
 		ms_paint_colours.forEach(color => {
 			
-			const cell = $('<div class="editor-selected-objects-materials-colour-cell"></div>');
+			// Get RGB values from the current hex colour
+			const r = parseInt(color.slice(1, 3), 16);
+			const g = parseInt(color.slice(3, 5), 16);
+			const b = parseInt(color.slice(5, 7), 16);
+			
+			// Initialize a new colour cell element for the colour picker UI
+			const cell = $('<div class="editor-selected-objects-materials-colour-cell" data-bs-title="' + r + ', ' + g + ', ' + b + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
 			cell.css('background-color', color);
 			
+			// Add the new colour cell element to the colour picker UI
 			$('.editor-selected-objects-materials-colour-grid').append(cell);
 			
 		});
 		
-		// Editor selected object materials colour cell click event
+		// Colour cell click event
 		$('.editor-selected-objects-materials-colour-cell').click(function()
 		{
 			
 			// Get the background colour of the selected colour cell
 			const selected_colour = $(this).css('background-color');
 			
-			// Set the selected object materials colour
+			// Set the selected object's new colour
 			$('#editor-selected-objects-materials-selected-colour').val('#' + selected_colour.match(/\d+/g).map(function(value) { return ('0' + parseInt(value).toString(16)).slice(-2); }).join(''));
 			if (self.selected_object)
 			{
@@ -941,6 +1019,178 @@ class Editor
 			}
 			
 		});
+		
+		// Re-initialize tooltips so the colour cell tooltips render
+		$('[data-bs-toggle="tooltip"]').each(function() { let tooltip = new bootstrap.Tooltip($(this)); $(this).on('click', function() { tooltip.hide(); }); });
+		
+	}
+	
+	/**
+	 * Updates the selected object material texture folders UI element.
+	 */
+	updateSelectedObjectMaterialTextureFolders(textures)
+	{
+		
+		// Get a reference to this editor to pass into the texture folder change event
+		let self = this;
+		
+		// Get the texture folder select element and add a default option to it
+		let select = $('#editor-selected-objects-materials-texture-select');
+		select.empty();
+		$('<option>', { value: "/", text: "Uncategorized" }).appendTo(select);
+		
+		// Generate texture folder options by iterating through every texture file path
+		for (let [name, texture] of Object.entries(textures))
+		{
+			
+			// Get texture file path parts
+			let parts = texture.path.split('/');
+			
+			// Initialize empty option element values
+			let text = "";
+			let value = "/";
+			
+			// Get just the relevant parts of the texture file path
+			for (let i = 2; i < parts.length - 1; i++)
+			{
+				
+				// Cleanly format the folder name to add to the label
+				text += parts[i].charAt(0).toUpperCase() + parts[i].slice(1) + "/";
+				
+				// Get the unformatted folder name to add to the folder path value
+				value += parts[i] + "/";
+				
+			}
+			
+			// Remove the trailing slash from the label
+			text = text.slice(0,-1);
+			
+			// Make sure the texture folder isn't already in the texture folders select element
+			let option = $('#editor-selected-objects-materials-texture-select option:contains("' + text + '")');
+			if (option.length === 0)
+			{
+				
+				// Add the texture folder to the texture folders select element
+				$('<option>', { value: value, text: text }).appendTo(select);
+				
+			}
+			
+		}
+		
+		// Get a list of all the options that have been added to the texture folders select element
+		let options = select.find('option');
+		
+		// Sort all the options alphabetically
+		options.sort(function(a, b)
+		{
+			
+			// Get each option label's folder path parts
+			let path_a = $(a).attr('value').split('/').filter(Boolean);
+			let path_b = $(b).attr('value').split('/').filter(Boolean);
+			
+			// Sort each subfolder level of the folder path
+			for (let i = 0; i < Math.min(path_a.length, path_b.length); i++)
+			{
+				let folder_a = path_a[i].toLowerCase();
+				let folder_b = path_b[i].toLowerCase();
+				
+				if (folder_a < folder_b) return -1;
+				if (folder_a > folder_b) return 1;
+			}
+			
+			// Subfolders with no additional subfolders come first
+			return path_a.length - path_b.length;
+			
+		});
+		
+		// Empty the texture folders select element and add the newly sorted options to it
+		select.empty().append(options);
+		
+		// Select the default texture folder option
+		select.val($("#editor-selected-objects-materials-texture-select option:first").val());
+		
+		// Update the list of textures in the texture picker
+		this.updateSelectedObjectMaterialTexturePicker(textures);
+		
+		// Texture folder change event
+		$('#editor-selected-objects-materials-texture-select').on('change', function()
+		{
+			
+			// Update the list of textures in the texture picker
+			self.updateSelectedObjectMaterialTexturePicker(textures);
+			
+		});
+		
+	}
+	
+	/**
+	 * Updates the selected object material texture picker UI elements.
+	 */
+	updateSelectedObjectMaterialTexturePicker(textures)
+	{
+		
+		// Get a reference to this editor to pass into the texture picker click event
+		let self = this;
+		
+		// Empty the texture picker of any previous textures
+		$('.editor-selected-objects-materials-texture-grid').empty();
+		
+		// Generate texture list by iterating through every texture file path
+		for (let [key, texture] of Object.entries(textures))
+		{
+			
+			// Get texture file path parts
+			let parts = texture.path.split('/');
+			
+			// Get just the relevant parts of the texture file path to use later to get only textures from the selected texture folder
+			let value = "/";
+			for (let i = 2; i < parts.length - 1; i++)
+			{
+				value += parts[i] + "/";
+			}
+			
+			// Check if the current texture belongs to the selected texture folder
+			if ($('#editor-selected-objects-materials-texture-select').find(':selected').val() == value)
+			{
+				
+				// Initialize a new texture element for the texture picker UI
+				const cell = $('<div class="editor-selected-objects-materials-texture-cell"><img src="' + texture.path + '" class="editor-selected-objects-materials-texture-image img-fluid" alt="' + key + '" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
+				
+				// Add the new texture element to the texture picker UI
+				$('.editor-selected-objects-materials-texture-grid').append(cell);
+				
+			}
+			
+		}
+		
+		// Texture element click event
+		$('.editor-selected-objects-materials-texture-image').on('click', function()
+		{
+			
+			// Set the selected object's new texture
+			if (self.selected_object)
+			{
+				
+				// Get the texture from the textures list by finding its key using its file path
+				let texture =  textures[Object.keys(textures).find(key => textures[key].path === $(this).attr('src'))];
+				
+				// Remove any old textures
+				if (self.highlighted_object_original_materials)
+				{
+					self.highlighted_object_original_materials.delete(self.selected_object);
+				}
+				
+				// Set the selected object's new texture
+				self.selected_object.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+				self.selected_object_original_materials.set(self.selected_object, self.selected_object.material);
+				self.selected_object.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, wireframe: true });
+				
+			}
+			
+		});
+		
+		// Re-initialize tooltips so the colour cell tooltips render
+		$('[data-bs-toggle="tooltip"]').each(function() { let tooltip = new bootstrap.Tooltip($(this)); $(this).on('click', function() { tooltip.hide(); }); });
 		
 	}
     

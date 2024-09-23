@@ -28,7 +28,10 @@ class Utilities
         texture_keys.forEach((key) => {
             texture_loader.load(texture_paths[key], (texture) => {
                 
-                // Store each loaded texture by name
+                // Add texture path to loaded texture
+                texture.path = texture_paths[key];
+                
+                // Store loaded texture by name
                 textures[key] = texture;
                 
                 // Increment the texture count to check if all textures are loaded

@@ -103,15 +103,15 @@
 		
 		<!-- Selected Objects Window -->
 		<div id="editor-selected-objects" class="row" style="display: none;">
-			<div class="editor-window col-6 col-md-5 col-lg-4 col-xl-2">
-				<div class="card pt-2 ps-2 pe-2 pb-3 mt-3 shadow-sm">
+			<div class="editor-window col-6 col-md-5 col-lg-4 col-xl-2 overflow-hidden">
+				<div id="editor-selected-objects-inner" class="card pt-2 ps-2 pe-2 pb-2 mt-3 shadow-sm">
 					<div class="accordion">
 						
 						<!-- Transform -->
 						<div class="accordion-item">
 							
 							<!-- Transform Title -->
-							<div class="card-title accordion-title w-100 mt-2 mb-0">
+							<div class="card-title accordion-title w-100 mb-0">
 								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-transform" aria-expanded="true" aria-controls="editor-selected-objects-transform">
 									<span data-bs-title="Move/scale/rotate objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										Transform
@@ -122,7 +122,7 @@
 							<div id="editor-selected-objects-transform" class="accordion-collapse collapse show p-2">
 								
 								<!-- Transform Modes -->
-								<div id="editor-selected-objects-transform-modes" class="mb-2">
+								<div id="editor-selected-objects-transform-modes" class="pb-2 mb-2 border-bottom">
 									<div class="d-flex">
 										<div class="mx-1">
 											<input id="editor-selected-objects-transform-position-radio" name="editor-selected-objects-transforms" class="btn-check" value="position" type="radio" checked>
@@ -280,13 +280,29 @@
 							<div id="editor-selected-objects-materials" class="accordion-collapse collapse p-2">
 								
 								<!-- Material Colour Picker -->
-								<div id="" class="mb-2">
-									<div id="editor-selected-objects-materials-colour-picker">
-										<div class="editor-selected-objects-materials-colour-grid mt-1 mb-2"></div>
-										<div class="editor-selected-objects-materials-colour-info">
-											<input id="editor-selected-objects-materials-selected-colour" class="form-control form-control-color" value="#CCCCCC" type="color">
+								<div id="editor-selected-objects-materials-colour-picker" class="pb-2 mb-2 border-bottom">
+									<div class="editor-selected-objects-materials-colour-grid mt-1 mb-2"></div>
+									<div class="editor-selected-objects-materials-colour-info my-1">
+										<input id="editor-selected-objects-materials-selected-colour" class="form-control form-control-color" value="#CCCCCC" type="color"
+										data-bs-title="Pick a custom colour." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									</div>
+									
+									<!-- Material Texture Remove -->
+									<div class="d-flex flex-row-reverse w-100">
+										<div class="text-end">
+											<label id="editor-selected-objects-materials-texture-reset-button" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
+											data-bs-title="Remove current texture." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<i class="bi bi-ban"></i>
+											</label>
 										</div>
 									</div>
+								</div>
+								
+								<!-- Material Texture Picker -->
+								<div id="editor-selected-objects-materials-texture-picker" class="mt-3">
+									<select id="editor-selected-objects-materials-texture-select" class="form-select form-select-sm"
+									data-bs-title="Select a texture category." data-bs-toggle="tooltip" data-bs-placement="bottom"></select>
+									<div class="editor-selected-objects-materials-texture-grid my-1"></div>
 								</div>
 								
 							</div>
@@ -404,7 +420,7 @@
 					world.load(worlds.TestWorld)
 					
 					// Initialize player
-					player = new Player(window, document, renderer, world, editor, debug);
+					player = new Player(window, document, renderer, textures, world, editor, debug);
 					
 					// Start game loop
 					animate();
@@ -480,13 +496,14 @@
 		{ 
 			
 			// Initialize bootstrap tooltips
-			const tooltipList = $('[data-bs-toggle="tooltip"]').each(function() { new bootstrap.Tooltip($(this)); });
+			$('[data-bs-toggle="tooltip"]').each(function() { let tooltip = new bootstrap.Tooltip($(this)); $(this).on('click', function() { tooltip.hide(); }); });
+			
 			
 			// ---------------- TODO: REMOVE EVERYTHING BETWEEN THESE LINES  ----------------
 			
             $('#menu').hide();
             init();
-			setTimeout(function() { editor.toggle(world, player); }, 500)
+			setTimeout(function() { editor.toggle(textures, world, player); }, 500)
 			
 			// ---------------- TODO: REMOVE EVERYTHING BETWEEN THESE LINES  ----------------
 			
@@ -503,6 +520,9 @@
 			
 			// Update game renderer
             renderer.setSize(window.innerWidth, window.innerHeight);
+			
+			// Resized editor UI elements.
+			editor.resize();
 			
         });
 		
@@ -536,7 +556,7 @@
 			{
 				
 				// Create a new empty world
-				editor.newWorld(world, textures, player);
+				editor.newWorld(textures, world, player);
 				
 			}
 		});
@@ -580,7 +600,7 @@
 			{
 				
 				// Spawn a new billboard
-				editor.spawn(Billboard, world, player, textures)
+				editor.spawn(Billboard, textures, world, player)
 				
 			}
 		});
@@ -968,7 +988,59 @@
 			}
 		});
 		
-		// Editor Utility Events
+		/**
+		 * Editor selected object colour picker input event.
+		 */
+		$("#editor-selected-objects-materials-selected-colour").on('input', function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Get hex string of the selected colour
+				const selected_colour = $(this).val();
+				
+				// Set the selected object's colour to the new colour
+				if (editor.selected_object)
+				{
+					editor.selected_object.material = editor.selected_object_original_materials.get(editor.selected_object);
+					editor.selected_object.material.color.set(new THREE.Color(selected_colour));
+					editor.selected_object_original_materials.set(editor.selected_object, editor.selected_object.material);
+					editor.selected_object.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+				}
+				
+			}
+		});
+		
+		/**
+		 * Editor selected object texture reset button click event.
+		 */
+		$("#editor-selected-objects-materials-texture-reset-button").click(function()
+		{
+			if (editor.enabled)
+			{
+				
+				// Get hex string of the editor's default spawned object colour
+				const selected_colour = "#" + editor.spawned_object_colour.toString(16);
+				
+				// Set the selected colour picker to the new colour
+				$('#editor-selected-objects-materials-selected-colour').css('background-color', selected_colour);
+				$('#editor-selected-objects-materials-selected-colour').val(selected_colour);
+				
+				// Set the selected object's colour to the new colour
+				if (editor.selected_object)
+				{
+					editor.highlighted_object_original_materials.delete(editor.selected_object);
+					editor.selected_object.material = editor.selected_object_original_materials.get(editor.selected_object);
+					editor.selected_object.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour) });
+					editor.selected_object_original_materials.set(editor.selected_object, editor.selected_object.material);
+					editor.selected_object.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+				}
+				
+			}
+		});
+		
+		
+		// Utility Class Events
 		
 		/**
 		 * Letter input textbox text input event.
