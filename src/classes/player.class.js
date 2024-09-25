@@ -1,4 +1,4 @@
-// three.js Import
+// three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
 
 // Class Imports
@@ -11,17 +11,14 @@ class Player
 {
 	
 	/**
-	 * Initializes a new player for use in the game world.
+	 * Initializes a new player for use in the current game world.
 	 *
 	 * @param {window} window_interface A reference to the web browser window, which contains the DOM document.
 	 * @param {document} dom_document A reference to the DOM document within the web browser window.
 	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element.
-	 * @param {textures} textures The loaded game textures.
 	 * @param {world} world The current game world.
-	 * @param {editor} editor The in-game world editor.
-	 * @param {editor} debug The in-game debugger.
 	 */
-	constructor(window_interface, dom_document, renderer, textures, world, editor, debug)
+	constructor(window_interface, dom_document, renderer, world)
 	{
 		
 		// Class Declarations/Initialization
@@ -88,7 +85,7 @@ class Player
 		// Player Controls
 		
 		// Initialize player's keyboard/mouse controls
-		this.controls = new Controls(dom_document, renderer, textures, world, editor, this, debug);
+		this.controls = new Controls(dom_document, renderer, world, this);
 		
 	}
 	

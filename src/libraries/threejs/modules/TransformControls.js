@@ -1251,8 +1251,20 @@ class TransformControlsGizmo extends Object3D {
 			}
 
 			// Align handles to current local or world rotation
-
-			handle.quaternion.copy( quaternion );
+			if (this.mode === 'translate' || this.mode === 'scale')
+			{
+				
+				// Keep the gizmo upright when translating or scaling
+				handle.quaternion.copy(new Quaternion(0, 0, 0, 1));
+				
+			}
+			else
+			{
+				
+				// Rotate the gizmo when in rotation mode
+				handle.quaternion.copy(quaternion);
+				
+			}
 
 			if ( this.mode === 'translate' || this.mode === 'scale' ) {
 

@@ -1,6 +1,10 @@
-// three.js Import
+// three.js Imports
 import { PointerLockControls } from '../libraries/threejs/modules/PointerLockControls.js';
 import { TransformControls } from '../libraries/threejs/modules/TransformControls.js';
+
+// Static Class Imports
+import Debug from './debug.class.js';
+import Editor from './editor.class.js';
 
 /**
  * A controls object which provides mouse/keyboard controls to a player.
@@ -13,22 +17,13 @@ class Controls
 	 *
 	 * @param {document} dom_document A reference to the browser window's DOM document.
 	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element.
-	 * @param {textures} textures The list of game textures.
 	 * @param {world} world The current game world.
-	 * @param {editor} editor The in-game world editor.
 	 * @param {player} player The player being controlled by the mouse/keyboard.
-	 * @param {editor} debug The in-game debugger.
 	 */
-	constructor(dom_document, renderer, textures, world, editor, player, debug)
+	constructor(dom_document, renderer, world, player)
 	{
 		
 		// Class Declarations/Initialization
-		
-		
-		// Debug Mode
-		
-		// Enable/disable debug mode
-		this.mode_debug = false;
 		
 		
 		// Player Mouse Controls
@@ -77,12 +72,12 @@ class Controls
 		// Player Mouse/Keyboard Control Event Listeners
 		
 		// Mouse event listeners
-		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, debug, dom_document, textures, world, editor, player));
-		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, debug, dom_document, textures, world, editor, player));
+		$(dom_document).on('mousedown', (event) => player.controls.onMouseDown(event, dom_document, world, player));
+		$(dom_document).on('mouseup', (event) => player.controls.onMouseUp(event, dom_document, world, player));
 		
 		// Keyboard event listeners
-		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, debug, dom_document, textures, world, editor, player));
-		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, debug, dom_document, textures, world, editor, player));
+		$(dom_document).on('keydown', (event) => player.controls.onKeyDown(event, dom_document, world, player));
+		$(dom_document).on('keyup', (event) => player.controls.onKeyUp(event, dom_document, world, player));
 		
 		// Pointer lock controls event listeners
 		this.pointer_lock_controls.addEventListener('lock', () => player.controls.onPointerLockControlsLock());
@@ -104,7 +99,7 @@ class Controls
 		/**
 		 * Mouse button click event.
 		 */
-		this.onMouseDown = function(event, debug, dom_document, textures, world, editor, player)
+		this.onMouseDown = function(event, dom_document, world, player)
 		{
 			
 			// Handle mouse button click event
@@ -117,7 +112,7 @@ class Controls
 					player.handleLeftMouseDown();
 					
 					// Handle editor left mouse down
-					editor.handleLeftMouseDown(player);
+					Editor.handleLeftMouseDown(player);
 					
 					break;
 				case 2:
@@ -132,7 +127,7 @@ class Controls
 		/**
 		 * Mouse button release event.
 		 */
-		this.onMouseUp = function(event, debug, dom_document, textures, world, editor, player)
+		this.onMouseUp = function(event, dom_document, world, player)
 		{
 			
 			// Handle mouse button release event
@@ -145,7 +140,7 @@ class Controls
 					player.handleLeftMouseUp();
 					
 					// Handle editor left mouse up
-					editor.handleLeftMouseUp(world, player);
+					Editor.handleLeftMouseUp(world, player);
 					
 					break;
 				case 2:
@@ -155,7 +150,7 @@ class Controls
 					player.handleRightMouseUp();
 					
 					// Handle editor right mouse up
-					editor.handleRightMouseUp(dom_document, world, player);
+					Editor.handleRightMouseUp(dom_document, world, player);
 					
 					break;
 			}
@@ -201,7 +196,7 @@ class Controls
 		/**
 		 * Keyboard key press event.
 		 */
-		this.onKeyDown = function(event, debug, dom_document, textures, world, editor, player)
+		this.onKeyDown = function(event, dom_document, world, player)
 		{
 			
 			// Ignore key presses if a text box or text area is being edited
@@ -252,7 +247,7 @@ class Controls
 		/**
 		 * Keyboard key release event.
 		 */
-		this.onKeyUp = function(event, debug, dom_document, textures, world, editor, player)
+		this.onKeyUp = function(event, dom_document, world, player)
 		{
 			
 			// Ignore key releases if a text box or text area is being edited
@@ -279,7 +274,7 @@ class Controls
 						// ShiftLeft + KeyD
 						
 						// Toggle debug on/off
-						debug.toggle();
+						Debug.toggle();
 					}
 					else
 					{
@@ -294,7 +289,7 @@ class Controls
 						// ShiftLeft + KeyE
 						
 						// Toggle editor on/off
-						editor.toggle(textures, world, player);
+						Editor.toggle(world, player);
 					}
 					else
 					{
@@ -309,7 +304,7 @@ class Controls
 				case 'Delete':
 					
 					// Delete editor selected object
-					editor.deleteSelectedObject(world, player);
+					Editor.deleteSelectedObject(world, player);
 					
 					break;
 				case 'ShiftLeft':

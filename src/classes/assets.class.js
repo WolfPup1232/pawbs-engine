@@ -1,19 +1,37 @@
-// three.js Import
+// three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
 
 /**
- * A utilities class that holds methods and functions that didn't really organize nicely anywhere else.
+ * A collection of in-game assets.
  */
-class Utilities
+class Assets
 {
+    
+	// Class Declarations
+	
+	// The list of textures loaded by the game
+	static textures = {};
+    
+    
+    // Constructor
+	
+	/**
+	 * Initializes the collection of in-game assets.
+	 */
+	static()
+	{
+		
+		// Do nothing.
+		
+	}
     
     
     // Methods
-	
+    
     /**
-    * Load Textures - Initializes game textures according to the list of textures in the textures.json file.
+    * Initializes game textures list according to the list of textures in the textures.json file.
     */
-    loadTextures(texture_paths, textures, callback)
+    static loadTextures(texture_paths, callback)
     {
         
         let count = 0;
@@ -32,7 +50,7 @@ class Utilities
                 texture.path = texture_paths[key];
                 
                 // Store loaded texture by name
-                textures[key] = texture;
+                this.textures[key] = texture;
                 
                 // Increment the texture count to check if all textures are loaded
                 count++;
@@ -57,4 +75,4 @@ class Utilities
     }
     
 }
-export default Utilities;
+export default Assets;

@@ -107,6 +107,59 @@
 				<div id="editor-selected-objects-inner" class="card pt-2 ps-2 pe-2 pb-2 mt-3 shadow-sm">
 					<div class="accordion">
 						
+						<!-- Transform Title -->
+						<div class="card-title fw-bold input-group-text d-block w-100 mb-2">
+							<div class="d-flex">
+								<div class="me-1">
+									<input id="editor-selected-objects-cut" class="btn-check" type="button">
+									<label for="editor-selected-objects-cut" class="btn btn-outline-secondary px-1 py-0"
+									data-bs-title="Cut selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-scissors"></i>
+									</label>
+								</div>
+								
+								<div class="mx-1">
+									<input id="editor-selected-objects-copy" class="btn-check" type="button">
+									<label for="editor-selected-objects-copy" class="btn btn-outline-secondary px-1 py-0"
+									data-bs-title="Copy selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-copy"></i>
+									</label>
+								</div>
+								
+								<div class="mx-1">
+									<input id="editor-selected-objects-paste" class="btn-check" type="button">
+									<label for="editor-selected-objects-paste" class="btn btn-outline-secondary px-1 py-0"
+									data-bs-title="Paste selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-clipboard"></i>
+									</label>
+								</div>
+								
+								<div class="vr mx-2"></div>
+								
+								<div class="mx-1">
+									<input id="editor-selected-objects-delete" class="btn-check" type="button">
+									<label for="editor-selected-objects-delete" class="btn btn-outline-secondary px-1 py-0"
+									data-bs-title="Delete selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-trash"></i>
+									</label>
+								</div>
+								
+								<div id="editor-selected-objects-grouping" class="ms-auto">
+									<input id="editor-selected-objects-group" class="btn-check" type="button">
+									<label for="editor-selected-objects-group" class="btn btn-outline-secondary px-1 py-0"
+									data-bs-title="Group selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-collection-fill"></i>
+									</label>
+									
+									<input id="editor-selected-objects-ungroup" class="btn-check" type="button">
+									<label for="editor-selected-objects-ungroup" class="btn btn-outline-secondary px-1 py-0 ms-1"
+									data-bs-title="Ungroup selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-collection"></i>
+									</label>
+								</div>
+							</div>
+						</div>
+						
 						<!-- Transform -->
 						<div class="accordion-item">
 							
@@ -362,10 +415,12 @@
 		// Class Imports
 		import Player from './classes/player.class.js';
 		import World from './classes/world.class.js';
+		import Billboard from './classes/billboard.class.js';
+		
+		// Static Class Imports
+		import Assets from './classes/assets.class.js';
 		import Editor from './classes/editor.class.js';
 		import Debug from './classes/debug.class.js';
-		import Utilities from './classes/utilities.class.js';
-		import Billboard from './classes/billboard.class.js';
 		
 		
 		// Game Declarations
@@ -377,10 +432,7 @@
 		let player;
 		
 		// Game World
-		let worlds, world, textures;
-		
-		// Game Utilities
-		let utilities, editor, debug;
+		let worlds, world;
 		
 		
 		// Game Functions
@@ -391,11 +443,6 @@
 		function init()
 		{
 			
-			// Initialize utilities
-			utilities = new Utilities();
-			editor = new Editor();
-			debug = new Debug();
-			
 			// Initialize three.js renderer
 			renderer = new THREE.WebGLRenderer();
 			renderer.setSize(window.innerWidth, window.innerHeight);
@@ -403,14 +450,11 @@
 			stop_animating = false;
 			$('#renderer').append(renderer.domElement);
 			
-			// Initialize textures
-			textures = {};
-			
 			// Initialize worlds
 			worlds = {};
 			
 			// Load textures
-			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { utilities.loadTextures(texture_paths, textures, function() {
+			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { Assets.loadTextures(texture_paths, function() {
 				
 				// Load worlds
 				fetch('./worlds/worlds.json').then(response => response.json()).then(worlds => {
@@ -420,7 +464,7 @@
 					world.load(worlds.TestWorld)
 					
 					// Initialize player
-					player = new Player(window, document, renderer, textures, world, editor, debug);
+					player = new Player(window, document, renderer, world);
 					
 					// Start game loop
 					animate();
@@ -461,10 +505,10 @@
 				player.update(world);
 				
 				// Update in-game editor
-				editor.update(world, player);
+				Editor.update(world, player);
 				
 				// Update in-game debugger
-				debug.update(world, player);
+				Debug.update(world, player);
 				
 			}
 			else
@@ -503,7 +547,7 @@
 			
             $('#menu').hide();
             init();
-			setTimeout(function() { editor.toggle(textures, world, player); }, 500)
+			setTimeout(function() { Editor.toggle(world, player); }, 500)
 			
 			// ---------------- TODO: REMOVE EVERYTHING BETWEEN THESE LINES  ----------------
 			
@@ -522,7 +566,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
 			
 			// Resized editor UI elements.
-			editor.resize();
+			Editor.resize();
 			
         });
 		
@@ -536,7 +580,7 @@
 		 */
 		$("#editor-world-name").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Set world name
@@ -552,11 +596,11 @@
 		 */
 		$("#editor-world-new").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Create a new empty world
-				editor.newWorld(textures, world, player);
+				Editor.newWorld(world, player);
 				
 			}
 		});
@@ -566,11 +610,11 @@
 		 */
 		$("#editor-world-load").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Load a world from a JSON file
-				editor.loadWorld(world, player);
+				Editor.loadWorld(world, player);
 				
 			}
 		});
@@ -580,11 +624,11 @@
 		 */
 		$("#editor-world-save").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Save the selected world as a JSON file
-				editor.saveWorld(world, player);
+				Editor.saveWorld(world, player);
 				
 			}
 		});
@@ -596,11 +640,11 @@
 		 */
 		$("#editor-world-geometry-billboard").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Spawn a new billboard
-				editor.spawn(Billboard, textures, world, player)
+				Editor.spawn(Billboard, world, player)
 				
 			}
 		});
@@ -610,11 +654,11 @@
 		 */
 		$("#editor-world-geometry-plane").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Spawn a new plane
-				editor.spawn(THREE.PlaneGeometry, world, player)
+				Editor.spawn(THREE.PlaneGeometry, world, player)
 				
 			}
 		});
@@ -624,11 +668,11 @@
 		 */
 		$("#editor-world-geometry-box").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Spawn a new box
-				editor.spawn(THREE.BoxGeometry, world, player)
+				Editor.spawn(THREE.BoxGeometry, world, player)
 				
 			}
 		});
@@ -638,11 +682,11 @@
 		 */
 		$("#editor-world-geometry-cylinder").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Spawn a new cylinder
-				editor.spawn(THREE.CylinderGeometry, world, player)
+				Editor.spawn(THREE.CylinderGeometry, world, player)
 				
 			}
 		});
@@ -652,11 +696,11 @@
 		 */
 		$("#editor-world-geometry-sphere").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Spawn a new sphere
-				editor.spawn(THREE.SphereGeometry, world, player)
+				Editor.spawn(THREE.SphereGeometry, world, player)
 				
 			}
 		});
@@ -711,7 +755,7 @@
 			}
 			
 			// Update the editor selected object UI
-			editor.updateSelectedObjectUI(player);
+			Editor.updateSelectedObjectUI(player);
 			
 		});
 		
@@ -722,7 +766,7 @@
 		 */
 		 $("#editor-selected-objects-transform-position-snap").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Check if position grid snap is enabled
@@ -742,7 +786,7 @@
 		 */
 		 $("#editor-selected-objects-transform-position-snap-checkbox").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Check if position grid snap is enabled
@@ -769,11 +813,11 @@
 		 */
 		 $("#editor-selected-objects-transform-position-x").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
-				// Set selected object X-axis position 
-				editor.selected_object.position.x = $("#editor-selected-objects-transform-position-x").val();
+				// Set selected object X-axis position
+				Editor.selected_objects.position.x = $("#editor-selected-objects-transform-position-x").val();
 				
 			}
 		});
@@ -783,11 +827,11 @@
 		 */
 		 $("#editor-selected-objects-transform-position-y").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
-				// Set selected object Y-axis position 
-				editor.selected_object.position.y = $("#editor-selected-objects-transform-position-y").val();
+				// Set selected object Y-axis position
+				Editor.selected_objects.position.y = $("#editor-selected-objects-transform-position-y").val();
 				
 			}
 		});
@@ -797,11 +841,11 @@
 		 */
 		 $("#editor-selected-objects-transform-position-z").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
-				// Set selected object Z-axis position 
-				editor.selected_object.position.z = $("#editor-selected-objects-transform-position-z").val();
+				// Set selected object Z-axis position
+				Editor.selected_objects.position.z = $("#editor-selected-objects-transform-position-z").val();
 				
 			}
 		});
@@ -813,7 +857,7 @@
 		 */
 		 $("#editor-selected-objects-transform-scale-snap").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Check if scale grid snap is enabled
@@ -833,7 +877,7 @@
 		 */
 		 $("#editor-selected-objects-transform-scale-snap-checkbox").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Check if scale grid snap is enabled
@@ -860,11 +904,11 @@
 		 */
 		 $("#editor-selected-objects-transform-scale-x").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Set selected object X-axis scale 
-				editor.selected_object.scale.x = $("#editor-selected-objects-transform-scale-x").val().slice(0, -1) / 100;
+				Editor.selected_objects.scale.x = $("#editor-selected-objects-transform-scale-x").val().slice(0, -1) / 100;
 				
 			}
 		});
@@ -874,11 +918,11 @@
 		 */
 		 $("#editor-selected-objects-transform-scale-y").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Set selected object Y-axis scale 
-				editor.selected_object.scale.y = $("#editor-selected-objects-transform-scale-y").val().slice(0, -1) / 100;
+				Editor.selected_objects.scale.y = $("#editor-selected-objects-transform-scale-y").val().slice(0, -1) / 100;
 				
 			}
 		});
@@ -888,11 +932,11 @@
 		 */
 		 $("#editor-selected-objects-transform-scale-z").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Set selected object Z-axis scale 
-				editor.selected_object.scale.z = $("#editor-selected-objects-transform-scale-z").val().slice(0, -1) / 100;
+				Editor.selected_objects.scale.z = $("#editor-selected-objects-transform-scale-z").val().slice(0, -1) / 100;
 				
 			}
 		});
@@ -904,7 +948,7 @@
 		 */
 		 $("#editor-selected-objects-transform-rotation-snap").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Check if rotation grid snap is enabled
@@ -924,7 +968,7 @@
 		 */
 		 $("#editor-selected-objects-transform-rotation-snap-checkbox").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Check if rotation grid snap is enabled
@@ -951,11 +995,11 @@
 		 */
 		 $("#editor-selected-objects-transform-rotation-x").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Set selected object X-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.x = $("#editor-selected-objects-transform-rotation-x").val().slice(0, -1) * (Math.PI / 180);
+				Editor.selected_objects.rotation.x = $("#editor-selected-objects-transform-rotation-x").val().slice(0, -1) * (Math.PI / 180);
 				
 			}
 		});
@@ -965,11 +1009,11 @@
 		 */
 		 $("#editor-selected-objects-transform-rotation-y").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Set selected object Y-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.y = $("#editor-selected-objects-transform-rotation-y").val().slice(0, -1)  * (Math.PI / 180);
+				Editor.selected_objects.rotation.y = $("#editor-selected-objects-transform-rotation-y").val().slice(0, -1)  * (Math.PI / 180);
 				
 			}
 		});
@@ -979,11 +1023,11 @@
 		 */
 		 $("#editor-selected-objects-transform-rotation-z").change(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Set selected object Z-axis rotation by converting the input degrees to radians
-				editor.selected_object.rotation.z = $("#editor-selected-objects-transform-rotation-z").val().slice(0, -1)  * (Math.PI / 180);
+				Editor.selected_objects.rotation.z = $("#editor-selected-objects-transform-rotation-z").val().slice(0, -1)  * (Math.PI / 180);
 				
 			}
 		});
@@ -993,19 +1037,24 @@
 		 */
 		$("#editor-selected-objects-materials-selected-colour").on('input', function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Get hex string of the selected colour
 				const selected_colour = $(this).val();
 				
-				// Set the selected object's colour to the new colour
-				if (editor.selected_object)
+				// Set the colour of all selected objects to the selected colour
+				if (Editor.selected_objects.children.length > 0)
 				{
-					editor.selected_object.material = editor.selected_object_original_materials.get(editor.selected_object);
-					editor.selected_object.material.color.set(new THREE.Color(selected_colour));
-					editor.selected_object_original_materials.set(editor.selected_object, editor.selected_object.material);
-					editor.selected_object.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+					Editor.selected_objects.traverse((child) => {
+						if (child.isMesh)
+						{
+							child.material = Editor.selected_object_original_materials.get(child);
+							child.material.color.set(new THREE.Color(selected_colour));
+							Editor.selected_object_original_materials.set(child, child.material);
+							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+						}
+					});
 				}
 				
 			}
@@ -1016,24 +1065,29 @@
 		 */
 		$("#editor-selected-objects-materials-texture-reset-button").click(function()
 		{
-			if (editor.enabled)
+			if (Editor.enabled)
 			{
 				
 				// Get hex string of the editor's default spawned object colour
-				const selected_colour = "#" + editor.spawned_object_colour.toString(16);
+				const selected_colour = "#" + Editor.spawned_object_colour.toString(16);
 				
 				// Set the selected colour picker to the new colour
 				$('#editor-selected-objects-materials-selected-colour').css('background-color', selected_colour);
 				$('#editor-selected-objects-materials-selected-colour').val(selected_colour);
 				
-				// Set the selected object's colour to the new colour
-				if (editor.selected_object)
+				// Set the colour of all selected objects to the selected colour
+				if (Editor.selected_objects.children.length > 0)
 				{
-					editor.highlighted_object_original_materials.delete(editor.selected_object);
-					editor.selected_object.material = editor.selected_object_original_materials.get(editor.selected_object);
-					editor.selected_object.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour) });
-					editor.selected_object_original_materials.set(editor.selected_object, editor.selected_object.material);
-					editor.selected_object.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+					Editor.selected_objects.traverse((child) => {
+						if (child.isMesh)
+						{
+							Editor.highlighted_object_original_materials.delete(child);
+							child.material = Editor.selected_object_original_materials.get(child);
+							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour) });
+							Editor.selected_object_original_materials.set(child, child.material);
+							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+						}
+					});
 				}
 				
 			}

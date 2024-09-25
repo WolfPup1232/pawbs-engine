@@ -66,7 +66,7 @@ button {
 
 /* Editor UI Elements */
 
-/* Editor Window */
+/* Selected Objects Window */
 #editor-selected-objects-inner {
 	overflow-y: scroll;
 }

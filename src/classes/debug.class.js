@@ -3,28 +3,32 @@
 */
 class Debug
 {
-		
+	
+	// Class Declarations
+	
+	// Enable/disable debugger
+	static enabled = false;
+	
+	
+	// Constructor
+	
 	/**
 	* Initializes the in-game debugger.
 	*/
-	constructor()
+	static()
 	{
 		
-		// Class Declarations/Initialization
-		
-		
-		// Enable/disable debugger
-		this.enabled = false;
+		// Do nothing.
 		
 	}
 	
 	
-	// Debugger Methods
+	// Methods
 	
 	/**
 	* Toggle debugger on/off.
 	*/
-	toggle()
+	static toggle()
 	{
 		
 		// Toggle debugger
@@ -57,7 +61,7 @@ class Debug
 	* @param {world} world The game world to debug.
 	* @param {player} player The player to debug.
 	*/
-	update(world, player)
+	static update(world, player)
 	{
 		if (this.enabled)
 		{
@@ -74,7 +78,7 @@ class Debug
 	* @param {world} world The game world to debug.
 	* @param {player} player The player to debug.
 	*/
-	output(world, player)
+	static output(world, player)
 	{
 		
 		// Output debug info to UI
