@@ -85,10 +85,10 @@ class Controls
 		$(renderer.domElement).on('click', () => player.controls.pointer_lock_controls.lock());
 		
 		// Editor UI pointer lock event listener
-    	$('#editor').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".editor-window", player); });
+		$('#editor').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".editor-window", player); });
 		
 		// Debug UI pointer lock event listener
-    	$('#debug').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".debug-window", player); });
+		$('#debug').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".debug-window", player); });
 		
 		// Transform controls event listeners
 		this.transform_controls.addEventListener('draggingChanged', (event) => player.controls.onTransformControlsDraggingChanged(player));

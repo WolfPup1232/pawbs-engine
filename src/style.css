@@ -73,52 +73,52 @@ button {
 
 /* Colour Picker */
 #editor-selected-objects-materials-colour-picker {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 .editor-selected-objects-materials-colour-grid {
-    display: grid;
-    grid-gap: 5px;
+	display: grid;
+	grid-gap: 5px;
 	grid-template-columns: repeat(8, 16px);
 }
 .editor-selected-objects-materials-colour-cell {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    border: 1px solid #000;
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	border: 1px solid #000;
 }
 .editor-selected-objects-materials-colour-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 #editor-selected-objects-materials-selected-colour {
-    padding: 5px;
-    text-align: center;
-    width: 150px;
-    border: 1px solid #000;
+	padding: 5px;
+	text-align: center;
+	width: 150px;
+	border: 1px solid #000;
 }
 
 /* Texture Picker */
 #editor-selected-objects-materials-texture-picker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 .editor-selected-objects-materials-texture-grid {
-    display: grid;
-    grid-gap: 5px;
+	display: grid;
+	grid-gap: 5px;
 	grid-template-columns: repeat(4, 64px);
 }
 .editor-selected-objects-materials-texture-image {
-    width: 64px;
-    height: 64px;
+	width: 64px;
+	height: 64px;
 	object-fit: cover;
 }
 .editor-selected-objects-materials-texture-cell {
-    cursor: pointer;
-    border: 1px solid #dee2e6;
+	cursor: pointer;
+	border: 1px solid #dee2e6;
 }
 
 

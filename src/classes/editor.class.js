@@ -86,8 +86,8 @@ class Editor
 		
 	}
 	
-    
-    // Event Handler Methods
+	
+	// Event Handler Methods
 	
 	/**
 	 * Handles player left mouse down.
@@ -210,9 +210,9 @@ class Editor
 		}
 		
 	}
-    
-    
-    // Methods
+	
+	
+	// Methods
 	
 	/**
 	 * Toggle editor on/off.
@@ -1527,6 +1527,6 @@ class Editor
 		$('[data-bs-toggle="tooltip"]').each(function() { let tooltip = new bootstrap.Tooltip($(this)); $(this).on('click', function() { tooltip.hide(); }); });
 		
 	}
-    
+	
 }
 export default Editor;
