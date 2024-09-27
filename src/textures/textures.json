@@ -1,5 +1,4 @@
 {
-	"campfire": "./textures/scenery/fire/campfire-front.png",
-	"moon_whale": "./textures/moon_whale.png",
-	"rock": "./textures/scenery/rocks/rock.jpg"
+	"apple1": "./textures/apple1.png",
+	"apple2": "./textures/apple2.png"
 }

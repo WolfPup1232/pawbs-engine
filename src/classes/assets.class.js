@@ -18,7 +18,7 @@ class Assets
 	/**
 	 * Initializes the collection of in-game assets.
 	 */
-	static()
+	static
 	{
 		
 		// Do nothing.

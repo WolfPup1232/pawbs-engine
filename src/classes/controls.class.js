@@ -176,6 +176,7 @@ class Controls
 			
 			// Mouse is now unlocked from the renderer
 			player.controls.is_mouse_locked = false;
+			player.controls.transform_controls.dragging = false;
 			
 		};
 		
@@ -298,13 +299,73 @@ class Controls
 						// Do nothing.
 					}
 					break;
+				case 'KeyC':
+					if (player.controls.is_control_left_pressed)
+					{
+						// ShiftLeft + KeyC
+						
+						// Copy editor selected objects to clipboard
+						Editor.copySelectedObjects()
+					}
+					else
+					{
+						// KeyC
+						
+						// Do nothing.
+					}
+					break;
+				case 'KeyX':
+					if (player.controls.is_control_left_pressed)
+					{
+						// ShiftLeft + KeyX
+						
+						// Cut editor selected objects to clipboard
+						Editor.cutSelectedObjects(world, player)
+					}
+					else
+					{
+						// KeyX
+						
+						// Do nothing.
+					}
+					break;
+				case 'KeyV':
+					if (player.controls.is_control_left_pressed)
+					{
+						// ShiftLeft + KeyV
+						
+						// Paste editor clipboard objects
+						Editor.pasteClipboardObjects(world, player)
+					}
+					else
+					{
+						// KeyV
+						
+						// Do nothing.
+					}
+					break;
+				case 'KeyZ':
+					if (player.controls.is_control_left_pressed)
+					{
+						// ShiftLeft + KeyZ
+						
+						// Toggle undo
+						//Editor.undo(world, player);
+					}
+					else
+					{
+						// KeyZ
+						
+						// Do nothing.
+					}
+					break;
 				case 'Space':
 					player.controls.is_player_jumping = false;
 					break;
 				case 'Delete':
 					
 					// Delete editor selected object
-					Editor.deleteSelectedObject(world, player);
+					Editor.deleteSelectedObjects(world, player);
 					
 					break;
 				case 'ShiftLeft':

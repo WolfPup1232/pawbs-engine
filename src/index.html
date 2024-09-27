@@ -709,53 +709,142 @@
 		// Editor Selected Object Window
 		
 		/**
-		 * Editor selected object transform type selected radio button change event.
+		 * Editor selected objects cut button click event.
+		 */
+		$("#editor-selected-objects-cut").click(function()
+		{
+			if (Editor.enabled)
+			{
+				
+				// Cut selected objects
+				Editor.cutSelectedObjects(world, player);
+				
+			}
+		});
+		
+		/**
+		 * Editor selected objects copy button click event.
+		 */
+		$("#editor-selected-objects-copy").click(function()
+		{
+			if (Editor.enabled)
+			{
+				
+				// Copy selected objects
+				Editor.copySelectedObjects();
+				
+			}
+		});
+		
+		/**
+		 * Editor clipboard objects paste button click event.
+		 */
+		$("#editor-selected-objects-paste").click(function()
+		{
+			if (Editor.enabled)
+			{
+				
+				// Paste clipboard objects
+				Editor.pasteClipboardObjects(world, player);
+				
+			}
+		});
+		
+		/**
+		 * Editor selected objects delete button click event.
+		 */
+		$("#editor-selected-objects-delete").click(function()
+		{
+			if (Editor.enabled)
+			{
+				
+				// Delete selected objects
+				Editor.deleteSelectedObjects(world, player);
+				
+			}
+		});
+		
+		/**
+		 * Editor selected objects group button click event.
+		 */
+		$("#editor-selected-objects-group").click(function()
+		{
+			if (Editor.enabled)
+			{
+				
+				// Group selected objects
+				//Editor.groupSelectedObjects(world, player);
+				
+			}
+		});
+		
+		/**
+		 * Editor selected objects ungroup button click event.
+		 */
+		$("#editor-selected-objects-ungroup").click(function()
+		{
+			if (Editor.enabled)
+			{
+				
+				// Ungroup selected objects
+				
+			}
+		});
+		
+		// Editor Selected Object Transform Types
+		
+		/**
+		 * Editor selected objects transform type selected radio button change event.
 		 */
 		$('input[type="radio"][name="editor-selected-objects-transforms"]').change(function()
 		{
+			if (Editor.enabled)
+			{
 			
-			// Get editor selected object transform type selected radio button value
-			let selectedValue = $(this).val();
-			
-			// Hide all transform controls
-			$("#editor-selected-objects-transform-position").hide();
-			$("#editor-selected-objects-transform-scale").hide();
-			$("#editor-selected-objects-transform-rotation").hide();
+				// Get editor selected object transform type selected radio button value
+				let selectedValue = $(this).val();
+				
+				// Hide all transform controls
+				$("#editor-selected-objects-transform-position").hide();
+				$("#editor-selected-objects-transform-scale").hide();
+				$("#editor-selected-objects-transform-rotation").hide();
 
-			// Change player transform controls mode based on selected radio button value
-			if (selectedValue === 'position')
-			{
+				// Change player transform controls mode based on selected radio button value
+				if (selectedValue === 'position')
+				{
+					
+					// Translate mode
+					player.controls.transform_controls.setMode('translate');
+					
+					// Show translate controls
+					$("#editor-selected-objects-transform-position").show();
+					
+				}
+				else if (selectedValue === 'scale')
+				{
+					
+					// Scale mode
+					player.controls.transform_controls.setMode('scale');
+					
+					// Show scale controls
+					$("#editor-selected-objects-transform-scale").show();
+					
+				}
+				else if (selectedValue === 'rotation')
+				{
+					
+					// Rotate mode
+					player.controls.transform_controls.setMode('rotate');
+					
+					// Show rotation controls
+					$("#editor-selected-objects-transform-rotation").show();
+					
+				}
 				
-				// Translate mode
-				player.controls.transform_controls.setMode('translate');
-				
-				// Show translate controls
-				$("#editor-selected-objects-transform-position").show();
+				// Update the editor selected object UI
+				Editor.updateSelectedObjectUI(player);
 				
 			}
-			else if (selectedValue === 'scale')
-			{
-				
-				// Scale mode
-				player.controls.transform_controls.setMode('scale');
-				
-				// Show scale controls
-				$("#editor-selected-objects-transform-scale").show();
-				
-			}
-			else if (selectedValue === 'rotation')
-			{
-				
-				// Rotate mode
-				player.controls.transform_controls.setMode('rotate');
-				
-				// Show rotation controls
-				$("#editor-selected-objects-transform-rotation").show();
-				
-			}
-			
-			// Update the editor selected object UI
-			Editor.updateSelectedObjectUI(player);
 			
 		});
 		
@@ -1032,6 +1121,8 @@
 			}
 		});
 		
+		// Editor Selected Object Materials
+		
 		/**
 		 * Editor selected object colour picker input event.
 		 */
@@ -1049,9 +1140,7 @@
 					Editor.selected_objects.traverse((child) => {
 						if (child.isMesh)
 						{
-							child.material = Editor.selected_object_original_materials.get(child);
-							child.material.color.set(new THREE.Color(selected_colour));
-							Editor.selected_object_original_materials.set(child, child.material);
+							child.userData.original_material.color.set(new THREE.Color(selected_colour));
 							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
 						}
 					});
@@ -1081,10 +1170,8 @@
 					Editor.selected_objects.traverse((child) => {
 						if (child.isMesh)
 						{
-							Editor.highlighted_object_original_materials.delete(child);
-							child.material = Editor.selected_object_original_materials.get(child);
 							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour) });
-							Editor.selected_object_original_materials.set(child, child.material);
+							child.userData.original_material = child.material.clone();
 							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
 						}
 					});

@@ -27,9 +27,6 @@ class Editor
 	// The colour of highlighted objects
 	static highlighted_object_colour = 0xffffff;
 	
-	// The original colour/materials of the highlighted objects
-	static highlighted_object_original_materials = new WeakMap();
-	
 	
 	// Selected objects
 	
@@ -39,8 +36,11 @@ class Editor
 	// The colour of selected objects
 	static selected_object_colour = 0xffffff;
 	
-	// The original colour/materials of the selected objects
-	static selected_object_original_materials = new WeakMap();
+	
+	// Clipboard objects
+	
+	// The cut/copies objects
+	static clipboard_objects = new THREE.Group();
 	
 	
 	// Spawned objects
@@ -54,10 +54,35 @@ class Editor
 	/**
 	 * Initializes the in-game world editor.
 	 */
-	static()
+	static
 	{
 		
-		// Do nothing.
+		// Add a deep clone function to the Object3D type along with a userData clone function to handle recursion (the Object3D's default clone method doesn't clone certain stuff, sad puppey)
+		THREE.Object3D.prototype.userDataClone = function(clone)
+		{
+			if (this.userData)
+			{
+				Object.entries(this.userData).forEach(([key, value]) => {
+					clone.userData[key] = value.clone();
+				});
+			}
+		};
+		THREE.Object3D.prototype.deepClone = function()
+		{
+			const clone = this.clone(true);
+			
+			this.userDataClone(clone);
+			
+			if (this.children && this.children.length > 0)
+			{
+				for (let i = 0; i < this.children.length; i++)
+				{
+					this.children[i].userDataClone(clone.children[i]);
+				}
+			}
+			
+			return clone;
+		};
 		
 	}
 	
@@ -172,6 +197,7 @@ class Editor
 				// Unlock the mouse from the renderer
 				player.controls.pointer_lock_controls.unlock();
 				player.controls.is_mouse_dragging = false;
+				player.controls.transform_controls.dragging = false;
 				
 				// Disable right-click menu
 				$(dom_document).one('contextmenu', function(event)
@@ -206,7 +232,7 @@ class Editor
 			
 			// Reset any highlighted or selected objects
 			this.resetHighlightedObject();
-			this.resetSelectedObjects(player);
+			this.resetSelectedObjects(world, player);
 			
 			// Remove player transform controls from the world
 			world.scene.remove(player.controls.transform_controls);
@@ -365,7 +391,7 @@ class Editor
 			
 			// Reset any highlighted or selected objects
 			this.resetHighlightedObject();
-			this.resetSelectedObjects(player);
+			this.resetSelectedObjects(world, player);
 			
 			// Initialize a temporary file input element to trigger an open file dialog
 			let file_input = $('<input type="file" accept=".json" style="display:none;">');
@@ -445,7 +471,7 @@ class Editor
 			
 			// Reset any highlighted or selected objects
 			this.resetHighlightedObject();
-			this.resetSelectedObjects(player);
+			this.resetSelectedObjects(world, player);
 		
 			// Create a temporary link element to trigger a save file dialog
 			let link = document.createElement('a');
@@ -662,11 +688,7 @@ class Editor
 									new_highlighted_object.traverse((child) => {
 										if (child.isMesh)
 										{
-											if (!this.highlighted_object_original_materials.has(child))
-											{
-												this.highlighted_object_original_materials.set(child, child.material);
-											}
-											
+											child.userData.original_material = child.material.clone();
 											child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5 });
 										}
 									});
@@ -688,11 +710,7 @@ class Editor
 						// Set the new highlighted object's material to a solid colour
 						if (new_highlighted_object)
 						{
-							if (!this.highlighted_object_original_materials.has(new_highlighted_object))
-							{
-								this.highlighted_object_original_materials.set(new_highlighted_object, new_highlighted_object.material);
-							}
-							
+							new_highlighted_object.userData.original_material = new_highlighted_object.material.clone();
 							new_highlighted_object.material = new THREE.MeshBasicMaterial({ color: new_highlighted_object.material.color.getHex(), transparent: true, opacity: 0.5 });
 						}
 						
@@ -749,7 +767,11 @@ class Editor
 				this.highlighted_object.traverse((child) => {
 					if (child.isMesh)
 					{
-						child.material =  this.highlighted_object_original_materials.get(child);
+						if (child.userData.original_material != null)
+						{
+							child.material = child.userData.original_material.clone();
+							child.userData.original_material = null;
+						}
 					}
 				});
 				
@@ -758,7 +780,11 @@ class Editor
 			{
 				
 				// Reset highlighted object material
-				this.highlighted_object.material =  this.highlighted_object_original_materials.get(this.highlighted_object);
+				if (this.highlighted_object.userData.original_material != null)
+				{
+					this.highlighted_object.material = this.highlighted_object.userData.original_material;
+					this.highlighted_object.userData.original_material = null;
+				}
 				
 			}
 			
@@ -792,7 +818,7 @@ class Editor
 			player.raycaster.far = Infinity;
 			
 			// Check intersections with world objects
-			const intersects = player.raycaster.intersectObjects(world.objects);
+			const intersects = player.raycaster.intersectObjects(world.objects, true);
 			if (intersects.length > 0)
 			{
 				
@@ -812,15 +838,25 @@ class Editor
 				if (!this.selected_objects.getObjectById(new_selected_object.id))
 				{
 					
-					// Set the new selected object's material to a solid colour
-					if (new_selected_object)
+					if (new_selected_object.isGroup)
 					{
-						if (!this.selected_object_original_materials.has(new_selected_object))
-						{
-							this.selected_object_original_materials.set(new_selected_object, new_selected_object.material);
-						}
 						
+						this.selected_objects.traverse((child) => {
+							if (child.isMesh)
+							{
+								child.userData.original_material = child.material.clone();
+								child.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+							}
+						});
+						
+					}
+					else
+					{
+					
+						// Set the new selected object's material to a wireframe
+						new_selected_object.userData.original_material = new_selected_object.material.clone();
 						new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+					
 					}
 					
 					// Remove the new selected object from the world in preparation to add it to the group
@@ -872,7 +908,7 @@ class Editor
 				else
 				{
 					
-					// Reset the selected object
+					// Reset the selected objects
 					this.resetSelectedObjects(world, player);
 					
 				}
@@ -882,7 +918,7 @@ class Editor
 			else
 			{
 				
-				// Reset the selected object
+				// Reset the selected objects
 				this.resetSelectedObjects(world, player);
 				
 			}
@@ -892,7 +928,7 @@ class Editor
 		else
 		{
 			
-			// Reset the selected object
+			// Reset the selected objects
 			this.resetSelectedObjects(world, player);
 			
 		}
@@ -919,7 +955,11 @@ class Editor
 			this.selected_objects.traverse((child) => {
 				if (child.isMesh)
 				{
-					child.material =  this.selected_object_original_materials.get(child);
+					if (child.userData.original_material != null)
+					{
+						child.material = child.userData.original_material.clone();
+						child.userData.original_material = null;
+					}
 				}
 			});
 			
@@ -982,39 +1022,91 @@ class Editor
 	}
 	
 	/**
-	 * Cuts the selected object.
+	 * Cuts the selected objects.
+	 *
+	 * @param {world} world The current game world.
+	 * @param {player} player The player editing the game world.
 	 */
-	static cutSelectedObject()
+	static cutSelectedObjects(world, player)
 	{
 		
-		// Do something...
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+			
+			// Detatch transform controls
+			player.controls.transform_controls.detach();
+			
+			// Remove selected objects from the world
+			world.removeObject(this.selected_objects);
+			
+			// Copy the selected objects to the clipboard
+			this.clipboard_objects = this.selected_objects.deepClone();
+			
+			// Reset the selected objects group
+			this.selected_objects = new THREE.Group();
+			
+			// Update selected object UI
+			this.updateSelectedObjectUI(player);
+			
+		}
 		
 	}
 	
 	/**
-	 * Copies the selected object.
+	 * Copies the selected objects.
 	 */
-	static copySelectedObject()
+	static copySelectedObjects()
 	{
 		
-		// Do something...
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+		
+			// Copy the selected objects to the clipboard
+			this.clipboard_objects = this.selected_objects.deepClone();
+		
+		}
 		
 	}
 	
 	/**
-	 * Pastes the selected object.
+	 * Pastes the clipboard objects.
+	 *
+	 * @param {world} world The current game world.
+	 * @param {player} player The player editing the game world.
 	 */
-	static pasteSelectedObject()
+	static pasteClipboardObjects(world, player)
 	{
 		
-		// Do something...
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+			
+			// Reset the selected objects
+			this.resetSelectedObjects(world, player);
+			
+			// Copy the selected objects to the clipboard
+			this.selected_objects = this.clipboard_objects.deepClone();
+			
+			// Re-add the group back to the world
+			world.addObject(this.selected_objects);
+			this.selected_objects.updateMatrixWorld();
+			
+			// Attach transform controls to new selected object
+			player.controls.transform_controls.attach(this.selected_objects);
+			
+			// Update selected object UI
+			this.updateSelectedObjectUI(player);
+			
+		}
 		
 	}
 	
 	/**
-	 * Deletes the selected object.
+	 * Deletes the selected objects.
 	 */
-	static deleteSelectedObject(world, player)
+	static deleteSelectedObjects(world, player)
 	{
 		
 		// Check if editor is enabled
@@ -1039,6 +1131,61 @@ class Editor
 				
 				// Reset the selected objects group
 				this.selected_objects = new THREE.Group();
+				
+				// Update selected object UI
+				this.updateSelectedObjectUI(player);
+				
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * Groups the selected objects.
+	 */
+	static groupSelectedObjects(world, player)
+	{
+		
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+			
+			// If an object is selected...
+			if (this.selected_objects.children.length > 0)
+			{
+				
+				// Detatch transform controls from object
+				player.controls.transform_controls.detach();
+				
+				// Remove the selected objects froup from the world
+				world.removeObject(this.selected_objects);
+				
+				// Reset the selected objects group
+				let grouped_objects = this.selected_objects.deepClone();
+				
+				// Set the selected objects group's position to that of the first selected object
+				grouped_objects.position.copy(this.selected_objects.position);
+				
+				// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
+				let selected_objects_offset = new THREE.Vector3().subVectors(this.selected_objects.position, grouped_objects.position);
+				selected_objects_offset.divide(grouped_objects.scale);
+				selected_objects_offset.applyQuaternion(grouped_objects.quaternion.clone().invert());
+				
+				// Set the new selected object's position/scale/rotation according to the offset
+				this.selected_objects.position.copy(selected_objects_offset);
+				this.selected_objects.scale.divide(grouped_objects.scale);
+				this.selected_objects.quaternion.premultiply(grouped_objects.quaternion.clone().invert());
+				
+				// Get the new selected object
+				this.selected_objects = new THREE.Group();
+				this.selected_objects.add(grouped_objects);
+				
+				// Re-add the group back to the world
+				world.addObject(this.selected_objects);
+				
+				// Attach transform controls to new selected object
+				player.controls.transform_controls.attach(this.selected_objects);
 				
 				// Update selected object UI
 				this.updateSelectedObjectUI(player);
@@ -1198,9 +1345,9 @@ class Editor
 				self.selected_objects.traverse((child) => {
 					if (child.isMesh)
 					{
-						child.material = self.selected_object_original_materials.get(child);
+						child.material = child.userData.original_material.clone();
 						child.material.color.set(new THREE.Color(selected_colour));
-						self.selected_object_original_materials.set(child, child.material);
+						child.userData.original_material = child.material.clone();
 						child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
 					}
 				});
@@ -1362,18 +1509,12 @@ class Editor
 				// Get the texture from the textures list by finding its key using its file path
 				let texture =  Assets.textures[Object.keys(Assets.textures).find(key => Assets.textures[key].path === $(this).attr('src'))];
 				
+				// Set the selected object's new texture
 				self.selected_objects.traverse((child) => {
 					if (child.isMesh)
 					{
-						// Remove any old textures
-						if (self.highlighted_object_original_materials)
-						{
-							self.highlighted_object_original_materials.delete(child);
-						}
-						
-						// Set the selected object's new texture
 						child.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-						self.selected_object_original_materials.set(child, child.material);
+						child.userData.original_material = child.material.clone();
 						child.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, wireframe: true });
 					}
 				});

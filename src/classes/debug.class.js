@@ -15,7 +15,7 @@ class Debug
 	/**
 	* Initializes the in-game debugger.
 	*/
-	static()
+	static
 	{
 		
 		// Do nothing.
