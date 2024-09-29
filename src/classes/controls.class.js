@@ -112,7 +112,7 @@ class Controls
 					player.handleLeftMouseDown();
 					
 					// Handle editor left mouse down
-					Editor.handleLeftMouseDown(player);
+					Editor.handleLeftMouseDown(event, player);
 					
 					break;
 				case 2:

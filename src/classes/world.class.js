@@ -366,49 +366,54 @@ class World
 		//		  whatever's in some kinda range of the player? But just the act of doing that would take more processing time? Idk.
 		for (let i = 0; i < this.objects.length; i++)
 		{
-			
-			// Create world object's bounding box
-			let object_box = new THREE.Box3().setFromObject(this.objects[i]);
-			
-			// Detect billboard collision
-			if (this.objects[i] instanceof Billboard)
-			{
-				
-				// Add some extra height to billboard bounding boxes
-				//
-				//	NOTE: I gave up trying to keep billboards perfectly upright
-				//		  on their own, so screw it, this is my workaround.
-				object_box.max.y += 5;
-				
-			}
-			
-			// Check for intersection between player and object
-			if (player_box.intersectsBox(object_box))
-			{
-				
-				// If object is below the player's vertical space...
-				if (object_box.max.y <= player_box.min.y)
+			this.objects[i].traverse((child) => {
+				if (child.isMesh)
 				{
-					// Player is walking above the object
-					continue;
+					// Create world object's bounding box
+					let object_box = new THREE.Box3().setFromObject(child);
+					
+					let skip = false;
+					
+					// Detect billboard collision
+					if (this.objects[i] instanceof Billboard)
+					{
+						
+						// Add some extra height to billboard bounding boxes
+						//
+						//	NOTE: I gave up trying to keep billboards perfectly upright
+						//		  on their own, so screw it, this is my workaround.
+						object_box.max.y += 5;
+						
+					}
+					
+					// Check for intersection between player and object
+					if (player_box.intersectsBox(object_box))
+					{
+						
+						// If object is below the player's vertical space...
+						if (object_box.max.y <= player_box.min.y)
+						{
+							// Player is walking above the object
+							skip = true;
+						}
+						
+						// If object is above the player's vertical space...
+						if (skip == false && object_box.min.y > player_box.max.y)
+						{
+							// Player is walking under the object
+							skip = true;
+						}
+						
+						// If object is too tall to be a step/stair...
+						if (skip == false && object_box.max.y > (player_box.min.y + this.stair_height))
+						{
+							// Player collides with object
+							collision_detected = true;
+						}
+						
+					}
 				}
-				
-				// If object is above the player's vertical space...
-				if (object_box.min.y > player_box.max.y)
-				{
-					// Player is walking under the object
-					continue;
-				}
-				
-				// If object is too tall to be a step/stair...
-				if (object_box.max.y > (player_box.min.y + this.stair_height))
-				{
-					// Player collides with object
-					collision_detected = true;
-				}
-				
-			}
-			
+			});
 		}
 		
 		return collision_detected;
@@ -436,7 +441,7 @@ class World
 		let object_surface_height = player.position.y - player.height;
 		
 		// Check intersections with all world objects
-		const intersects = player.raycaster.intersectObjects(this.all_objects);
+		const intersects = player.raycaster.intersectObjects(this.all_objects, true);
 		if (intersects.length > 0)
 		{
 			
@@ -475,12 +480,13 @@ class World
 	detectPlaneSurfaceAtPoint(point, plane)
 	{
 		
-		// I don't know what the hell this is or why the plane's rotation is being applied to it
+		// I don't know what the hell a normal is
 		const normal = new THREE.Vector3(0, 0, 1);
 		normal.applyQuaternion(plane.quaternion);
 		
 		// Okay this is for sure the plane's position
-		const plane_position = plane.position.clone();
+		const plane_position = new THREE.Vector3();
+		plane.getWorldPosition(plane_position);
 		
 		// I have no idea what the hell these are but I saw them in an equation online
 		const D = -normal.dot(plane_position);

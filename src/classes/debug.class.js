@@ -82,7 +82,10 @@ class Debug
 	{
 		
 		// Output debug info to UI
-		$("#debug-text").html("player.controls.is_mouse_left_down    = " + player.controls.is_mouse_left_down + "<br />" + 
+		$("#debug-text").html("player.position.x    = " + player.position.x + "<br />" + 
+							  "player.position.y    = " + player.position.y + "<br />" + 
+							  "player.position.z    = " + player.position.z + "<br />" + 
+							  "player.controls.is_mouse_left_down    = " + player.controls.is_mouse_left_down + "<br />" + 
 							  "player.controls.is_mouse_dragging     = " + player.controls.is_mouse_dragging + "<br />" +
 							  "player.controls.transform_controls.dragging    = " + player.controls.transform_controls.dragging + "<br />");
 		

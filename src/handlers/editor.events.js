@@ -1,3 +1,6 @@
+// three.js Imports
+import * as THREE from '../libraries/threejs/three.js';
+
 // Static Class Imports
 import Editor from '../classes/editor.class.js';
 
@@ -213,7 +216,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 		{
 			
 			// Group selected objects
-			//Editor.groupSelectedObjects(world, player);
+			Editor.groupSelectedObjects(world, player);
 			
 		}
 	});
@@ -227,6 +230,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 		{
 			
 			// Ungroup selected objects
+			Editor.ungroupSelectedObjects(world, player);
 			
 		}
 	});

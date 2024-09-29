@@ -21,8 +21,8 @@ class Editor
 	
 	// Highlighted objects
 	
-	// The highlighted object
-	static highlighted_object = null;
+	// The group of highlighted objects
+	static highlighted_objects = new THREE.Group();
 	
 	// The colour of highlighted objects
 	static highlighted_object_colour = 0xffffff;
@@ -30,7 +30,7 @@ class Editor
 	
 	// Selected objects
 	
-	// The selected objects
+	// The group of selected objects
 	static selected_objects = new THREE.Group();
 	
 	// The colour of selected objects
@@ -39,7 +39,7 @@ class Editor
 	
 	// Clipboard objects
 	
-	// The cut/copies objects
+	// The group of cut/copied objects
 	static clipboard_objects = new THREE.Group();
 	
 	
@@ -66,6 +66,14 @@ class Editor
 					clone.userData[key] = value.clone();
 				});
 			}
+			
+			if (this.children && this.children.length > 0)
+			{
+				for (let i = 0; i < this.children.length; i++)
+				{
+					this.children[i].userDataClone(clone.children[i]);
+				}
+			}
 		};
 		THREE.Object3D.prototype.deepClone = function()
 		{
@@ -84,6 +92,19 @@ class Editor
 			return clone;
 		};
 		
+		// Add a function to the Object3D type which gets the top-most parent from an object's chain of parents' parents.
+		THREE.Object3D.prototype.getTopMostParent = function()
+		{
+			let object = this;
+			
+			while (object.parent && !(object.parent instanceof THREE.Scene))
+			{
+				object = object.parent;
+			}
+			
+			return object;
+		};
+		
 	}
 	
 	
@@ -94,20 +115,26 @@ class Editor
 	 *
 	 * @param {player} player The player to handle mouse input for.
 	 */
-	static handleLeftMouseDown(player)
+	static handleLeftMouseDown(event, player)
 	{
 		
 		// Check if editor is enabled
 		if (this.enabled)
 		{
-		
+			
 			// If the mouse is locked to the renderer...
 			if (player.controls.is_mouse_locked)
 			{
-			
+				
+				// Prevent shift-clicking from highlighting text
+				if (event.shiftKey)
+				{
+					event.preventDefault();
+				}
+				
 				// Handle transform controls mouse down event
 				player.controls.transform_controls.mouseDown(player);
-			
+				
 			}
 			
 		}
@@ -231,7 +258,7 @@ class Editor
 			$("#editor").hide();
 			
 			// Reset any highlighted or selected objects
-			this.resetHighlightedObject();
+			this.resetHighlightedObjects();
 			this.resetSelectedObjects(world, player);
 			
 			// Remove player transform controls from the world
@@ -339,7 +366,7 @@ class Editor
 		{
 		
 			// Reset any highlighted or selected objects
-			this.resetHighlightedObject();
+			this.resetHighlightedObjects();
 			this.resetSelectedObjects(world, player);
 			
 			// Remove all objects from the world
@@ -390,7 +417,7 @@ class Editor
 		{
 			
 			// Reset any highlighted or selected objects
-			this.resetHighlightedObject();
+			this.resetHighlightedObjects();
 			this.resetSelectedObjects(world, player);
 			
 			// Initialize a temporary file input element to trigger an open file dialog
@@ -470,7 +497,7 @@ class Editor
 		{
 			
 			// Reset any highlighted or selected objects
-			this.resetHighlightedObject();
+			this.resetHighlightedObjects();
 			this.resetSelectedObjects(world, player);
 		
 			// Create a temporary link element to trigger a save file dialog
@@ -651,7 +678,7 @@ class Editor
 		{
 			
 			// Initialize potential new highlighted object
-			let new_highlighted_object = null;
+			let new_highlighted_objects = null;
 			
 			// Cast a ray from the player's position in the direction the player is looking
 			player.raycaster.ray.origin.copy(player.position);
@@ -665,66 +692,47 @@ class Editor
 			{
 				
 				// Get the first object object that the player is looking at
-				new_highlighted_object = intersects[0].object;
+				new_highlighted_objects = intersects[0].object.getTopMostParent();
+				
+				// Reset highlighted objects
+				this.resetHighlightedObjects();
 				
 				// If the new highlighted object is different than the current highlighted object and any of the selected objects
-				if (this.highlighted_object !== new_highlighted_object && !this.selected_objects.getObjectById(new_highlighted_object.id))
+				if (!this.highlighted_objects.getObjectById(new_highlighted_objects.id) && !this.selected_objects.getObjectById(new_highlighted_objects.id))
 				{
 					
 					// Check if the object is a group
-					if (new_highlighted_object.isGroup)
+					if (new_highlighted_objects.isGroup)
 					{
 						
-						// Iterate through each object in the group and highlight it
-						new_highlighted_object.traverse((child) => {
+						// Make the new highlighted object's material transparent
+						new_highlighted_objects.traverse((child) => {
 							if (child.isMesh)
 							{
-								// Reset the old highlighted object's material
-								this.resetHighlightedObject();
-								
-								// Set the new highlighted object's material to a solid colour
-								if (new_highlighted_object)
-								{
-									new_highlighted_object.traverse((child) => {
-										if (child.isMesh)
-										{
-											child.userData.original_material = child.material.clone();
-											child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5 });
-										}
-									});
-								
-								}
-								
-								// Get the new highlighted object
-								this.highlighted_object = new_highlighted_object;
+								child.userData.original_material = child.material.clone();
+								child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5 });
 							}
 						});
 						
 					}
 					else
 					{
-					
-						// Reset the old highlighted object's material
-						this.resetHighlightedObject();
 						
-						// Set the new highlighted object's material to a solid colour
-						if (new_highlighted_object)
-						{
-							new_highlighted_object.userData.original_material = new_highlighted_object.material.clone();
-							new_highlighted_object.material = new THREE.MeshBasicMaterial({ color: new_highlighted_object.material.color.getHex(), transparent: true, opacity: 0.5 });
-						}
+						// Make the new highlighted object's material transparent
+						new_highlighted_objects.userData.original_material = new_highlighted_objects.material.clone();
+						new_highlighted_objects.material = new THREE.MeshBasicMaterial({ color: new_highlighted_objects.material.color.getHex(), transparent: true, opacity: 0.5 });
 						
-						// Get the new highlighted object
-						this.highlighted_object = new_highlighted_object;
-					
 					}
 					
+					// Set the highlighted objects
+					this.highlighted_objects = new_highlighted_objects;
+					
 				}
-				else if (this.selected_objects.getObjectById(new_highlighted_object.id))
+				else if (this.selected_objects.getObjectById(new_highlighted_objects.id))
 				{
 					
 					// Reset the highlighted object
-					this.resetHighlightedObject();
+					this.resetHighlightedObjects();
 					
 				}
 				
@@ -734,7 +742,7 @@ class Editor
 			{
 				
 				// Reset the highlighted object
-				this.resetHighlightedObject();
+				this.resetHighlightedObjects();
 				
 			}
 			
@@ -743,7 +751,7 @@ class Editor
 		{
 			
 			// Reset the highlighted object
-			this.resetHighlightedObject();
+			this.resetHighlightedObjects();
 			
 		}
 		
@@ -752,19 +760,19 @@ class Editor
 	/**
 	 * Resets the highlighted object.
 	 */
-	static resetHighlightedObject()
+	static resetHighlightedObjects()
 	{
-
+		
 		// If an object is highlighted...
-		if (this.highlighted_object)
+		if (this.highlighted_objects)
 		{
 			
 			// Check if the object is a group
-			if (this.highlighted_object.isGroup)
+			if (this.highlighted_objects.isGroup)
 			{
 				
 				// Reset highlighted objects materials
-				this.highlighted_object.traverse((child) => {
+				this.highlighted_objects.traverse((child) => {
 					if (child.isMesh)
 					{
 						if (child.userData.original_material != null)
@@ -780,16 +788,13 @@ class Editor
 			{
 				
 				// Reset highlighted object material
-				if (this.highlighted_object.userData.original_material != null)
-				{
-					this.highlighted_object.material = this.highlighted_object.userData.original_material;
-					this.highlighted_object.userData.original_material = null;
-				}
+				this.highlighted_objects.material = this.highlighted_objects.userData.original_material;
+				this.highlighted_objects.userData.original_material = null;
 				
 			}
 			
 			// Reset the highlighted objects group
-			this.highlighted_object = null;
+			this.highlighted_objects = new THREE.Group();
 			
 		}
 		
@@ -823,14 +828,14 @@ class Editor
 			{
 				
 				// Get the first object object that the player is looking at
-				let new_selected_object = intersects[0].object;
+				let new_selected_object = intersects[0].object.getTopMostParent();
 				
 				// If the new selected object is already highlighted...
-				if (this.highlighted_object == new_selected_object)
+				if (this.highlighted_objects.getObjectById(new_selected_object.id))
 				{
 					
 					// Reset highlighted object
-					this.resetHighlightedObject();
+					this.resetHighlightedObjects();
 					
 				}
 				
@@ -838,10 +843,12 @@ class Editor
 				if (!this.selected_objects.getObjectById(new_selected_object.id))
 				{
 					
+					// Check if the object is a group
 					if (new_selected_object.isGroup)
 					{
 						
-						this.selected_objects.traverse((child) => {
+						// Make the new selected object's material wireframe
+						new_selected_object.traverse((child) => {
 							if (child.isMesh)
 							{
 								child.userData.original_material = child.material.clone();
@@ -853,7 +860,7 @@ class Editor
 					else
 					{
 					
-						// Set the new selected object's material to a wireframe
+						// Make the new selected object's material wireframe
 						new_selected_object.userData.original_material = new_selected_object.material.clone();
 						new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
 					
@@ -1161,27 +1168,86 @@ class Editor
 				// Remove the selected objects froup from the world
 				world.removeObject(this.selected_objects);
 				
-				// Reset the selected objects group
+				// The new object group will just be a clone of the selected objects group
 				let grouped_objects = this.selected_objects.deepClone();
 				
+				// Reset the selected objects group
+				this.selected_objects = new THREE.Group();
+				
 				// Set the selected objects group's position to that of the first selected object
-				grouped_objects.position.copy(this.selected_objects.position);
+				this.selected_objects.position.copy(grouped_objects.position);
 				
 				// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
-				let selected_objects_offset = new THREE.Vector3().subVectors(this.selected_objects.position, grouped_objects.position);
-				selected_objects_offset.divide(grouped_objects.scale);
-				selected_objects_offset.applyQuaternion(grouped_objects.quaternion.clone().invert());
+				let selected_objects_offset = new THREE.Vector3().subVectors(grouped_objects.position, this.selected_objects.position);
 				
 				// Set the new selected object's position/scale/rotation according to the offset
-				this.selected_objects.position.copy(selected_objects_offset);
-				this.selected_objects.scale.divide(grouped_objects.scale);
-				this.selected_objects.quaternion.premultiply(grouped_objects.quaternion.clone().invert());
+				grouped_objects.position.copy(selected_objects_offset);
 				
 				// Get the new selected object
-				this.selected_objects = new THREE.Group();
 				this.selected_objects.add(grouped_objects);
 				
 				// Re-add the group back to the world
+				world.addObject(this.selected_objects);
+				
+				// Attach transform controls to new selected object
+				player.controls.transform_controls.attach(this.selected_objects);
+				
+				// Update selected object UI
+				this.updateSelectedObjectUI(player);
+				
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * Un-groups the selected objects.
+	 */
+	static ungroupSelectedObjects(world, player)
+	{
+		
+		// Check if editor is enabled
+		if (this.enabled)
+		{
+			
+			// If an object is selected...
+			if (this.selected_objects.children.length > 0 && this.selected_objects.children[0].isGroup)
+			{
+				
+				// Detatch transform controls from object
+				player.controls.transform_controls.detach();
+				
+				// Remove the selected objects froup from the world
+				world.removeObject(this.selected_objects);
+				
+				// Get the selected objects group's child
+				let selected_object_group = this.selected_objects.children[0];
+				
+				// Get child's position/scale/rotation
+				let selected_object_position = selected_object_group.position.clone();
+				let selected_object_scale = selected_object_group.scale.clone();
+				let selected_object_rotation = selected_object_group.quaternion.clone();
+				
+				// Calculate the child's new position/scale/rotation relative to the world instead of the selected objects group
+				selected_object_rotation.premultiply(this.selected_objects.quaternion);
+				selected_object_position.applyQuaternion(this.selected_objects.quaternion);
+				selected_object_position.multiply(this.selected_objects.scale);
+				selected_object_position.add(this.selected_objects.position);
+				selected_object_scale.multiply(this.selected_objects.scale);
+				
+				// Set the child's new position/scale/rotation
+				selected_object_group.position.copy(selected_object_position);
+				selected_object_group.scale.copy(selected_object_scale);
+				selected_object_group.quaternion.copy(selected_object_rotation);
+				
+				// Remove the child from the selected objects group
+				this.selected_objects.remove(selected_object_group);
+				
+				// Get the selected objects group's child
+				this.selected_objects = selected_object_group;
+				
+				// Re-add the child to the world
 				world.addObject(this.selected_objects);
 				
 				// Attach transform controls to new selected object
@@ -1243,15 +1309,26 @@ class Editor
 				if (this.selected_objects.children.length > 1)
 				{
 					
-					// Show object grouping buttons
-					$("#editor-selected-objects-grouping").show();
+					// Show object group button
+					$("#editor-selected-objects-group-label").show();
+					$("#editor-selected-objects-ungroup-label").hide();
+					
+					
+				} // Otherwise, if an object group is selected...
+				else if (this.selected_objects.children.length > 0 && this.selected_objects.children[0].isGroup)
+				{
+					
+					// Show object ungroup button
+					$("#editor-selected-objects-group-label").hide();
+					$("#editor-selected-objects-ungroup-label").show();
 					
 				}
 				else
-				{	
+				{
 					
 					// Hide object grouping buttons
-					$("#editor-selected-objects-grouping").hide();
+					$("#editor-selected-objects-group-label").hide();
+					$("#editor-selected-objects-ungroup-label").hide();
 					
 				}
 				

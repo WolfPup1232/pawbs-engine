@@ -296,7 +296,7 @@ class Player
 		this.raycaster.far = this.stair_check_distance;
 		
 		// Check intersections with all world objects
-		const intersects = this.raycaster.intersectObjects(world.all_objects);
+		const intersects = this.raycaster.intersectObjects(world.all_objects, true);
 		if (intersects.length > 0)
 		{
 			
@@ -321,8 +321,12 @@ class Player
 			else
 			{
 				
+				// Get the closest object's position relative to the world
+				const closest_object_position = new THREE.Vector3();
+				closest_object.getWorldPosition(closest_object_position);
+				
 				// Calculate the difference in height between where the player's feet are and the closest object's height
-				const height_difference = (closest_object.position.y + (closest_object.geometry.parameters.height / 2)) - (this.position.y - this.height);
+				const height_difference = (closest_object_position.y + (closest_object.geometry.parameters.height / 2)) - (this.position.y - this.height);
 				
 				// If the height difference implies the object is a step, step the player up onto the object
 				if (height_difference > 0 && height_difference <= world.stair_height)
