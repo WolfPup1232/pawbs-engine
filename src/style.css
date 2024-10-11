@@ -131,6 +131,10 @@ button {
 	margin-top: 2px;
 }
 
+.pb-2px {
+	padding-bottom: 2px;
+}
+
 .w-36px {
 	width: 36px;
 }

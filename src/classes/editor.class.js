@@ -6,6 +6,8 @@ import Billboard from './billboard.class.js';
 
 // Static Class Imports
 import Assets from './assets.class.js';
+import Shaders from './shaders.class.js';
+import Debug from './debug.class.js';
 
 /**
  * The in-game world editor.
@@ -17,6 +19,15 @@ class Editor
 	
 	// Editor enabled/disabled flag
 	static enabled = false;
+	
+	// Select objects flag
+	static select_objects = true;
+	
+	// Select object faces flag
+	static select_faces = false;
+	
+	// Select object vertices
+	static select_vertices = false;
 	
 	
 	// Highlighted objects
@@ -37,6 +48,66 @@ class Editor
 	static selected_object_colour = 0xffffff;
 	
 	
+	// Hovered object faces
+	
+	// The hovered object whose faces should be highlighted or selected
+	static hovered_faces_object = null;
+	
+	// The index of the last face which was hovered over
+	static previously_hovered_face_index = null;
+	
+	
+	// Highlighted object faces
+	
+	// The colour of highlighted object faces
+	static highlighted_face_colour = 0xaaaaaa;
+	
+	
+	// Selected object faces
+	
+	// The colour of selected object faces
+	static selected_face_colour = 0x666666;
+	
+	
+	// Highlighted object vertices
+	
+	// The hovered object whose vertices should be highlighted
+	static highlighted_vertices_object = null;
+	
+	// The colour of highlighted object vertices
+	static highlighted_vertex_colour = 0xffffff;
+	
+	// The colour of highlighted object vertices
+	static highlighted_vertex_outline_colour = 0x000000;
+	
+	// The size of highlighted object vertices
+	static highlighted_vertex_size = 0.25;
+	
+	// The thickness of highlighted object vertices outlines
+	static highlighted_vertex_outline_size = 0.1;
+	
+	
+	// Selected object vertices
+	
+	// The selected object whose vertices should be highlighted or selected
+	static selected_vertices_object = null;
+	
+	// The colour of un-selected object vertices
+	static unselected_vertex_colour = 0xffff00;
+	
+	// The colour of selected object vertices
+	static selected_vertex_colour = 0xff0000;
+	
+	// The colour of selected object vertices
+	static selected_vertex_outline_colour = 0x000000;
+	
+	// The size of selected object vertices
+	static selected_vertex_size = 0.25;
+	
+	// The thickness of selected object vertices outlines
+	static selected_vertex_outline_size = 0.1;
+	
+	
 	// Clipboard objects
 	
 	// The group of cut/copied objects
@@ -47,6 +118,12 @@ class Editor
 	
 	// The colour of spawned objects
 	static spawned_object_colour = 0xd3d3d3;
+	
+	
+	// Wall tool
+	
+	// The grid which will act as a visual aid for the wall tool
+	static grid_helper = new THREE.GridHelper();
 	
 	
 	// Constructor
@@ -63,8 +140,25 @@ class Editor
 			if (this.userData)
 			{
 				Object.entries(this.userData).forEach(([key, value]) => {
-					clone.userData[key] = value.clone();
+					if (typeof value.clone === 'function')
+					{
+						clone.userData[key] = value.clone();
+					}
+					else
+					{
+						clone.userData[key] = structuredClone(value);
+					}
 				});
+			}
+			
+			if (this.geometry)
+			{
+				clone.geometry = this.geometry.clone();
+			}
+			
+			if (this.material)
+			{
+				clone.material = this.material.clone();
 			}
 			
 			if (this.children && this.children.length > 0)
@@ -78,6 +172,16 @@ class Editor
 		THREE.Object3D.prototype.deepClone = function()
 		{
 			const clone = this.clone(true);
+			
+			if (this.geometry)
+			{
+				clone.geometry = this.geometry.clone();
+			}
+			
+			if (this.material)
+			{
+				clone.material = this.material.clone();
+			}
 			
 			this.userDataClone(clone);
 			
@@ -113,29 +217,23 @@ class Editor
 	/**
 	 * Handles player left mouse down.
 	 *
-	 * @param {player} player The player to handle mouse input for.
+	 * @param {Player} player The player to handle mouse input for.
 	 */
 	static handleLeftMouseDown(event, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If the mouse is locked to the renderer...
+		if (player.controls.is_mouse_locked)
 		{
 			
-			// If the mouse is locked to the renderer...
-			if (player.controls.is_mouse_locked)
+			// Prevent shift-clicking from highlighting text
+			if (event.shiftKey)
 			{
-				
-				// Prevent shift-clicking from highlighting text
-				if (event.shiftKey)
-				{
-					event.preventDefault();
-				}
-				
-				// Handle transform controls mouse down event
-				player.controls.transform_controls.mouseDown(player);
-				
+				event.preventDefault();
 			}
+			
+			// Handle transform controls mouse down event
+			player.controls.transform_controls.mouseDown(player);
 			
 		}
 		
@@ -144,44 +242,47 @@ class Editor
 	/**
 	 * Handles player left mouse up.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player to handle mouse input for.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player to handle mouse input for.
 	 */
 	static handleLeftMouseUp(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If the mouse is locked to the renderer...
+		if (player.controls.is_mouse_locked)
 		{
 			
-			// If the mouse is locked to the renderer...
-			if (player.controls.is_mouse_locked)
+			// If the mouse is currently dragging...
+			if (player.controls.is_mouse_dragging)
 			{
 				
-				// If the mouse is currently dragging...
-				if (player.controls.is_mouse_dragging)
+				// Handle transform controls mouse up event
+				player.controls.transform_controls.mouseUp(player);
+				
+				
+			} // Otherwise, if the mouse is not currently dragging...
+			else
+			{
+				
+				// Select the object that the player is facing
+				if (this.select_objects)
 				{
-					
-					// The mouse is no longer dragging
-					player.controls.is_mouse_dragging = false;
-					
-					// Handle transform controls mouse up event
-					player.controls.transform_controls.mouseUp(player);
-					
-					
-				} // Otherwise, if the mouse is not currently dragging...
-				else
+					this.selectObjects(world, player);
+				}
+				
+				// Select the object face that the player is facing
+				if (this.select_faces)
 				{
-					
-					// Select the object the player is facing
-					this.selectObject(world, player);
-					
+					this.selectFace(world, player);
+				}
+				
+				// Select the object vertex that the player is facing
+				if (this.select_vertices)
+				{
+					this.selectVertex(world, player)
 				}
 				
 			}
-			
-			// The mouse is no longer dragging
-			player.controls.is_mouse_dragging = false;
 			
 		}
 		
@@ -193,46 +294,34 @@ class Editor
 	static handleRightMouseDown()
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
-		{
-			
-			// Do nothing.
-			
-		}
+		// Do nothing.
 		
 	}
 	
 	/**
 	 * Handles player right mouse up.
 	 *
-	 * @param {document} dom_document A reference to the DOM document within the web browser window.
-	 * @param {world} world The current game world.
-	 * @param {player} player The player to handle mouse input for.
+	 * @param {Document} dom_document A reference to the DOM document within the web browser window.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player to handle mouse input for.
 	 */
 	static handleRightMouseUp(dom_document, world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If the mouse is locked to the renderer...
+		if (player.controls.is_mouse_locked)
 		{
 			
-			// If the mouse is locked to the renderer...
-			if (player.controls.is_mouse_locked)
+			// Unlock the mouse from the renderer
+			player.controls.pointer_lock_controls.unlock();
+			//player.controls.is_mouse_dragging = false;
+			player.controls.transform_controls.dragging = false;
+			
+			// Disable right-click menu
+			$(dom_document).one('contextmenu', function(event)
 			{
-				
-				// Unlock the mouse from the renderer
-				player.controls.pointer_lock_controls.unlock();
-				player.controls.is_mouse_dragging = false;
-				player.controls.transform_controls.dragging = false;
-				
-				// Disable right-click menu
-				$(dom_document).one('contextmenu', function(event)
-				{
-					event.preventDefault();
-				});
-				
-			}
+				event.preventDefault();
+			});
 			
 		}
 		
@@ -244,8 +333,8 @@ class Editor
 	/**
 	 * Toggle editor on/off.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static toggle(world, player)
 	{
@@ -260,6 +349,9 @@ class Editor
 			// Reset any highlighted or selected objects
 			this.resetHighlightedObjects();
 			this.resetSelectedObjects(world, player);
+			
+			// Reset any highlighted or selected object faces
+			this.resetHighlightedAndSelectedFaces(world);
 			
 			// Remove player transform controls from the world
 			world.scene.remove(player.controls.transform_controls);
@@ -299,39 +391,48 @@ class Editor
 	/**
 	 * Updates editor processes every frame.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static update(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If the player is dragging with the left mouse button...
+		if (player.controls.is_mouse_left_down && player.controls.is_mouse_dragging)
 		{
 			
-			// If the player is dragging with the left mouse button...
-			if (player.controls.is_mouse_left_down && player.controls.is_mouse_dragging)
-			{
-				
-				// Handle transform controls mouse move event
-				player.controls.transform_controls.mouseMove(player);
-				
-				// Update selected object UI elements
-				this.updateSelectedObjectUI(player);
-				
-			}
-			else
-			{
-				
-				// Handle transform controls mouse hover event
-				player.controls.transform_controls.mouseHover(player);
-				
-			}
+			// Handle transform controls mouse move event
+			player.controls.transform_controls.mouseMove(player);
+			
+			// Update selected object UI elements
+			this.updateSelectedObjectsUI(player);
+			
+		}
+		else
+		{
+			
+			// Handle transform controls mouse hover event
+			player.controls.transform_controls.mouseHover(player);
 			
 		}
 		
 		// Update object highlighting
-		this.updateHighlightedObject(world, player);
+		if (this.select_objects)
+		{
+			this.highlightObjects(world, player);
+		}
+		
+		// Update object face highlighting
+		if (this.select_faces)
+		{
+			this.highlightFace(world, player);
+		}
+		
+		// Update object vertex highlighting
+		if (this.select_vertices)
+		{
+			this.highlightVertices(world, player);
+		}
 		
 	}
 	
@@ -341,416 +442,375 @@ class Editor
 	static resize()
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
-		{
-		
-			// Set selected objects window maximum height
-			$("#editor-selected-objects-inner").css({"max-height": "calc(" + ($('#renderer').height() - $('#editor-title').height()) + "px - 2rem)"});
-			
-		}
+		// Set selected objects window maximum height
+		$("#editor-selected-objects-inner").css({"max-height": "calc(" + ($('#renderer').height() - $('#editor-title').height()) + "px - 2rem)"});
 		
 	}
 	
 	/**
 	 * Resets the current world using some hard-coded defaults.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static newWorld(world, player)
 	{
-	
-		// Check if editor is enabled
-		if (this.enabled)
-		{
 		
-			// Reset any highlighted or selected objects
-			this.resetHighlightedObjects();
-			this.resetSelectedObjects(world, player);
-			
-			// Remove all objects from the world
-			world.removeAllObjects();
-			
-			// Initialize the world's properties
-			world.name = "";
-			
-			// Initialize default terrain
-			const plane_geometry = new THREE.PlaneGeometry(100, 100);
-			const plane_material = new THREE.MeshBasicMaterial({ color: 0x302400 });
-			const plane = new THREE.Mesh(plane_geometry, plane_material);
-			plane.rotation.x = -Math.PI / 2;
-			plane.position.y = 0;
-			plane.position.z = 0;
-			plane.name = "plane";
-			world.addTerrain(plane);
-			
-			// Initialize default objects
-			const campfire = new Billboard(1.5, 1.5, Assets.textures.campfire);
-			campfire.position.set(0, 0.75, -5);
-			campfire.name = "campfire";
-			world.addObject(campfire);
-			
-			// Reset the player's position
-			player.position.x = 0;
-			player.position.y = player.height;
-			player.position.z = 0;
-			
-			// Add player transform controls to the world
-			world.scene.add(player.controls.transform_controls);
+		// Reset any highlighted or selected objects
+		this.resetHighlightedObjects();
+		this.resetSelectedObjects(world, player);
 		
-		}
+		// Remove all objects from the world
+		world.removeAllObjects();
+		
+		// Initialize the world's properties
+		world.name = "";
+		
+		// Initialize default terrain
+		const plane_geometry = new THREE.PlaneGeometry(100, 100);
+		const plane_material = new THREE.MeshBasicMaterial({ color: 0x302400 });
+		const plane = new THREE.Mesh(plane_geometry, plane_material);
+		plane.rotation.x = -Math.PI / 2;
+		plane.position.y = 0;
+		plane.position.z = 0;
+		plane.name = "plane";
+		world.addTerrain(plane);
+		
+		// Initialize default objects
+		const campfire = new Billboard(1.5, 1.5, Assets.textures.campfire);
+		campfire.position.set(0, 0.75, -5);
+		campfire.name = "campfire";
+		world.addObject(campfire);
+		
+		// Reset the player's position
+		player.position.x = 0;
+		player.position.y = player.height;
+		player.position.z = 0;
+		
+		// Add player transform controls to the world
+		world.scene.add(player.controls.transform_controls);
 		
 	}
 	
 	/**
 	 * Loads a world from a saved JSON file using an open file dialog.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static loadWorld(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// Reset any highlighted or selected objects
+		this.resetHighlightedObjects();
+		this.resetSelectedObjects(world, player);
+		
+		// Initialize a temporary file input element to trigger an open file dialog
+		let file_input = $('<input type="file" accept=".json" style="display:none;">');
+		$('body').append(file_input);
+		
+		// Trigger the open file dialog
+		file_input.trigger('click');
+		
+		// Handle file selection
+		file_input.on('change', function(event)
 		{
 			
-			// Reset any highlighted or selected objects
-			this.resetHighlightedObjects();
-			this.resetSelectedObjects(world, player);
+			// Initialize a file reader to read the selected file
+			let reader = new FileReader();
 			
-			// Initialize a temporary file input element to trigger an open file dialog
-			let file_input = $('<input type="file" accept=".json" style="display:none;">');
-			$('body').append(file_input);
-			
-			// Trigger the open file dialog
-			file_input.trigger('click');
-			
-			// Handle file selection
-			file_input.on('change', function(event)
+			// Callback function to attempt to parse the selected file's JSON contents
+			reader.onload = function(event)
 			{
-				
-				// Initialize a file reader to read the selected file
-				let reader = new FileReader();
-				
-				// Callback function to attempt to parse the selected file's JSON contents
-				reader.onload = function(event)
+				try
 				{
-					try
-					{
-						
-						// Parse JSON file contents
-						let json = JSON.parse(event.target.result);
-						
-						// Load world from JSON file contents
-						world.loadFromJSON(json);
-						
-						// Add player transform controls to the scene
-						world.scene.add(player.controls.transform_controls);
-						
-						// Update player position and rotation
-						player.position.x = world.player_position.x;
-						player.position.y = world.player_position.y;
-						player.position.z = world.player_position.z;
-						player.rotation.x = 0;
-						player.rotation.y = 0;
-						player.rotation.z = 0;
-						
-						// Initialize UI elements
-						$("#editor-world-name").val(world.name);
-						
-						
-					}
-					catch (error)
-					{
-						
-						// Error loading world
-						console.error("Error loading world: ", error);
-						
-					}
-				};
-				
-				// Read the selected file as text
-				reader.readAsText(event.target.files[0]);
-				
-				// Remove temporary file input element after selected file is loaded
-				file_input.remove();
-				
-			});
+					
+					// Parse JSON file contents
+					let json = JSON.parse(event.target.result);
+					
+					// Load world from JSON file contents
+					world.loadFromJSON(json);
+					
+					// Add player transform controls to the scene
+					world.scene.add(player.controls.transform_controls);
+					
+					// Update player position and rotation
+					player.position.x = world.player_position.x;
+					player.position.y = world.player_position.y;
+					player.position.z = world.player_position.z;
+					player.rotation.x = 0;
+					player.rotation.y = 0;
+					player.rotation.z = 0;
+					
+					// Initialize UI elements
+					$("#editor-world-name").val(world.name);
+					
+					
+				}
+				catch (error)
+				{
+					
+					// Error loading world
+					console.error("Error loading world: ", error);
+					
+				}
+			};
 			
-		}
+			// Read the selected file as text
+			reader.readAsText(event.target.files[0]);
+			
+			// Remove temporary file input element after selected file is loaded
+			file_input.remove();
+			
+		});
 		
 	}
 	
 	/**
 	 * Saves the world to a JSON file using a save file dialog.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static saveWorld(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
-		{
-			
-			// Reset any highlighted or selected objects
-			this.resetHighlightedObjects();
-			this.resetSelectedObjects(world, player);
+		// Reset any highlighted or selected objects
+		this.resetHighlightedObjects();
+		this.resetSelectedObjects(world, player);
+	
+		// Create a temporary link element to trigger a save file dialog
+		let link = document.createElement('a');
 		
-			// Create a temporary link element to trigger a save file dialog
-			let link = document.createElement('a');
-			
-			// Serialize the game world's contents to an object URL for download
-			link.href = URL.createObjectURL(new Blob([JSON.stringify(world.toJSON())], { type: "application/json" }));
-			
-			// Set the download file name
-			link.download = world.name + ".json";
-			
-			// Append the link element to the document body
-			document.body.appendChild(link);
-			
-			// Trigger the save file dialog
-			link.click();
-			
-			// Remove the link element from the document body
-			document.body.removeChild(link);
-			
-		}
+		// Serialize the game world's contents to an object URL for download
+		link.href = URL.createObjectURL(new Blob([JSON.stringify(world.toJSON())], { type: "application/json" }));
+		
+		// Set the download file name
+		link.download = world.name + ".json";
+		
+		// Append the link element to the document body
+		document.body.appendChild(link);
+		
+		// Trigger the save file dialog
+		link.click();
+		
+		// Remove the link element from the document body
+		document.body.removeChild(link);
 		
 	}
 	
 	/**
 	 * Spawns a new object into the world at the location the player is facing.
 	 *
-	 * @param {Geometry} three.mesh The class of geometry to be spawned.
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {THREE.Mesh} Geometry The class of geometry to be spawned.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static spawn(Geometry, world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// Cast a ray from the player's position in the direction the player is looking
+		player.raycaster.ray.origin.copy(player.position);
+		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+		player.raycaster.near = 0;
+		player.raycaster.far = Infinity;
+		
+		// Check intersections with world objects
+		const intersects = player.raycaster.intersectObjects(world.all_objects_and_terrain);
+		if (intersects.length > 0)
 		{
+		
+			// Get the first object object that the player is looking at
+			let intersect_object = intersects[0].object;
+			let intended_position = intersects[0].point;
 			
-			// Cast a ray from the player's position in the direction the player is looking
-			player.raycaster.ray.origin.copy(player.position);
-			player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-			player.raycaster.near = 0;
-			player.raycaster.far = Infinity;
+			// Initialize object to be spawned
+			let spawn_object = new Geometry();
+			let spawn_object_material = new THREE.MeshBasicMaterial({ color: this.spawned_object_colour });
 			
-			// Check intersections with world objects
-			const intersects = player.raycaster.intersectObjects(world.all_objects);
-			if (intersects.length > 0)
+			// Re-initialize object to be spawned by specified type
+			if (spawn_object instanceof Billboard)
 			{
-			
-				// Get the first object object that the player is looking at
-				let intersect_object = intersects[0].object;
-				let intended_position = intersects[0].point;
 				
-				// Initialize object to be spawned
-				let spawn_object = new Geometry();
-				let spawn_object_material = new THREE.MeshBasicMaterial({ color: this.spawned_object_colour });
-				
-				// Re-initialize object to be spawned by specified type
-				if (spawn_object instanceof Billboard)
-				{
-					
-					// Spawn Billboard
-					spawn_object = new Billboard(1, 1, Assets.textures.campfire);
-					
-				}
-				else if (spawn_object instanceof THREE.PlaneGeometry)
-				{
-					
-					// Spawn Plane
-					spawn_object = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), spawn_object_material);
-					
-				}
-				else if (spawn_object instanceof THREE.BoxGeometry)
-				{
-					
-					// Spawn Box
-					spawn_object = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), spawn_object_material);
-					
-				}
-				if (spawn_object instanceof THREE.CylinderGeometry)
-				{
-					
-					// Spawn Cylinder
-					spawn_object = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1), spawn_object_material);
-					
-				}
-				if (spawn_object instanceof THREE.SphereGeometry)
-				{
-					
-					// Spawn Sphere
-					spawn_object = new THREE.Mesh(new THREE.SphereGeometry(0.5), spawn_object_material);
-					
-				}
-				
-				// Get the spawn object's bounding box
-				let spawn_object_box = new THREE.Box3();
-				let spawn_object_size = new THREE.Vector3();
-				
-				spawn_object.geometry.computeBoundingBox();
-				spawn_object.geometry.boundingBox.getSize(spawn_object_size);
-				
-				spawn_object_box.setFromCenterAndSize(intended_position, spawn_object_size);
-					
-				// Get the intersect object's bounding box
-				let intersect_object_box = new THREE.Box3().setFromObject(intersect_object);
-					
-				intersect_object.updateMatrixWorld();
-				intersect_object_box.applyMatrix4(intersect_object.matrixWorld);
-				
-				// Check for intersection between the object being spawned and the intersect object
-				if (spawn_object_box.intersectsBox(intersect_object_box))
-				{
-					
-					// Check for horizontal collision between the object being spawned and the intersect object
-					if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.max.y)
-					{
-						
-						// Adjust horizontal axis to avoid collision
-						let overlap_x = Math.min(spawn_object_box.max.x - intersect_object_box.min.x, intersect_object_box.max.x - spawn_object_box.min.x);
-						let overlap_z = Math.min(spawn_object_box.max.z - intersect_object_box.min.z, intersect_object_box.max.z - spawn_object_box.min.z);
-						
-						// Adjust spawned object's horizontal intended position
-						if (overlap_x < overlap_z)
-						{
-							intended_position.x -= (spawn_object_box.min.x < intersect_object_box.min.x) ? overlap_x : -overlap_x;
-						}
-						else
-						{
-							intended_position.z -= (spawn_object_box.min.z < intersect_object_box.min.z) ? overlap_z : -overlap_z;
-						}
-						
-					}
-					
-					// Check for vertical collision between the object being spawned and the intersect object's upper surface
-					if (spawn_object_box.min.y < intersect_object_box.max.y && spawn_object_box.max.y > intersect_object_box.max.y)
-					{
-						
-						// Adjust spawned object's vertical intended position
-						intended_position.y += (intersect_object_box.max.y - spawn_object_box.min.y);
-						
-					}
-					
-					// Check for vertical collision between the object being spawned and the intersect object's lower surface
-					if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.min.y)
-					{
-						
-						// Adjust spawned object's vertical intended position
-						intended_position.y -= (spawn_object_box.max.y - intersect_object_box.min.y);
-						
-					}
-				}
-				
-				// Set the position of the object being spawned
-				spawn_object.position.x = intended_position.x;
-				spawn_object.position.y = intended_position.y + ((spawn_object_box.max.y - spawn_object_box.min.y) / 2);
-				spawn_object.position.z = intended_position.z;
-				
-				// Spawn the object
-				world.addObject(spawn_object);
+				// Spawn Billboard
+				spawn_object = new Billboard(1, 1, Assets.textures.campfire);
 				
 			}
+			else if (spawn_object instanceof THREE.PlaneGeometry)
+			{
+				
+				// Spawn Plane
+				spawn_object = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), spawn_object_material);
+				
+			}
+			else if (spawn_object instanceof THREE.BoxGeometry)
+			{
+				
+				// Spawn Box
+				spawn_object = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), spawn_object_material);
+				
+			}
+			if (spawn_object instanceof THREE.CylinderGeometry)
+			{
+				
+				// Spawn Cylinder
+				spawn_object = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1), spawn_object_material);
+				
+			}
+			if (spawn_object instanceof THREE.SphereGeometry)
+			{
+				
+				// Spawn Sphere
+				spawn_object = new THREE.Mesh(new THREE.SphereGeometry(0.5), spawn_object_material);
+				
+			}
+			
+			// Get the spawn object's bounding box
+			let spawn_object_box = new THREE.Box3();
+			let spawn_object_size = new THREE.Vector3();
+			
+			spawn_object.geometry.computeBoundingSphere();
+			spawn_object.geometry.computeBoundingBox();
+			spawn_object.geometry.boundingBox.getSize(spawn_object_size);
+			
+			spawn_object_box.setFromCenterAndSize(intended_position, spawn_object_size);
+				
+			// Get the intersect object's bounding box
+			let intersect_object_box = new THREE.Box3().setFromObject(intersect_object);
+				
+			intersect_object.updateMatrixWorld();
+			intersect_object_box.applyMatrix4(intersect_object.matrixWorld);
+			
+			// Check for intersection between the object being spawned and the intersect object
+			if (spawn_object_box.intersectsBox(intersect_object_box))
+			{
+				
+				// Check for horizontal collision between the object being spawned and the intersect object
+				if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.max.y)
+				{
+					
+					// Adjust horizontal axis to avoid collision
+					let overlap_x = Math.min(spawn_object_box.max.x - intersect_object_box.min.x, intersect_object_box.max.x - spawn_object_box.min.x);
+					let overlap_z = Math.min(spawn_object_box.max.z - intersect_object_box.min.z, intersect_object_box.max.z - spawn_object_box.min.z);
+					
+					// Adjust spawned object's horizontal intended position
+					if (overlap_x < overlap_z)
+					{
+						intended_position.x -= (spawn_object_box.min.x < intersect_object_box.min.x) ? overlap_x : -overlap_x;
+					}
+					else
+					{
+						intended_position.z -= (spawn_object_box.min.z < intersect_object_box.min.z) ? overlap_z : -overlap_z;
+					}
+					
+				}
+				
+				// Check for vertical collision between the object being spawned and the intersect object's upper surface
+				if (spawn_object_box.min.y < intersect_object_box.max.y && spawn_object_box.max.y > intersect_object_box.max.y)
+				{
+					
+					// Adjust spawned object's vertical intended position
+					intended_position.y += (intersect_object_box.max.y - spawn_object_box.min.y);
+					
+				}
+				
+				// Check for vertical collision between the object being spawned and the intersect object's lower surface
+				if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.min.y)
+				{
+					
+					// Adjust spawned object's vertical intended position
+					intended_position.y -= (spawn_object_box.max.y - intersect_object_box.min.y);
+					
+				}
+			}
+			
+			// Set the position of the object being spawned
+			spawn_object.position.x = intended_position.x;
+			spawn_object.position.y = intended_position.y + ((spawn_object_box.max.y - spawn_object_box.min.y) / 2);
+			spawn_object.position.z = intended_position.z;
+			
+			// Spawn the object
+			world.addObject(spawn_object);
 			
 		}
 		
 	}
 	
 	/**
-	 * Updates highlighting whichever object the player is looking at.
+	 * Highlights whichever objects the player is looking at.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
-	static updateHighlightedObject(world, player)
+	static highlightObjects(world, player)
 	{
 		
-		// If editor is enabled, update object highlighting...
-		if (this.enabled)
+		// Initialize potential new highlighted objects
+		let new_highlighted_objects = null;
+		
+		// Cast a ray from the player's position in the direction the player is looking
+		player.raycaster.ray.origin.copy(player.position);
+		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+		player.raycaster.near = 0;
+		player.raycaster.far = Infinity;
+		
+		// Check intersections with world objects
+		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		if (intersects.length > 0)
 		{
 			
-			// Initialize potential new highlighted object
-			let new_highlighted_objects = null;
+			// Get the first object or group of objects that the player is looking at
+			new_highlighted_objects = intersects[0].object.getTopMostParent();
 			
-			// Cast a ray from the player's position in the direction the player is looking
-			player.raycaster.ray.origin.copy(player.position);
-			player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-			player.raycaster.near = 0;
-			player.raycaster.far = Infinity;
+			// Reset previously highlighted objects
+			this.resetHighlightedObjects();
 			
-			// Check intersections with world objects
-			const intersects = player.raycaster.intersectObjects(world.objects, true);
-			if (intersects.length > 0)
+			// If the new highlighted objects are different than the current highlighted objects or any of the selected objects...
+			if (!this.highlighted_objects.getObjectById(new_highlighted_objects.id) && !this.selected_objects.getObjectById(new_highlighted_objects.id))
 			{
 				
-				// Get the first object object that the player is looking at
-				new_highlighted_objects = intersects[0].object.getTopMostParent();
-				
-				// Reset highlighted objects
-				this.resetHighlightedObjects();
-				
-				// If the new highlighted object is different than the current highlighted object and any of the selected objects
-				if (!this.highlighted_objects.getObjectById(new_highlighted_objects.id) && !this.selected_objects.getObjectById(new_highlighted_objects.id))
+				// If the new highlighted objects are a group...
+				if (new_highlighted_objects.isGroup)
 				{
 					
-					// Check if the object is a group
-					if (new_highlighted_objects.isGroup)
-					{
-						
-						// Make the new highlighted object's material transparent
-						new_highlighted_objects.traverse((child) => {
-							if (child.isMesh)
-							{
-								child.userData.original_material = child.material.clone();
-								child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5 });
-							}
-						});
-						
-					}
-					else
-					{
-						
-						// Make the new highlighted object's material transparent
-						new_highlighted_objects.userData.original_material = new_highlighted_objects.material.clone();
-						new_highlighted_objects.material = new THREE.MeshBasicMaterial({ color: new_highlighted_objects.material.color.getHex(), transparent: true, opacity: 0.5 });
-						
-					}
+					// Make the new highlighted object's children's material transparent
+					new_highlighted_objects.traverse((child) => {
+						if (child.isMesh)
+						{
+							child.userData.original_material = child.material.clone();
+							child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5 });
+						}
+					});
 					
-					// Set the highlighted objects
-					this.highlighted_objects = new_highlighted_objects;
 					
-				}
-				else if (this.selected_objects.getObjectById(new_highlighted_objects.id))
+				} // Otherwise, if the new highlighted object is a singular object...
+				else
 				{
 					
-					// Reset the highlighted object
-					this.resetHighlightedObjects();
+					// Make the new highlighted object's material transparent
+					new_highlighted_objects.userData.original_material = new_highlighted_objects.material.clone();
+					new_highlighted_objects.material = new THREE.MeshBasicMaterial({ color: new_highlighted_objects.material.color.getHex(), transparent: true, opacity: 0.5 });
 					
 				}
 				
+				// Set the highlighted objects to the newly highlighted objects
+				this.highlighted_objects = new_highlighted_objects;
 				
-			} // Otherwise, if the player isn't looking at any objects...
-			else
+			}
+			else if (this.selected_objects.getObjectById(new_highlighted_objects.id))
 			{
 				
-				// Reset the highlighted object
+				// Reset the highlighted objects
 				this.resetHighlightedObjects();
 				
 			}
 			
-		} // Otherwise, if editor is disabled...
+			
+		} // Otherwise, if the player isn't looking at any objects...
 		else
 		{
 			
-			// Reset the highlighted object
+			// Reset the highlighted objects
 			this.resetHighlightedObjects();
 			
 		}
@@ -758,38 +818,39 @@ class Editor
 	}
 	
 	/**
-	 * Resets the highlighted object.
+	 * Resets the highlighted objects.
 	 */
 	static resetHighlightedObjects()
 	{
 		
-		// If an object is highlighted...
+		// If objects are highlighted...
 		if (this.highlighted_objects)
 		{
 			
-			// Check if the object is a group
+			// If the highlighted objects are a group...
 			if (this.highlighted_objects.isGroup)
 			{
 				
-				// Reset highlighted objects materials
+				// Reset highlighted object's children's materials
 				this.highlighted_objects.traverse((child) => {
 					if (child.isMesh)
 					{
 						if (child.userData.original_material != null)
 						{
 							child.material = child.userData.original_material.clone();
-							child.userData.original_material = null;
+							delete child.userData.original_material;
 						}
 					}
 				});
 				
-			}
+				
+			} // Otherwise, if the new highlighted object is a singular object...
 			else
 			{
 				
-				// Reset highlighted object material
+				// Reset highlighted object's material
 				this.highlighted_objects.material = this.highlighted_objects.userData.original_material;
-				this.highlighted_objects.userData.original_material = null;
+				delete this.highlighted_objects.userData.original_material;
 				
 			}
 			
@@ -801,127 +862,121 @@ class Editor
 	}
 	
 	/**
-	 * Selects whichever object the player is looking at.
+	 * Selects whichever objects the player is looking at.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
-	static selectObject(world, player)
+	static selectObjects(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// Detatch transform controls if they're attached to anything
+		player.controls.transform_controls.detach();
+		
+		// Cast a ray from the player's position in the direction the player is looking
+		player.raycaster.ray.origin.copy(player.position);
+		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+		player.raycaster.near = 0;
+		player.raycaster.far = Infinity;
+		
+		// Check intersections with world objects
+		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		if (intersects.length > 0)
 		{
 			
-			// Detatch transform controls if they're attached to anything
-			player.controls.transform_controls.detach();
+			// Get the first object or group of objects that the player is looking at
+			let new_selected_object = intersects[0].object.getTopMostParent();
 			
-			// Cast a ray from the player's position in the direction the player is looking
-			player.raycaster.ray.origin.copy(player.position);
-			player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-			player.raycaster.near = 0;
-			player.raycaster.far = Infinity;
-			
-			// Check intersections with world objects
-			const intersects = player.raycaster.intersectObjects(world.objects, true);
-			if (intersects.length > 0)
+			// If the new selected objects are highlighted...
+			if (this.highlighted_objects.getObjectById(new_selected_object.id))
 			{
 				
-				// Get the first object object that the player is looking at
-				let new_selected_object = intersects[0].object.getTopMostParent();
+				// Reset highlighted objects
+				this.resetHighlightedObjects();
 				
-				// If the new selected object is already highlighted...
-				if (this.highlighted_objects.getObjectById(new_selected_object.id))
+			}
+			
+			// If the new selected object is different than the current selected object...
+			if (!this.selected_objects.getObjectById(new_selected_object.id))
+			{
+				
+				// If the new selected objects are a group...
+				if (new_selected_object.isGroup)
 				{
 					
-					// Reset highlighted object
-					this.resetHighlightedObjects();
+					// Make the new selected object's children's material wireframe
+					new_selected_object.traverse((child) => {
+						if (child.isMesh)
+						{
+							child.userData.original_material = child.material.clone();
+							child.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+						}
+					});
 					
+					
+				} // Otherwise, if the new selected object is a singular object...
+				else
+				{
+				
+					// Make the new selected object's material wireframe
+					new_selected_object.userData.original_material = new_selected_object.material.clone();
+					new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+				
 				}
 				
-				// If the new selected object is different than the current selected object...
-				if (!this.selected_objects.getObjectById(new_selected_object.id))
+				// Remove the new selected objects from the world in preparation to add it to the selected objects group
+				world.removeObject(new_selected_object);
+				
+				// Select multiple objects if shift key is held down...
+				if (player.controls.modifier_shift_left_pressed)
 				{
 					
-					// Check if the object is a group
-					if (new_selected_object.isGroup)
-					{
-						
-						// Make the new selected object's material wireframe
-						new_selected_object.traverse((child) => {
-							if (child.isMesh)
-							{
-								child.userData.original_material = child.material.clone();
-								child.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
-							}
-						});
-						
-					}
-					else
-					{
-					
-						// Make the new selected object's material wireframe
-						new_selected_object.userData.original_material = new_selected_object.material.clone();
-						new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
-					
-					}
-					
-					// Remove the new selected object from the world in preparation to add it to the group
-					world.removeObject(new_selected_object);
-					
-					// Select multiple objects if shift key is held down...
-					if (player.controls.modifier_shift_left_pressed)
-					{
-						world.removeObject(this.selected_objects);
-					}
-					else
-					{
-						
-						// Reset the selected object if only one object is being selected
-						this.resetSelectedObjects(world, player);
-						
-					}
-					
-					// Set the selected objects group's position to that of the first selected object
-					if (this.selected_objects.children.length == 0)
-					{
-						this.selected_objects.position.copy(new_selected_object.position);
-					}
-					
-					// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
-					let selected_objects_offset = new THREE.Vector3().subVectors(new_selected_object.position, this.selected_objects.position);
-					selected_objects_offset.divide(this.selected_objects.scale);
-					selected_objects_offset.applyQuaternion(this.selected_objects.quaternion.clone().invert());
-					
-					// Set the new selected object's position/scale/rotation according to the offset
-					new_selected_object.position.copy(selected_objects_offset);
-					new_selected_object.scale.divide(this.selected_objects.scale);
-					new_selected_object.quaternion.premultiply(this.selected_objects.quaternion.clone().invert());
-					
-					// Get the new selected object
-					this.selected_objects.add(new_selected_object);
-					
-					// Re-add the group back to the world
-					world.addObject(this.selected_objects);
-					
-					// Attach transform controls to new selected object
-					player.controls.transform_controls.attach(this.selected_objects);
-					
-					// Update selected object UI
-					this.updateSelectedObjectUI(player);
+					// Remove the selected objects group from the world because it may already be in it if multiple objects are being selected
+					world.removeObject(this.selected_objects);
 					
 					
-				} // Otherwise, if the new selected object is the same as the current selected object...
+				} // Otherwise, if only one object is being selected...
 				else
 				{
 					
-					// Reset the selected objects
+					// Reset the selected objects if only one object is being selected
 					this.resetSelectedObjects(world, player);
 					
 				}
 				
+				// If no previous objects have been selected yet...
+				if (this.selected_objects.children.length == 0)
+				{
+					
+					// Set the selected objects group's position to that of the newly selected object
+					this.selected_objects.position.copy(new_selected_object.position);
+					
+				}
 				
-			} // Otherwise, if the player isn't looking at any objects...
+				// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
+				let selected_objects_offset = new THREE.Vector3().subVectors(new_selected_object.position, this.selected_objects.position);
+				selected_objects_offset.divide(this.selected_objects.scale);
+				selected_objects_offset.applyQuaternion(this.selected_objects.quaternion.clone().invert());
+				
+				// Set the new selected object's position/scale/rotation according to the offset
+				new_selected_object.position.copy(selected_objects_offset);
+				new_selected_object.scale.divide(this.selected_objects.scale);
+				new_selected_object.quaternion.premultiply(this.selected_objects.quaternion.clone().invert());
+				
+				// Get the new selected object
+				this.selected_objects.add(new_selected_object);
+				
+				// Add (or re-add) the selected object group back to the world
+				world.addObject(this.selected_objects);
+				
+				// Attach transform controls to the selected objects group
+				player.controls.transform_controls.attach(this.selected_objects);
+				
+				// Update selected objects UI
+				this.updateSelectedObjectsUI(player);
+				
+				
+			} // Otherwise, if the new selected object is the same as the current selected object...
 			else
 			{
 				
@@ -931,7 +986,7 @@ class Editor
 			}
 			
 			
-		} // Otherwise, if editor is disabled...
+		} // Otherwise, if the player isn't looking at any objects...
 		else
 		{
 			
@@ -945,8 +1000,8 @@ class Editor
 	/**
 	 * Resets the selected objects.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static resetSelectedObjects(world, player)
 	{
@@ -958,14 +1013,14 @@ class Editor
 			// Detatch transform controls if they're attached to anything
 			player.controls.transform_controls.detach();
 			
-			// Reset selected object materials
+			// Reset selected object's materials
 			this.selected_objects.traverse((child) => {
 				if (child.isMesh)
 				{
 					if (child.userData.original_material != null)
 					{
 						child.material = child.userData.original_material.clone();
-						child.userData.original_material = null;
+						delete child.userData.original_material;
 					}
 				}
 			});
@@ -973,12 +1028,12 @@ class Editor
 			// Remove the selected objects from the world to re-add them to the world outside of the selected objects group
 			world.removeObject(this.selected_objects);
 			
-			// Prepare selected objects to be deselected
+			// Prepare the selected objects to be deselected by iterating through the selected objects group's children
 			let objects_to_deselect = [];
 			for (let i = 0; i < this.selected_objects.children.length; i++)
 			{
 				
-				// Get the selected objects group's child
+				// Get the selected objects group's current child
 				let selected_object = this.selected_objects.children[i];
 				
 				// Get child's position/scale/rotation
@@ -1007,7 +1062,7 @@ class Editor
 			for (let i = 0; i < objects_to_deselect.length; i++)
 			{
 				
-				// Get selected objects group's child
+				// Get selected objects group's current child
 				let selected_object = objects_to_deselect[i];
 				
 				// Remove the child from the selected objects group
@@ -1021,8 +1076,8 @@ class Editor
 			// Reset the selected objects group
 			this.selected_objects = new THREE.Group();
 			
-			// Update selected object UI
-			this.updateSelectedObjectUI(player);
+			// Update selected objects UI
+			this.updateSelectedObjectsUI(player);
 			
 		}
 		
@@ -1031,32 +1086,26 @@ class Editor
 	/**
 	 * Cuts the selected objects.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static cutSelectedObjects(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
-		{
-			
-			// Detatch transform controls
-			player.controls.transform_controls.detach();
-			
-			// Remove selected objects from the world
-			world.removeObject(this.selected_objects);
-			
-			// Copy the selected objects to the clipboard
-			this.clipboard_objects = this.selected_objects.deepClone();
-			
-			// Reset the selected objects group
-			this.selected_objects = new THREE.Group();
-			
-			// Update selected object UI
-			this.updateSelectedObjectUI(player);
-			
-		}
+		// Detatch transform controls
+		player.controls.transform_controls.detach();
+		
+		// Remove selected objects from the world
+		world.removeObject(this.selected_objects);
+		
+		// Copy the selected objects to the clipboard
+		this.clipboard_objects = this.selected_objects.deepClone();
+		
+		// Reset the selected objects group
+		this.selected_objects = new THREE.Group();
+		
+		// Update selected object UI
+		this.updateSelectedObjectsUI(player);
 		
 	}
 	
@@ -1066,83 +1115,68 @@ class Editor
 	static copySelectedObjects()
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
-		{
-		
-			// Copy the selected objects to the clipboard
-			this.clipboard_objects = this.selected_objects.deepClone();
-		
-		}
+		// Copy the selected objects to the clipboard
+		this.clipboard_objects = this.selected_objects.deepClone();
 		
 	}
 	
 	/**
 	 * Pastes the clipboard objects.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {player} player The player editing the game world.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static pasteClipboardObjects(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
-		{
-			
-			// Reset the selected objects
-			this.resetSelectedObjects(world, player);
-			
-			// Copy the selected objects to the clipboard
-			this.selected_objects = this.clipboard_objects.deepClone();
-			
-			// Re-add the group back to the world
-			world.addObject(this.selected_objects);
-			this.selected_objects.updateMatrixWorld();
-			
-			// Attach transform controls to new selected object
-			player.controls.transform_controls.attach(this.selected_objects);
-			
-			// Update selected object UI
-			this.updateSelectedObjectUI(player);
-			
-		}
+		// Reset the selected objects
+		this.resetSelectedObjects(world, player);
+		
+		// Copy the selected objects to the clipboard
+		this.selected_objects = this.clipboard_objects.deepClone();
+		
+		// Re-add the group back to the world
+		world.addObject(this.selected_objects);
+		this.selected_objects.updateMatrixWorld();
+		
+		// Attach transform controls to new selected object
+		player.controls.transform_controls.attach(this.selected_objects);
+		
+		// Update selected object UI
+		this.updateSelectedObjectsUI(player);
 		
 	}
 	
 	/**
 	 * Deletes the selected objects.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static deleteSelectedObjects(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If an object is selected...
+		if (this.selected_objects.children.length > 0)
 		{
 			
-			// If an object is selected...
-			if (this.selected_objects.children.length > 0)
+			// Detatch transform controls from object
+			player.controls.transform_controls.detach();
+			
+			// Remove each selected object from the world
+			for (let i = 0; i < this.selected_objects.children.length; i++)
 			{
-				
-				// Detatch transform controls from object
-				player.controls.transform_controls.detach();
-				
-				// Remove each selected object from the world
-				for (let i = 0; i < this.selected_objects.children.length; i++)
-				{
-					world.removeObject(this.selected_objects[i]);
-				}
-				
-				// Remove the selected objects froup from the world
-				world.removeObject(this.selected_objects);
-				
-				// Reset the selected objects group
-				this.selected_objects = new THREE.Group();
-				
-				// Update selected object UI
-				this.updateSelectedObjectUI(player);
-				
+				world.removeObject(this.selected_objects[i]);
 			}
+			
+			// Remove the selected objects froup from the world
+			world.removeObject(this.selected_objects);
+			
+			// Reset the selected objects group
+			this.selected_objects = new THREE.Group();
+			
+			// Update selected object UI
+			this.updateSelectedObjectsUI(player);
 			
 		}
 		
@@ -1150,52 +1184,49 @@ class Editor
 	
 	/**
 	 * Groups the selected objects.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static groupSelectedObjects(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If an object is selected...
+		if (this.selected_objects.children.length > 0)
 		{
 			
-			// If an object is selected...
-			if (this.selected_objects.children.length > 0)
-			{
-				
-				// Detatch transform controls from object
-				player.controls.transform_controls.detach();
-				
-				// Remove the selected objects froup from the world
-				world.removeObject(this.selected_objects);
-				
-				// The new object group will just be a clone of the selected objects group
-				let grouped_objects = this.selected_objects.deepClone();
-				
-				// Reset the selected objects group
-				this.selected_objects = new THREE.Group();
-				
-				// Set the selected objects group's position to that of the first selected object
-				this.selected_objects.position.copy(grouped_objects.position);
-				
-				// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
-				let selected_objects_offset = new THREE.Vector3().subVectors(grouped_objects.position, this.selected_objects.position);
-				
-				// Set the new selected object's position/scale/rotation according to the offset
-				grouped_objects.position.copy(selected_objects_offset);
-				
-				// Get the new selected object
-				this.selected_objects.add(grouped_objects);
-				
-				// Re-add the group back to the world
-				world.addObject(this.selected_objects);
-				
-				// Attach transform controls to new selected object
-				player.controls.transform_controls.attach(this.selected_objects);
-				
-				// Update selected object UI
-				this.updateSelectedObjectUI(player);
-				
-			}
+			// Detatch transform controls from object
+			player.controls.transform_controls.detach();
+			
+			// Remove the selected objects froup from the world
+			world.removeObject(this.selected_objects);
+			
+			// The new object group will just be a clone of the selected objects group
+			let grouped_objects = this.selected_objects.deepClone();
+			
+			// Reset the selected objects group
+			this.selected_objects = new THREE.Group();
+			
+			// Set the selected objects group's position to that of the first selected object
+			this.selected_objects.position.copy(grouped_objects.position);
+			
+			// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
+			let selected_objects_offset = new THREE.Vector3().subVectors(grouped_objects.position, this.selected_objects.position);
+			
+			// Set the new selected object's position/scale/rotation according to the offset
+			grouped_objects.position.copy(selected_objects_offset);
+			
+			// Get the new selected object
+			this.selected_objects.add(grouped_objects);
+			
+			// Re-add the group back to the world
+			world.addObject(this.selected_objects);
+			
+			// Attach transform controls to new selected object
+			player.controls.transform_controls.attach(this.selected_objects);
+			
+			// Update selected object UI
+			this.updateSelectedObjectsUI(player);
 			
 		}
 		
@@ -1203,58 +1234,1045 @@ class Editor
 	
 	/**
 	 * Un-groups the selected objects.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
 	static ungroupSelectedObjects(world, player)
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If an object is selected...
+		if (this.selected_objects.children.length > 0 && this.selected_objects.children[0].isGroup)
 		{
 			
-			// If an object is selected...
-			if (this.selected_objects.children.length > 0 && this.selected_objects.children[0].isGroup)
+			// Detatch transform controls from object
+			player.controls.transform_controls.detach();
+			
+			// Remove the selected objects froup from the world
+			world.removeObject(this.selected_objects);
+			
+			// Get the selected objects group's child
+			let selected_object_group = this.selected_objects.children[0];
+			
+			// Get child's position/scale/rotation
+			let selected_object_position = selected_object_group.position.clone();
+			let selected_object_scale = selected_object_group.scale.clone();
+			let selected_object_rotation = selected_object_group.quaternion.clone();
+			
+			// Calculate the child's new position/scale/rotation relative to the world instead of the selected objects group
+			selected_object_rotation.premultiply(this.selected_objects.quaternion);
+			selected_object_position.applyQuaternion(this.selected_objects.quaternion);
+			selected_object_position.multiply(this.selected_objects.scale);
+			selected_object_position.add(this.selected_objects.position);
+			selected_object_scale.multiply(this.selected_objects.scale);
+			
+			// Set the child's new position/scale/rotation
+			selected_object_group.position.copy(selected_object_position);
+			selected_object_group.scale.copy(selected_object_scale);
+			selected_object_group.quaternion.copy(selected_object_rotation);
+			
+			// Remove the child from the selected objects group
+			this.selected_objects.remove(selected_object_group);
+			
+			// Get the selected objects group's child
+			this.selected_objects = selected_object_group;
+			
+			// Re-add the child to the world
+			world.addObject(this.selected_objects);
+			
+			// Attach transform controls to new selected object
+			player.controls.transform_controls.attach(this.selected_objects);
+			
+			// Update selected object UI
+			this.updateSelectedObjectsUI(player);
+			
+		}
+		
+	}
+	
+	/**
+	 * Highlights whichever object face the player is looking at.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static highlightFace(world, player)
+	{
+		
+		// Cast a ray from the player's position in the direction the player is looking
+		player.raycaster.ray.origin.copy(player.position);
+		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+		player.raycaster.near = 0;
+		player.raycaster.far = Infinity;
+		
+		// Check intersections with world objects
+		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		if (intersects.length > 0)
+		{
+			
+			// Get first intersected object
+			const intersect_object = intersects[0].object;
+			const intersect_face_index = intersects[0].faceIndex;
+			
+			// If geometry is indexed and doesn't have any deleted faces...
+			if (intersect_object.geometry.index && !intersect_object.userData.has_deleted_faces)
 			{
 				
-				// Detatch transform controls from object
-				player.controls.transform_controls.detach();
+				// Store the original geometry in the intersected object's userData
+				intersect_object.userData.original_geometry = intersect_object.geometry;
 				
-				// Remove the selected objects froup from the world
-				world.removeObject(this.selected_objects);
+				// Initialize values to hold the collection of selected object faces and a flag indicating whether or not any faces have been deleted
+				intersect_object.userData.selected_faces = new Set();
+				intersect_object.userData.has_deleted_faces = false;
 				
-				// Get the selected objects group's child
-				let selected_object_group = this.selected_objects.children[0];
+				// Convert geometry to non-indexed geometry for face manipulation
+				intersect_object.geometry = intersect_object.geometry.toNonIndexed();
 				
-				// Get child's position/scale/rotation
-				let selected_object_position = selected_object_group.position.clone();
-				let selected_object_scale = selected_object_group.scale.clone();
-				let selected_object_rotation = selected_object_group.quaternion.clone();
+				// Assign a default white colour to each of the geometry's vertices
+				const colors = [];
+				for (let i = 0; i < intersect_object.geometry.attributes.position.count; i++)
+				{
+					colors.push(1, 1, 1);
+				}
+				intersect_object.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+				intersect_object.material.vertexColors = true;
+				intersect_object.material.needsUpdate = true;
 				
-				// Calculate the child's new position/scale/rotation relative to the world instead of the selected objects group
-				selected_object_rotation.premultiply(this.selected_objects.quaternion);
-				selected_object_position.applyQuaternion(this.selected_objects.quaternion);
-				selected_object_position.multiply(this.selected_objects.scale);
-				selected_object_position.add(this.selected_objects.position);
-				selected_object_scale.multiply(this.selected_objects.scale);
+				// Create groups of faces/triangles for highlighting/selecting/deleting later
+				this.createFaceGroups(intersect_object);
 				
-				// Set the child's new position/scale/rotation
-				selected_object_group.position.copy(selected_object_position);
-				selected_object_group.scale.copy(selected_object_scale);
-				selected_object_group.quaternion.copy(selected_object_rotation);
+			}
+			
+			// The object is now non-indexed and has its face groups identified
+			
+			// If the previously hovered face index is different than the currently intersected face index, or the currently intersected object
+			// is different than the last object which was being hovered over...
+			if (this.previously_hovered_face_index !== intersect_face_index || this.hovered_faces_object !== intersect_object)
+			{
 				
-				// Remove the child from the selected objects group
-				this.selected_objects.remove(selected_object_group);
+				// If an object face was previously being hovered over, reset its colour...
+				if (this.hovered_faces_object && this.previously_hovered_face_index !== null)
+				{
+					
+					// Get the previously hovered face's group id and group
+					const face_group_id = this.hovered_faces_object.userData.face_group_ids.getX(this.previously_hovered_face_index * 3);
+					const face_group = this.hovered_faces_object.userData.face_groups[face_group_id];
+					
+					// Reset the colour of the face which was previously being hovered over...
+					if (!(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id)))
+					{
+						this.setFaceGroupColour(this.hovered_faces_object, face_group, new THREE.Color(0xffffff));
+					}
+					
+				}
 				
-				// Get the selected objects group's child
-				this.selected_objects = selected_object_group;
+				// If the currently intersected face isn't already selected, highlight it...
+				if (!(intersect_object.userData.selected_faces && (intersect_object.userData.face_group_ids && intersect_object.userData.selected_faces.has(intersect_object.userData.face_group_ids.getX(intersect_face_index * 3)))))
+				{
+					
+					// Get the intersected face's group
+					const face_group = intersect_object.userData.face_groups[intersect_object.userData.face_group_ids.getX(intersect_face_index * 3)];
+					
+					// Highlight the face group...
+					const color = new THREE.Color(this.highlighted_face_colour);
+					if (face_group)
+					{
+						face_group.forEach((fIndex) => {
+							const vertex_indices = [fIndex * 3, fIndex * 3 + 1, fIndex * 3 + 2];
+							vertex_indices.forEach((i) => {
+								intersect_object.geometry.attributes.color.setXYZ(i, color.r, color.g, color.b);
+							});
+						});
+						intersect_object.geometry.attributes.color.needsUpdate = true;
+					}
+					
+				}
 				
-				// Re-add the child to the world
-				world.addObject(this.selected_objects);
+				// Set the hovered faces object and face index
+				this.hovered_faces_object = intersect_object;
+				this.previously_hovered_face_index = intersect_face_index;
 				
-				// Attach transform controls to new selected object
-				player.controls.transform_controls.attach(this.selected_objects);
+			}
+			
+			
+		} // Otherwise, if the player isn't looking at any objects...
+		else
+		{
+			
+			// If an object face was previously being hovered over, reset its colour...
+			if (this.hovered_faces_object && this.previously_hovered_face_index !== null)
+			{
 				
-				// Update selected object UI
-				this.updateSelectedObjectUI(player);
+				// Get the previously hovered face's group id and group
+				const face_group_id = this.hovered_faces_object.userData.face_group_ids.getX(this.previously_hovered_face_index * 3);
+				const face_group = this.hovered_faces_object.userData.face_groups[face_group_id];
+				
+				// Reset the colour of the face which was previously being hovered over...
+				if (!(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id)))
+				{
+					this.setFaceGroupColour(this.hovered_faces_object, face_group, new THREE.Color(0xffffff));
+				}
+				
+			}
+			
+			// Convert the object back to indexed geometry if it's allowed to be (only it has no selected or deleted faces)...
+			if (this.hovered_faces_object && (this.hovered_faces_object.userData && this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.size === 0 && !this.hovered_faces_object.userData.has_deleted_faces && this.hovered_faces_object.userData.original_geometry))
+			{
+				
+				// Reset the object's geometry back to its original indexed geometry
+				this.hovered_faces_object.geometry = this.hovered_faces_object.userData.original_geometry;
+				this.hovered_faces_object.material.vertexColors = false;
+				this.hovered_faces_object.material.needsUpdate = true;
+				
+				// Delete the object's geometry face modification related userData values
+				delete this.hovered_faces_object.userData.original_geometry;
+				delete this.hovered_faces_object.userData.face_groups;
+				delete this.hovered_faces_object.userData.selected_faces;
+				delete this.hovered_faces_object.userData.has_deleted_faces;
+				
+			}
+			
+			// Reset the hovered faces object and face index
+			this.hovered_faces_object = null;
+			this.previously_hovered_face_index = null;
+			
+		}
+		
+	}
+	
+	/**
+	 * Selects whichever object face is currently highlighted.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static selectFace(world, player)
+	{
+		
+		// If an object is being hovered over...
+		if (this.hovered_faces_object && this.previously_hovered_face_index !== null)
+		{
+			
+			// Get the hovered face's group id and group
+			const face_group_id = this.hovered_faces_object.userData.face_group_ids.getX(this.previously_hovered_face_index * 3);
+			const face_group = this.hovered_faces_object.userData.face_groups[face_group_id];
+			
+			// Initialize flag indicating the hovered face's group should be selected if it isn't already selected
+			const select_face_group = !(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id));
+
+			// If the player is not holding down the shift key to select multiple faces...
+			if (!player.controls.modifier_shift_left_pressed)
+			{
+				
+				// Deselect all world object's faces...
+				world.all_objects.forEach((object) => {
+					object.traverse((child) => {
+						
+						// If any of the child object's faces are selected...
+						if (child.userData.selected_faces)
+						{
+							
+							// Reset the object's selected faces
+							child.userData.selected_faces.clear();
+							
+							// Reset the object's selected face colours
+							if (child.material && child.material.vertexColors)
+							{
+								const colour = new THREE.Color(0xffffff);
+								const colours = child.geometry.attributes.color;
+								for (let i = 0; i < colours.count; i++)
+								{
+									colours.setXYZ(i, colour.r, colour.g, colour.b);
+								}
+								colours.needsUpdate = true;
+							}
+							
+						}
+						
+					});
+				});
+				
+			}
+			
+			// Select the hovered face group if it wasn't already selected...
+			if (select_face_group)
+			{
+				this.hovered_faces_object.userData.selected_faces.add(face_group_id);
+				this.setFaceGroupColour(this.hovered_faces_object, face_group, new THREE.Color(this.selected_face_colour));
+			}
+			
+			
+		} // Otherwise, if no object is being hovered over...
+		else
+		{
+			
+			// Deselect all world object's faces...
+			world.all_objects.forEach((object) => {
+				object.traverse((child) => {
+					
+					// If any of the child object's faces are selected...
+					if (child.userData.selected_faces)
+					{
+						
+						// Reset the object's selected faces
+						child.userData.selected_faces.clear();
+						
+						// Reset the object's selected face colours
+						if (child.material && child.material.vertexColors)
+						{
+							const colour = new THREE.Color(0xffffff);
+							const colours = child.geometry.attributes.color;
+							for (let i = 0; i < colours.count; i++)
+							{
+								colours.setXYZ(i, colour.r, colour.g, colour.b);
+							}
+							colours.needsUpdate = true;
+						}
+						
+					}
+					
+				});
+			});
+			
+		}
+		
+	}
+	
+	/**
+	 * Resets any highlighted or selected object faces.
+	 *
+	 * @param {World} world The current game world.
+	 */
+	static resetHighlightedAndSelectedFaces(world)
+	{
+		
+		// Deselect all world object's faces...
+		world.all_objects.forEach((object) => {
+			object.traverse((child) => {
+				
+				// Convert the object back to indexed geometry if it's allowed to be (only it has no selected or deleted faces)...
+				if (child.userData && child.userData.selected_faces && child.userData.selected_faces.size === 0 && !child.userData.has_deleted_faces && child.userData.original_geometry)
+				{
+					
+					// Reset the object's geometry back to its original indexed geometry
+					child.geometry = child.userData.original_geometry;
+					child.material.vertexColors = false;
+					child.material.needsUpdate = true;
+					
+					// Delete the object's geometry face modification related userData values
+					delete child.userData.original_geometry;
+					delete child.userData.face_groups;
+					delete child.userData.selected_faces;
+					delete child.userData.has_deleted_faces;
+					
+					
+				} // Otherwise, if the object is not allowed to be converted back to indexed geometry...
+				else
+				{
+					
+					// If any of the child object's faces are selected...
+					if (child.userData.selected_faces)
+					{
+						
+						// Reset the object's selected faces
+						child.userData.selected_faces.clear();
+						
+						// Reset selected face colours
+						if (child.material && child.material.vertexColors)
+						{
+							const colour = new THREE.Color(0xffffff);
+							const colours = child.geometry.attributes.color;
+							for (let i = 0; i < colours.count; i++)
+							{
+								colours.setXYZ(i, colour.r, colour.g, colour.b);
+							}
+							colours.needsUpdate = true;
+						}
+						
+					}
+					
+				}
+				
+				// Reset the hovered faces object and face index
+				this.previously_hovered_face_index = null;
+				this.hovered_faces_object = null;
+				
+			});
+		});
+	}
+	
+	/**
+	 * Deletes the selected object faces.
+	 *
+	 * @param {World} world The current game world.
+	 */
+	static deleteSelectedFaces(world)
+	{
+		
+		// Check if object face selection is enabled...
+		if (this.select_faces)
+		{
+			
+			// Iterate through all object looking for selected faces to delete...
+			world.all_objects.forEach((object) => {
+				object.traverse((child) => {
+					
+					// If the child object has any selected faces...
+					if (child.userData.selected_faces && child.userData.selected_faces.size > 0)
+					{
+						
+						// Get the positions, colours, and normals from the object's geometry
+						const position = child.geometry.attributes.position;
+						const colours = child.geometry.attributes.color;
+						const normals = child.geometry.attributes.normal;
+						
+						// Get the object's array of face group IDs
+						const face_group_ids = child.userData.face_group_ids;
+						
+						// Initialize an array of all faces to delete
+						let faces_to_delete = [];
+						child.userData.selected_faces.forEach((face_group_id) => {
+							const face_group = child.userData.face_groups[face_group_id];
+							faces_to_delete = faces_to_delete.concat(face_group);
+						});
+						
+						// Sort the faces to delete in descending order
+						faces_to_delete.sort((a, b) => b - a);
+						
+						// Iterate through each face to delete and delete it...
+						faces_to_delete.forEach((face_index) => {
+							
+							// Get the vertices of the current face to be deleted
+							const vertices = [face_index * 3, face_index * 3 + 1, face_index * 3 + 2];
+							
+							// Sort the vertices
+							vertices.sort((a, b) => b - a);
+							
+							// Remove each vertex...
+							vertices.forEach((i) => {
+								
+								// Remove vertex position data
+								const position_array = Array.from(position.array);
+								position_array.splice(i * 3, 3);
+								position.array = new Float32Array(position_array);
+								
+								// Remove vertex colour data
+								const colour_array = Array.from(colours.array);
+								colour_array.splice(i * 3, 3);
+								colours.array = new Float32Array(colour_array);
+								
+								// Remove vertex normals data
+								const normals_array = Array.from(normals.array);
+								normals_array.splice(i * 3, 3);
+								normals.array = new Float32Array(normals_array);
+								
+								// Remove face group id
+								const face_group_ids_array = Array.from(face_group_ids.array);
+								face_group_ids_array.splice(i, 1);
+								face_group_ids.array = new Uint16Array(face_group_ids_array);
+								
+							});
+							
+							// Update geometry attribute counts
+							const new_count = position.array.length / 3;
+							position.count = new_count;
+							colours.count = new_count;
+							normals.count = new_count;
+							face_group_ids.count = new_count;
+							
+							// Set geometry attributes to require an update
+							position.needsUpdate = true;
+							colours.needsUpdate = true;
+							normals.needsUpdate = true;
+							face_group_ids.needsUpdate = true;
+							
+						});
+						
+						// Clear the object's selected faces and flag it as having deleted faces
+						child.userData.selected_faces.clear();
+						child.userData.has_deleted_faces = true;
+						
+						// Compute geometry normals
+						child.geometry.computeVertexNormals();
+						
+						// Re-create the object's face groups
+						this.createFaceGroups(child);
+						
+					}
+					
+				});
+			});
+			
+			// Reset the previously hovered face index
+			this.previously_hovered_face_index = null;
+			
+		}
+		
+	}
+	
+	/**
+	 * Create groups of faces for an object's geometry, which consist of one-to-many faces (aka triangles), and store them in the object's userData. Boxes will generate groups of two faces/triangles which make up the surfaces of each side. Other geometries keep it to one face/triangle per group.
+	 *
+	 * @param {THREE.Mesh} mesh The object whose full surface of triangles will be grouped up according to geometry type.
+	 */
+	static createFaceGroups(mesh)
+	{
+		
+		// Get the object geometry's face count (each face has 3 vertices, because each face is a triangle)
+		const geometry_face_count = mesh.geometry.attributes.position.count / 3;
+		
+		// Initialize an array of face group IDs
+		const face_group_ids = new Uint16Array(geometry_face_count * 3);
+		
+		// Initialize a counter for tracking the current face group id as face groups are being created
+		let current_face_group_id = 0;
+		
+		// If the object was originally a box (not accounting for the user messing with the vertices after the fact)...
+		if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'BoxGeometry')
+		{
+			
+			// Each side of a box consists of two faces/triangles, so provide the current face group id to two faces/triangles accordingly
+			// by letting the vertex offset value climb twice as high before moving on to the next face group...
+			for (let i = 0; i < geometry_face_count; i += 2)
+			{
+				for (let j = 0; j < 2; j++)
+				{
+					const vertexOffset = (i + j) * 3;
+					face_group_ids[vertexOffset] = current_face_group_id;
+					face_group_ids[vertexOffset + 1] = current_face_group_id;
+					face_group_ids[vertexOffset + 2] = current_face_group_id;
+				}
+				current_face_group_id++;
+			}
+			
+			
+		} // Otherwise, if the object was originally any other type of object (again, not accounting for the user messing with vertices)...
+		else
+		{
+			
+			// For all other geometries, each face group will only have one face/triangle, so let the vertex offset value climb accordingly
+			// and move on to the next face group only after one face/triangle has been added...
+			for (let i = 0; i < geometry_face_count; i++)
+			{
+				const vertexOffset = i * 3;
+				face_group_ids[vertexOffset] = current_face_group_id;
+				face_group_ids[vertexOffset + 1] = current_face_group_id;
+				face_group_ids[vertexOffset + 2] = current_face_group_id;
+				current_face_group_id++;
+			}
+			
+		}
+		
+		// Add the array of face group IDs to the object
+		mesh.userData.face_group_ids = new THREE.BufferAttribute(face_group_ids, 1);
+		
+		// Initialize a collection of face groups to add to the object
+		mesh.userData.face_groups = {};
+		
+		// Add each of the object's faces to the appropriate face group according to the group IDs that were just created...
+		for (let i = 0; i < geometry_face_count; i++)
+		{
+			const face_group_id = mesh.userData.face_group_ids.getX(i * 3);
+			if (!mesh.userData.face_groups[face_group_id])
+			{
+				mesh.userData.face_groups[face_group_id] = [];
+			}
+			mesh.userData.face_groups[face_group_id].push(i);
+		}
+		
+	}
+	
+	/**
+	 * Sets the specified object's face group to the desired colour.
+	 *
+	 * @param {THREE.Mesh} mesh The object whose face group colour is to be set.
+	 * @param {array} face_group The face group whose colour is to be set.
+	 * @param {THREE.Color} colour The colour to set the specified face group's faces to.
+	 */
+	static setFaceGroupColour(mesh, face_group, colour)
+	{
+		
+		// If the face group is valid...
+		if (face_group)
+		{
+			
+			// Iterate through each face to re-colour...
+			face_group.forEach((face_index) => {
+				
+				// Get the vertices of the current face to re-colour
+				const vertices = [face_index * 3, face_index * 3 + 1, face_index * 3 + 2];
+				
+				// Set the colour of the face's vertices
+				vertices.forEach((i) => {
+					mesh.geometry.attributes.color.setXYZ(i, colour.r, colour.g, colour.b);
+				});
+			});
+			
+			// Set the geometry colour attribute to require an update
+			mesh.geometry.attributes.color.needsUpdate = true;
+			
+		}
+		
+	}
+	
+	/**
+	 * Highlights the vertices of whichever object the player is looking at.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static highlightVertices(world, player)
+	{
+		
+		// Cast a ray from the player's position in the direction the player is looking
+		player.raycaster.ray.origin.copy(player.position);
+		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+		player.raycaster.near = 0;
+		player.raycaster.far = Infinity;
+		
+		// Check intersections with world objects
+		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		if (intersects.length > 0)
+		{
+			
+			// Get first intersected object
+			let intersect_object = intersects[0].object;
+			
+			// Check if the intersected object is a mesh and doesn't already have highlighted vertices, or if it's a set of points...
+			if ((intersect_object instanceof THREE.Mesh && !intersect_object.userData.vertices) || intersect_object instanceof THREE.Points)
+			{
+			
+				// If the intersect object is a set of points...
+				if (intersect_object instanceof THREE.Points)
+				{
+					
+					// Check if the intersect object overlaps the selected vertices object or the highlighted vertices object, and if it does, set it to the corresponding object instead...
+					let overlap_found = false;
+					intersects.forEach(intersect => {
+						if (intersect.object == this.selected_vertices_object)
+						{
+							overlap_found = true;
+							intersect_object = this.selected_vertices_object;
+						}
+						else if (intersect.object == this.highlighted_vertices_object)
+						{
+							overlap_found = true;
+							intersect_object = this.highlighted_vertices_object;
+						}
+					});
+					
+					// If no overlap was found, just set the intersect object to the first available intersected mesh...
+					if (!overlap_found)
+					{
+						intersects.forEach(intersect => {
+							if (intersect.object instanceof THREE.Mesh)
+							{
+								intersect_object = intersect.object;
+							}
+						});
+					}
+					
+				}
+				
+				// If the intersected object is now a mesh and doesn't match the highlighted verticies object, the selected vertices object, or any of the spheres in the selected vertices object's group of selected vertices... (I know, right? Mouthful...)
+				if (intersect_object instanceof THREE.Mesh && intersect_object != this.highlighted_vertices_object && intersect_object != this.selected_vertices_object && !(this.selected_vertices_object && this.selected_vertices_object.userData.selected_vertices && this.selected_vertices_object.userData.selected_vertices.getObjectById(intersect_object.id)))
+				{
+					
+					// Reset the highlighted vertices
+					this.resetHighlightedVertices();
+					
+					// Get intersected object to highlight its vertices
+					this.highlighted_vertices_object = intersect_object;
+					
+					// Draw the object's vertices and store them in the userData
+					this.highlighted_vertices_object.userData.vertices = new THREE.Points(this.highlighted_vertices_object.geometry, Shaders.pointOutline(this.highlighted_vertex_colour, this.highlighted_vertex_size, this.highlighted_vertex_outline_colour, this.highlighted_vertex_outline_size));
+					this.highlighted_vertices_object.add(this.highlighted_vertices_object.userData.vertices);
+					
+					// Reset the object's collection of indices at vertex positions
+					this.highlighted_vertices_object.userData.object_indices_at_positions = {};
+					
+					// Get the object's vertices and vertex count
+					const highlighted_vertices_object_position = this.highlighted_vertices_object.geometry.getAttribute('position');
+					const highlighted_vertices_object_vertex_count = highlighted_vertices_object_position.count;
+					
+					// Generate new collection of indices at vertex positions for the object...
+					for (let i = 0; i < highlighted_vertices_object_vertex_count; i++)
+					{
+						const position = new THREE.Vector3().fromBufferAttribute(highlighted_vertices_object_position, i);
+						const key = position.x.toFixed(5) + ',' + position.y.toFixed(5) + ',' + position.z.toFixed(5);
+						
+						if (!this.highlighted_vertices_object.userData.object_indices_at_positions[key])
+						{
+							this.highlighted_vertices_object.userData.object_indices_at_positions[key] = [];
+						}
+						
+						this.highlighted_vertices_object.userData.object_indices_at_positions[key].push(i);
+					}
+					
+					
+				} // Otherwise, if the intersected object fails *all* those conditions, and we're sure it's *not* just the highlighted vertices object...
+				else if (intersect_object != this.highlighted_vertices_object)
+				{
+					
+					// Reset the highlighted vertices
+					this.resetHighlightedVertices();
+					
+				}
+				
+				
+			} // Otherwise, if the intersected object is a mesh and already has highlighted vertices (meaning it's probably just been selected), and it's not a set of points either...
+			else
+			{
+				
+				// Double-check that it's not actually just the highlighted vertices object...
+				if (intersect_object != this.highlighted_vertices_object)
+				{
+				
+					// Reset the highlighted vertices
+					this.resetHighlightedVertices();
+					
+				}
+				
+			}
+			
+			
+		}  // Otherwise, if the player isn't looking at any objects...
+		else
+		{
+			
+			// Reset the highlighted vertices
+			this.resetHighlightedVertices();
+			
+		}
+		
+	}
+	
+	/**
+	 * Resets the highlighted vertices object.
+	 *
+	 * @param {boolean} preserve_indices Boolean flag indicating whether or not to preserve the object indices at positions in preparation for making the highlighted vertices object into the selected vertices object.
+	 */
+	static resetHighlightedVertices(preserve_indices = false)
+	{
+		
+		// If vertices are highlighted...
+		if (this.highlighted_vertices_object)
+		{
+			
+			// Remove the set of points from the highlighted vertices object
+			this.highlighted_vertices_object.remove(this.highlighted_vertices_object.userData.vertices);
+			
+			// Delete the points object from the object's userData
+			delete this.highlighted_vertices_object.userData.vertices;
+			
+			// If we're not flagged to preserve object indices at positions...
+			if (!preserve_indices)
+			{
+				
+				// Delete the object indices at positions too
+				delete this.highlighted_vertices_object.userData.object_indices_at_positions;
+				
+			}
+			
+			// Reset the highlighted vertices object
+			this.highlighted_vertices_object = null;
+			
+		}
+		
+	}
+	
+	/**
+	 * Selects the highlighted vertices object which the player is looking at. If the object is already selected, then selects whichever individual vertex the player is looking at.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static selectVertex(world, player)
+	{
+		
+		// Cast a ray from the player's position in the direction the player is looking
+		player.raycaster.ray.origin.copy(player.position);
+		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+		player.raycaster.near = 0;
+		player.raycaster.far = Infinity;
+		player.raycaster.params.Points.threshold = 0.1;
+		
+		// Check intersections with world objects
+		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		if (intersects.length > 0)
+		{
+			
+			// Get first intersected object
+			let intersect_object = intersects[0].object;
+			
+			// Check if the intersected object is a mesh and already has highlighted vertices, or if it's a set of points...
+			if ((intersect_object instanceof THREE.Mesh && intersect_object.userData.vertices) || intersect_object instanceof THREE.Points)
+			{
+				
+				// Check if the set of points overlaps the selected vertices object, and retrieve it instead...
+				if (intersect_object instanceof THREE.Points)
+				{
+					
+					// Check if the intersect object overlaps the selected vertices object or the highlighted vertices object, and if it does, set it to the corresponding object instead...
+					intersects.forEach(intersect => {
+						if (intersect.object == this.highlighted_vertices_object)
+						{
+							intersect_object = intersect.object;
+						}
+						else if (intersect.object == this.selected_vertices_object)
+						{
+							intersect_object = intersect.object;
+						}
+					});
+					
+				}
+				
+				// If the intersect object is already highlighted, then select it...
+				if (intersect_object == this.highlighted_vertices_object)
+				{
+					
+					// Clear any previous selected vertices object
+					this.resetSelectedVertices(world, player);
+					
+					// Reset the highlighted vertices object (which is what's being intersected here, obviously) but preserve its object indices at positions because we still need them
+					this.resetHighlightedVertices(true);
+					
+					// Select the intersected object
+					this.selected_vertices_object = intersect_object;
+					
+					// Draw the object's vertices and store them in the userData
+					this.selected_vertices_object.userData.vertices = new THREE.Points(this.selected_vertices_object.geometry, Shaders.pointOutline(this.unselected_vertex_colour, this.selected_vertex_size, this.selected_vertex_outline_colour, this.selected_vertex_outline_size));
+					this.selected_vertices_object.add(this.selected_vertices_object.userData.vertices);
+					
+					// Reset the selected vertex indices and selected vertices initial matrix in preparation for storing those values
+					this.selected_vertices_object.userData.selected_vertex_indices = new Set();
+					this.selected_vertices_object.userData.selected_vertices_initial_matrix = new THREE.Matrix4();
+					
+					
+				} // Otherwise, if the intersect object is already selected...
+				else if (intersect_object == this.selected_vertices_object)
+				{
+					
+					// Cast a ray from the player's position in the direction the player is looking
+					player.raycaster.ray.origin.copy(player.position);
+					player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
+					player.raycaster.near = 0;
+					player.raycaster.far = Infinity;
+					
+					// Check intersections with any of the selected vertices object's vertices
+					const intersects = player.raycaster.intersectObject(this.selected_vertices_object.userData.vertices);
+					if (intersects.length > 0)
+					{
+						
+						// Get the index of the intersected vertex
+						const index = intersects[0].index;
+						
+						// Get the position of the intersected vertex
+						const position = new THREE.Vector3().fromBufferAttribute(this.selected_vertices_object.geometry.getAttribute('position'), index);
+						const key = position.x.toFixed(5) + ',' + position.y.toFixed(5) + ',' + position.z.toFixed(5);
+						
+						// Get all intersected vertex indices corresponding to that position
+						const indices = this.selected_vertices_object.userData.object_indices_at_positions[key];
+						
+						// If intersected vertex indices were found, and they're not already selected...
+						if (indices && !this.selected_vertices_object.userData.selected_vertex_indices.has(indices[0]))
+						{
+							
+							// Clear any previous selected vertices if the shift key isn't being pressed...
+							if (!player.controls.modifier_shift_left_pressed)
+							{
+								this.selected_vertices_object.userData.selected_vertex_indices.clear();
+							}
+							
+							// Select the intersected vertices
+							indices.forEach(i => this.selected_vertices_object.userData.selected_vertex_indices.add(i));
+							
+						} // Otherwise, if no intersected vertex indices were found (unlikely), or they're already selected (likely)...
+						else
+						{
+							
+							// Clear any previous selected vertices
+							this.selected_vertices_object.userData.selected_vertex_indices.clear();
+							
+						}
+						
+						// If any vertices were actually successfully selected...
+						if (this.selected_vertices_object.userData.selected_vertex_indices.size > 0)
+						{
+							
+							// Remove the selected vertex helper spheres group from the world
+							world.removeObject(this.selected_vertices_object.userData.selected_vertices);
+							
+							// Re-initialize the group which will contain selected vertex helper spheres
+							this.selected_vertices_object.userData.selected_vertices = new THREE.Group();
+							
+							// Get the helper sphere group's initial position, scale, and rotation in preparation for repositioning it over the selected vertices object
+							let selected_vertices_object_position = this.selected_vertices_object.userData.selected_vertices.position.clone();
+							let selected_vertices_object_scale = this.selected_vertices_object.userData.selected_vertices.scale.clone();
+							let selected_vertices_object_rotation = this.selected_vertices_object.userData.selected_vertices.quaternion.clone();
+							
+							// Modify those initial position values according to the selected vertices obect's position, rotation, and scale
+							selected_vertices_object_rotation.premultiply(this.selected_vertices_object.quaternion);
+							selected_vertices_object_position.applyQuaternion(this.selected_vertices_object.quaternion);
+							selected_vertices_object_position.multiply(this.selected_vertices_object.scale);
+							selected_vertices_object_position.add(this.selected_vertices_object.position);
+							selected_vertices_object_scale.multiply(this.selected_vertices_object.scale);
+							
+							// Position, rotate, and scale the helper sphere group according to those modified position values
+							this.selected_vertices_object.userData.selected_vertices.position.copy(selected_vertices_object_position);
+							this.selected_vertices_object.userData.selected_vertices.scale.copy(selected_vertices_object_scale);
+							this.selected_vertices_object.userData.selected_vertices.quaternion.copy(selected_vertices_object_rotation);
+							
+							// Get the inverse scale of the helper sphere group so that we can make sure the helper spheres don't end up all stretched and weird if the selected vertices object's scale has been changed at all
+							const selected_vertices_object_inverse_scale = new THREE.Vector3(1 / this.selected_vertices_object.userData.selected_vertices.scale.x, 1 / this.selected_vertices_object.userData.selected_vertices.scale.y, 1 / this.selected_vertices_object.userData.selected_vertices.scale.z);
+							
+							// Add helper spheres for each selected vertex...
+							for (let index of this.selected_vertices_object.userData.selected_vertex_indices)
+							{
+								
+								// Get the position of the current selected index
+								const position = new THREE.Vector3();
+								position.fromBufferAttribute(this.selected_vertices_object.geometry.getAttribute('position'), index);
+								
+								// Initialize a helper sphere
+								const sphere_geometry = new THREE.SphereGeometry(0.05, 8, 8);
+								const sphere_material = new THREE.MeshBasicMaterial({ color: this.selected_vertex_colour });
+								const sphere = new THREE.Mesh(sphere_geometry, sphere_material);
+								
+								// Position and scale the helper sphere
+								sphere.position.copy(position);
+								sphere.scale.copy(selected_vertices_object_inverse_scale);
+								
+								// Store the helper sphere's vertex index for applying transforms to the vertex later on
+								sphere.userData.vertex_index = index;
+								
+								// Add the helper sphere to the helper sphere group
+								this.selected_vertices_object.userData.selected_vertices.add(sphere);
+								
+							}
+							
+							// Add the selected vertex helper spheres group to the world
+							world.addObject(this.selected_vertices_object.userData.selected_vertices);
+							
+							// Attach the transform controls to the selected vertices group
+							player.controls.transform_controls.attach(this.selected_vertices_object.userData.selected_vertices);
+							
+							
+						} // Otherwise, if no vertices were selected...
+						else
+						{
+							
+							// Reset the selected vertices just in case
+							this.resetSelectedVertices(world, player);
+							
+						}
+						
+					}
+					
+					
+				} // Otherwise, if the intersected object is neither highlighted nor selected...
+				else
+				{
+					
+					// Reset the selected vertices
+					this.resetSelectedVertices(world, player);
+					
+				}
+				
+				
+			} // Otherwise, if the intersected object is a mesh but doesn't have any highlighted vertices, and it's not a set of points either...
+			else
+			{
+				
+				// Reset the selected vertices
+				this.resetSelectedVertices(world, player);
+				
+			}
+			
+			
+		} // Otherwise, if the player isn't looking at any objects...
+		else
+		{
+			
+			// Reset the selected vertices
+			this.resetSelectedVertices(world, player);
+			
+		}
+		
+	}
+	
+	/**
+	 * Resets the selected vertices object.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static resetSelectedVertices(world, player)
+	{
+		
+		// If vertices are selected...
+		if (this.selected_vertices_object)
+		{
+			
+			// Detach the transform controls from the selected vertices object
+			player.controls.transform_controls.detach();
+			
+			// Remove the set of points from the selected vertices object
+			this.selected_vertices_object.remove(this.selected_vertices_object.userData.vertices);
+			
+			// Remove the helper spheres group from the world
+			world.removeObject(this.selected_vertices_object.userData.selected_vertices);
+			
+			// Delete everything related to selected vertices from the object's userData
+			delete this.selected_vertices_object.userData.vertices;
+			delete this.selected_vertices_object.userData.selected_vertices;
+			delete this.selected_vertices_object.userData.selected_vertices_initial_matrix;
+			delete this.selected_vertices_object.userData.selected_vertex_indices;
+			delete this.selected_vertices_object.userData.object_indices_at_positions;
+			
+			// Reset the selected vertices object
+			this.selected_vertices_object = null;
+			
+		}
+		
+	}
+	
+	/**
+	 * Updates the initial positions of the selected object vertices for calculating transforms.
+	 *
+	 * @param {Player} player The player editing the game world.
+	 */
+	static updateSelectedVertexInitialPositions(player)
+	{
+		
+		// If vertex selection mode is enabled...
+		if (Editor.select_vertices && Editor.selected_vertices_object)
+		{
+			
+			// If the player's mouse is currently dragging...
+			if (player.controls.is_mouse_dragging)
+			{
+				
+				// Get the selected vertices group's initial matrix
+				Editor.selected_vertices_object.userData.selected_vertices_initial_matrix.copy(Editor.selected_vertices_object.userData.selected_vertices.matrix);
+				
+				// Initialize the collection which will store the initial positions of the selected object vertices
+				Editor.selected_vertices_object.userData.initial_vertex_positions = {};
+				
+				// Iterate through the selected vertices group's helper spheres
+				Editor.selected_vertices_object.userData.selected_vertices.children.forEach(child => {
+					
+					// Get the vertex index from the current helper sphere
+					const index = child.userData.vertex_index;
+					
+					// Get the vertex position corresponding to the index
+					const position = new THREE.Vector3();
+					position.fromBufferAttribute(Editor.selected_vertices_object.geometry.getAttribute('position'), index);
+					
+					// Add the vertex position to the collection of initial positions
+					Editor.selected_vertices_object.userData.initial_vertex_positions[index] = position.clone();
+					
+				});
 				
 			}
 			
@@ -1263,109 +2281,179 @@ class Editor
 	}
 	
 	/**
-	 * Updates the selected object UI elements.
-	 *
-	 * @param {player} player The player editing the game world.
+	 * Updates the positions of the selected object vertices during vertex transformation.
 	 */
-	static updateSelectedObjectUI(player)
+	static updateSelectedVertexPositions()
 	{
 		
-		// Check if editor is enabled
-		if (this.enabled)
+		// If vertex selection mode is enabled...
+		if (Editor.select_vertices)
 		{
 			
-			// Check if object is selected
-			if (this.selected_objects.children.length > 0)
+			// If the selected vertices group isn't empty...
+			if (Editor.selected_vertices_object.userData.selected_vertices)
 			{
 				
-				// Show selected object UI
-				$("#editor-selected-objects").show();
+				// Get the selected vertices object's world matrix for applying vertex transforms according to world space instead of local space
+				const selected_vertices_object_world_matrix = Editor.selected_vertices_object.matrixWorld;
 				
-				// Update grid snaps
-				if ($("#editor-selected-objects-transform-position-snap-checkbox").is(':checked'))
-				{
-					$("#editor-selected-objects-transform-position-snap").val(player.controls.transform_controls.translationSnap);
-				}
-				if ($("#editor-selected-objects-transform-scale-snap-checkbox").is(':checked'))
-				{
-					$("#editor-selected-objects-transform-scale-snap").val(player.controls.transform_controls.scaleSnap);
-				}
-				if ($("#editor-selected-objects-transform-rotation-snap-checkbox").is(':checked'))
-				{
-					$("#editor-selected-objects-transform-rotation-snap").val(player.controls.transform_controls.rotationSnap);
-				}
+				// Get the selected vertices object's inverse world matrix for applying vertex transforms back to local space from world space
+				const selected_vertices_object_inverse_world_matrix = new THREE.Matrix4().copy(selected_vertices_object_world_matrix).invert();
 				
-				// Update position
-				$("#editor-selected-objects-transform-position-x").val(this.selected_objects.position.x);
-				$("#editor-selected-objects-transform-position-y").val(this.selected_objects.position.y);
-				$("#editor-selected-objects-transform-position-z").val(this.selected_objects.position.z);
+				// Get the delta matrix between the helper spheres group's initial and current positions
+				const selected_vertices_delta_matrix = new THREE.Matrix4().multiplyMatrices(Editor.selected_vertices_object.userData.selected_vertices.matrix, Editor.selected_vertices_object.userData.selected_vertices_initial_matrix.clone().invert());
 				
-				// Update scale
-				$("#editor-selected-objects-transform-scale-x").val(((this.selected_objects.scale.x / 1) * 100) + "%");
-				$("#editor-selected-objects-transform-scale-y").val(((this.selected_objects.scale.y / 1) * 100) + "%");
-				$("#editor-selected-objects-transform-scale-z").val(((this.selected_objects.scale.z / 1) * 100) + "%");
+				// Get the selected vertices object's position
+				const position = Editor.selected_vertices_object.geometry.getAttribute('position');
 				
-				// If more than one object is selected...
-				if (this.selected_objects.children.length > 1)
+				// Iterate through each of the selected vertices to update their positions according to the delta matrix
+				for (let index of Editor.selected_vertices_object.userData.selected_vertex_indices)
 				{
 					
-					// Show object group button
-					$("#editor-selected-objects-group-label").show();
-					$("#editor-selected-objects-ungroup-label").hide();
+					// Get the initial local vertex position
+					const vertex = Editor.selected_vertices_object.userData.initial_vertex_positions[index].clone();
 					
+					// Transform the vertex from local space to world space
+					vertex.applyMatrix4(selected_vertices_object_world_matrix);
 					
-				} // Otherwise, if an object group is selected...
-				else if (this.selected_objects.children.length > 0 && this.selected_objects.children[0].isGroup)
-				{
+					// Apply the delta matrix to adjust the vertex position in world space
+					vertex.applyMatrix4(selected_vertices_delta_matrix);
 					
-					// Show object ungroup button
-					$("#editor-selected-objects-group-label").hide();
-					$("#editor-selected-objects-ungroup-label").show();
+					// Get the new X, Y, and Z values of the adjusted vertex position
+					const x = vertex.x;
+					const y = vertex.y;
+					const z = vertex.z;
 					
-				}
-				else
-				{
+					// Transform the vertex back to local space with the new vertex position
+					vertex.set(x, y, z).applyMatrix4(selected_vertices_object_inverse_world_matrix);
 					
-					// Hide object grouping buttons
-					$("#editor-selected-objects-group-label").hide();
-					$("#editor-selected-objects-ungroup-label").hide();
+					// Update the selected vertices object's position with the modified vertex
+					position.setXYZ(index, vertex.x, vertex.y, vertex.z);
 					
 				}
 				
-				// If transform controls rotation mode is selected...
-				if (player.controls.transform_controls.mode == "rotate")
-				{
-					
-					// Check if selected object is billboard
-					if (this.selected_objects.children.length == 1 && this.selected_objects.children[0] instanceof Billboard)
-					{
-						
-						// Hide rotation for billboards
-						$("#editor-selected-objects-transform-rotation").hide();
-						
-					}
-					else
-					{
-						
-						// Update rotation
-						$("#editor-selected-objects-transform-rotation").show();
-						
-						$("#editor-selected-objects-transform-rotation-x").val((this.selected_objects.rotation.x * (180 / Math.PI)) + "°");
-						$("#editor-selected-objects-transform-rotation-y").val((this.selected_objects.rotation.y * (180 / Math.PI)) + "°");
-						$("#editor-selected-objects-transform-rotation-z").val((this.selected_objects.rotation.z * (180 / Math.PI)) + "°");
-						
-					}
-					
-				}
+				// Mark the selected vertices object's position attribute for an update and recalculate its bounding geometry
+				position.needsUpdate = true;
+				Editor.selected_vertices_object.geometry.computeVertexNormals();
+				Editor.selected_vertices_object.geometry.computeBoundingSphere();
+				Editor.selected_vertices_object.geometry.computeBoundingBox();
+				
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * Updates the main editor UI elements.
+	 *
+	 * @param {Player} player The player editing the game world.
+	 */
+	static updateEditorWorldUI(player)
+	{
+		
+		// Do something.
+		
+	}
+	
+	/**
+	 * Updates the selected object UI elements.
+	 *
+	 * @param {Player} player The player editing the game world.
+	 */
+	static updateSelectedObjectsUI(player)
+	{
+		
+		// Check if object selection mode is enabled and object is selected
+		if (this.select_objects && this.selected_objects.children.length > 0)
+		{
+			
+			// Show selected object UI
+			$("#editor-selected-objects").show();
+			
+			// Update grid snaps
+			if ($("#editor-selected-objects-transform-position-snap-checkbox").is(':checked'))
+			{
+				$("#editor-selected-objects-transform-position-snap").val(player.controls.transform_controls.translationSnap);
+			}
+			if ($("#editor-selected-objects-transform-scale-snap-checkbox").is(':checked'))
+			{
+				$("#editor-selected-objects-transform-scale-snap").val(player.controls.transform_controls.scaleSnap);
+			}
+			if ($("#editor-selected-objects-transform-rotation-snap-checkbox").is(':checked'))
+			{
+				$("#editor-selected-objects-transform-rotation-snap").val(player.controls.transform_controls.rotationSnap);
+			}
+			
+			// Update position
+			$("#editor-selected-objects-transform-position-x").val(this.selected_objects.position.x);
+			$("#editor-selected-objects-transform-position-y").val(this.selected_objects.position.y);
+			$("#editor-selected-objects-transform-position-z").val(this.selected_objects.position.z);
+			
+			// Update scale
+			$("#editor-selected-objects-transform-scale-x").val(((this.selected_objects.scale.x / 1) * 100) + "%");
+			$("#editor-selected-objects-transform-scale-y").val(((this.selected_objects.scale.y / 1) * 100) + "%");
+			$("#editor-selected-objects-transform-scale-z").val(((this.selected_objects.scale.z / 1) * 100) + "%");
+			
+			// If more than one object is selected...
+			if (this.selected_objects.children.length > 1)
+			{
+				
+				// Show object group button
+				$("#editor-selected-objects-group-label").show();
+				$("#editor-selected-objects-ungroup-label").hide();
+				
+				
+			} // Otherwise, if an object group is selected...
+			else if (this.selected_objects.children.length > 0 && this.selected_objects.children[0].isGroup)
+			{
+				
+				// Show object ungroup button
+				$("#editor-selected-objects-group-label").hide();
+				$("#editor-selected-objects-ungroup-label").show();
 				
 			}
 			else
 			{
 				
-				// Hide selected object UI
-				$("#editor-selected-objects").hide();
+				// Hide object grouping buttons
+				$("#editor-selected-objects-group-label").hide();
+				$("#editor-selected-objects-ungroup-label").hide();
 				
 			}
+			
+			// If transform controls rotation mode is selected...
+			if (player.controls.transform_controls.mode == "rotate")
+			{
+				
+				// Check if selected object is billboard
+				if (this.selected_objects.children.length == 1 && this.selected_objects.children[0] instanceof Billboard)
+				{
+					
+					// Hide rotation for billboards
+					$("#editor-selected-objects-transform-rotation").hide();
+					
+				}
+				else
+				{
+					
+					// Update rotation
+					$("#editor-selected-objects-transform-rotation").show();
+					
+					$("#editor-selected-objects-transform-rotation-x").val((this.selected_objects.rotation.x * (180 / Math.PI)) + "°");
+					$("#editor-selected-objects-transform-rotation-y").val((this.selected_objects.rotation.y * (180 / Math.PI)) + "°");
+					$("#editor-selected-objects-transform-rotation-z").val((this.selected_objects.rotation.z * (180 / Math.PI)) + "°");
+					
+				}
+				
+			}
+			
+		}
+		else
+		{
+			
+			// Hide selected object UI
+			$("#editor-selected-objects").hide();
 			
 		}
 		

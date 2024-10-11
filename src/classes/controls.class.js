@@ -15,10 +15,10 @@ class Controls
 	/**
 	 * Initializes a new controls object to provide mouse/keyboard controls to a player.
 	 *
-	 * @param {document} dom_document A reference to the browser window's DOM document.
-	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element.
-	 * @param {world} world The current game world.
-	 * @param {player} player The player being controlled by the mouse/keyboard.
+	 * @param {Document} dom_document A reference to the browser window's DOM document.
+	 * @param {THREE.WebGLRenderer} renderer A reference to the three.js renderer element.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player being controlled by the mouse/keyboard.
 	 */
 	constructor(dom_document, renderer, world, player)
 	{
@@ -91,8 +91,8 @@ class Controls
 		$('#debug').on('click', function(event) { player.controls.pointerLockOnUIWhitespaceClick(event, $(this), ".debug-window", player); });
 		
 		// Transform controls event listeners
-		this.transform_controls.addEventListener('draggingChanged', (event) => player.controls.onTransformControlsDraggingChanged(player));
-		
+		this.transform_controls.addEventListener('draggingChanged', (event) => player.controls.onTransformControlsDraggingChanged(event, player));
+		this.transform_controls.addEventListener('objectChange', (event) => player.controls.onTransformControlsObjectChanged(event, player));
 		
 		// Mouse Control Events
 		
@@ -111,8 +111,14 @@ class Controls
 					// Handle player left mouse down
 					player.handleLeftMouseDown();
 					
-					// Handle editor left mouse down
-					Editor.handleLeftMouseDown(event, player);
+					// Check if editor is enabled...
+					if (Editor.enabled)
+					{
+						
+						// Handle editor left mouse down
+						Editor.handleLeftMouseDown(event, player);
+						
+					}
 					
 					break;
 				case 2:
@@ -139,8 +145,14 @@ class Controls
 					// Handle player left mouse up
 					player.handleLeftMouseUp();
 					
-					// Handle editor left mouse up
-					Editor.handleLeftMouseUp(world, player);
+					// Check if editor is enabled...
+					if (Editor.enabled)
+					{
+						
+						// Handle editor left mouse up
+						Editor.handleLeftMouseUp(world, player);
+						
+					}
 					
 					break;
 				case 2:
@@ -149,8 +161,14 @@ class Controls
 					// Handle player right mouse up
 					player.handleRightMouseUp();
 					
-					// Handle editor right mouse up
-					Editor.handleRightMouseUp(dom_document, world, player);
+					// Check if editor is enabled...
+					if (Editor.enabled)
+					{
+						
+						// Handle editor right mouse up
+						Editor.handleRightMouseUp(dom_document, world, player);
+						
+					}
 					
 					break;
 			}
@@ -176,18 +194,52 @@ class Controls
 			
 			// Mouse is now unlocked from the renderer
 			player.controls.is_mouse_locked = false;
+			
+			// Make sure the transform controls knows the mouse is now unlocked from the renderer
 			player.controls.transform_controls.dragging = false;
 			
 		};
 		
 		/**
-		 * TransformControls mouse dragging event, used by three.js TransformControls when the mouse is dragging the gizmo.
+		 * TransformControls mouse dragging changed event, used by three.js TransformControls when the mouse is beginning or ending dragging the gizmo.
 		 */
-		this.onTransformControlsDraggingChanged = function(player)
+		this.onTransformControlsDraggingChanged = function(event, player)
 		{
 			
-			// Mouse is now dragging the gizmo
-			player.controls.is_mouse_dragging = true;
+			// Determine whether or not the mouse is dragging the gizmo
+			player.controls.is_mouse_dragging = event.value;
+			
+			// If the mouse is starting to drag the gizmo...
+			if (player.controls.is_mouse_dragging)
+			{
+				
+				// Check if editor is enabled...
+				if (Editor.enabled)
+				{
+					
+					// Update editor selected vertex initial positions
+					Editor.updateSelectedVertexInitialPositions(player);
+					
+				}
+				
+			}
+			
+		};
+		
+		/**
+		 * TransformControls object changed event, used by three.js TransformControls when the gizmo has modified the object its attached to.
+		 */
+		this.onTransformControlsObjectChanged = function(event, player)
+		{
+			
+			// Check if editor is enabled...
+			if (Editor.enabled)
+			{
+				
+				// Updates editor selected vertex positions
+				Editor.updateSelectedVertexPositions(player);
+				
+			}
 			
 		};
 		
@@ -219,18 +271,7 @@ class Controls
 					player.controls.is_player_moving_backward = true;
 					break;
 				case 'KeyD':
-					if (player.controls.modifier_shift_left_pressed)
-					{
-						// ShiftLeft + KeyD
-						
-						// Do nothing.
-					}
-					else
-					{
-						// KeyD
-						
-						player.controls.is_player_moving_right = true;
-					}
+					player.controls.is_player_moving_right = true;
 					break;
 				case 'Space':
 					player.controls.is_player_jumping = true;
@@ -270,19 +311,7 @@ class Controls
 					player.controls.is_player_moving_backward = false;
 					break;
 				case 'KeyD':
-					if (player.controls.modifier_shift_left_pressed)
-					{
-						// ShiftLeft + KeyD
-						
-						// Toggle debug on/off
-						Debug.toggle();
-					}
-					else
-					{
-						// KeyD
-						
-						player.controls.is_player_moving_right = false;
-					}
+					player.controls.is_player_moving_right = false;
 					break;
 				case 'KeyE':
 					if (player.controls.modifier_shift_left_pressed)
@@ -304,8 +333,14 @@ class Controls
 					{
 						// ShiftLeft + KeyC
 						
-						// Copy editor selected objects to clipboard
-						Editor.copySelectedObjects()
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Copy editor selected objects to clipboard
+							Editor.copySelectedObjects()
+							
+						}
 					}
 					else
 					{
@@ -319,8 +354,14 @@ class Controls
 					{
 						// ShiftLeft + KeyX
 						
-						// Cut editor selected objects to clipboard
-						Editor.cutSelectedObjects(world, player)
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Cut editor selected objects to clipboard
+							Editor.cutSelectedObjects(world, player)
+							
+						}
 					}
 					else
 					{
@@ -334,8 +375,14 @@ class Controls
 					{
 						// ShiftLeft + KeyV
 						
-						// Paste editor clipboard objects
-						Editor.pasteClipboardObjects(world, player)
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Paste editor clipboard objects
+							Editor.pasteClipboardObjects(world, player)
+							
+						}
 					}
 					else
 					{
@@ -349,8 +396,14 @@ class Controls
 					{
 						// ShiftLeft + KeyZ
 						
-						// Toggle undo
-						//Editor.undo(world, player);
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Toggle editor undo
+							//Editor.undo(world, player);
+							
+						}
 					}
 					else
 					{
@@ -363,9 +416,17 @@ class Controls
 					player.controls.is_player_jumping = false;
 					break;
 				case 'Delete':
-					
-					// Delete editor selected object
-					Editor.deleteSelectedObjects(world, player);
+					// Check if editor is enabled...
+					if (Editor.enabled)
+					{
+						
+						// Delete editor selected object
+						Editor.deleteSelectedObjects(world, player);
+						
+						// Delete editor selected face
+						Editor.deleteSelectedFaces(world);
+						
+					}
 					
 					break;
 				case 'ShiftLeft':
@@ -381,15 +442,15 @@ class Controls
 	}
 	
 	
-	// Functions
+	// Methods
 	
 	/**
 	 * Locks the mouse pointer to the renderer when any UI element's whitespace is clicked. Whitespace is defined as whatever HTML elements are within the element calling this function that do not have the "window_class" CSS class applied to them or their children.
 	 *
-	 * @param {event} event The event object passed by the event handler.
-	 * @param {jquery} element_clicked The element which was clicked and is subsequently calling the event handler.
+	 * @param {Event} event The event object passed by the event handler.
+	 * @param {Element} element_clicked The element which was clicked and is subsequently calling the event handler.
 	 * @param {string} window_class The name of the CSS class applied to HTML elements which, along with their children, will not constitute whitespace.
-	 * @param {player} player The player whose mouse pointer will be locked to the renderer.
+	 * @param {Player} player The player whose mouse pointer will be locked to the renderer.
 	 */
 	pointerLockOnUIWhitespaceClick(event, element_clicked, window_class, player)
 	{

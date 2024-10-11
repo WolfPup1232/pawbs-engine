@@ -13,10 +13,10 @@ class Player
 	/**
 	 * Initializes a new player for use in the current game world.
 	 *
-	 * @param {window} window_interface A reference to the web browser window, which contains the DOM document.
-	 * @param {document} dom_document A reference to the DOM document within the web browser window.
-	 * @param {renderer} three.webglrenderer A reference to the three.js renderer element.
-	 * @param {world} world The current game world.
+	 * @param {Window} window_interface A reference to the web browser window, which contains the DOM document.
+	 * @param {Document} dom_document A reference to the DOM document within the web browser window.
+	 * @param {THREE.WebGLRenderer} renderer A reference to the three.js renderer element.
+	 * @param {World} world The current game world.
 	 */
 	constructor(window_interface, dom_document, renderer, world)
 	{
@@ -181,7 +181,7 @@ class Player
 	/**
 	 * Updates the player in the game world (movement, collision detection, etc).
 	 *
-	 * @param {world} world The current game world.
+	 * @param {World} world The current game world.
 	 */
 	update(world)
 	{
@@ -281,8 +281,8 @@ class Player
 	/**
 	 * Updates player movement over steps or stairs and ramps.
 	 *
-	 * @param {world} world The current game world.
-	 * @param {direction} three.vector3 The direction in which to check for steps/stairs/ramps to traverse.
+	 * @param {World} world The current game world.
+	 * @param {THREE.Vector3} direction The direction in which to check for steps/stairs/ramps to traverse.
 	 */
 	stepInDirection(world, direction)
 	{
@@ -296,7 +296,7 @@ class Player
 		this.raycaster.far = this.stair_check_distance;
 		
 		// Check intersections with all world objects
-		const intersects = this.raycaster.intersectObjects(world.all_objects, true);
+		const intersects = this.raycaster.intersectObjects(world.all_objects_and_terrain, true);
 		if (intersects.length > 0)
 		{
 			
@@ -325,8 +325,23 @@ class Player
 				const closest_object_position = new THREE.Vector3();
 				closest_object.getWorldPosition(closest_object_position);
 				
+				let closest_object_height = 0;
+				if (closest_object.geometry.parameters && closest_object.geometry.parameters.height)
+				{
+					closest_object_height = closest_object.geometry.parameters.height;
+				}
+				else
+				{
+					closest_object.geometry.computeBoundingBox();
+					
+					const boundingBox = closest_object.geometry.boundingBox.clone();
+					boundingBox.applyMatrix4(closest_object.matrixWorld);
+					
+					closest_object_height = boundingBox.max.y - boundingBox.min.y;
+				}
+				
 				// Calculate the difference in height between where the player's feet are and the closest object's height
-				const height_difference = (closest_object_position.y + (closest_object.geometry.parameters.height / 2)) - (this.position.y - this.height);
+				const height_difference = (closest_object_position.y + (closest_object_height / 2)) - (this.position.y - this.height);
 				
 				// If the height difference implies the object is a step, step the player up onto the object
 				if (height_difference > 0 && height_difference <= world.stair_height)

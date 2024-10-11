@@ -1,10 +1,18 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
 
+// Class Imports
+import Billboard from '../classes/billboard.class.js';
+
 // Static Class Imports
 import Editor from '../classes/editor.class.js';
 
-// Editor UI Event Handlers
+/**
+ * Initializes the Editor UI event handlers.
+ *
+ * @param {World} world The current game world.
+ * @param {Player} player The player editing the game world.
+ */
 export default function initializeEditorUIEventHandlers(world, player)
 {
 	
@@ -149,6 +157,66 @@ export default function initializeEditorUIEventHandlers(world, player)
 	//#endregion
 	
 	
+	//#region [Editor Object Selection Types]
+
+	/**
+	* Editor object selection type selected radio button change event.
+	*/
+	$('input[type="radio"][name="editor-world-select-types"]').change(function()
+	{
+		if (Editor.enabled)
+		{
+		
+			// Get editor object selection type selected radio button value
+			let selected_value = $(this).val();
+			
+			// Disable all selection type modes
+			Editor.select_objects = false;
+			Editor.select_faces = false;
+			Editor.select_vertices = false;
+			
+			Editor.resetHighlightedObjects();
+			Editor.resetSelectedObjects(world, player);
+			
+			Editor.resetHighlightedAndSelectedFaces(world, player);
+			
+			Editor.resetHighlightedVertices();
+			Editor.resetSelectedVertices(world, player);
+			
+			// Change object selection type mode based on selected radio button value
+			if (selected_value === 'objects')
+			{
+				
+				// Object selection mode
+				Editor.select_objects = true;
+				
+			}
+			else if (selected_value === 'faces')
+			{
+				
+				// Face selection mode
+				Editor.select_faces = true;
+				
+			}
+			else if (selected_value === 'vertices')
+			{
+				
+				// Vertex selection mode
+				Editor.select_vertices = true;
+				player.controls.transform_controls.setMode('translate');
+				
+			}
+			
+			// Update the editor selected object UI
+			Editor.updateSelectedObjectsUI(player);
+			
+		}
+		
+	});
+	
+	//#endregion
+	
+	
 	//#region [Editor Selected Object Window]
 	
 	/**
@@ -249,7 +317,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 		{
 		
 			// Get editor selected object transform type selected radio button value
-			let selectedValue = $(this).val();
+			let selected_value = $(this).val();
 			
 			// Hide all transform controls
 			$("#editor-selected-objects-transform-position").hide();
@@ -257,7 +325,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 			$("#editor-selected-objects-transform-rotation").hide();
 			
 			// Change player transform controls mode based on selected radio button value
-			if (selectedValue === 'position')
+			if (selected_value === 'position')
 			{
 				
 				// Translate mode
@@ -267,7 +335,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				$("#editor-selected-objects-transform-position").show();
 				
 			}
-			else if (selectedValue === 'scale')
+			else if (selected_value === 'scale')
 			{
 				
 				// Scale mode
@@ -277,7 +345,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				$("#editor-selected-objects-transform-scale").show();
 				
 			}
-			else if (selectedValue === 'rotation')
+			else if (selected_value === 'rotation')
 			{
 				
 				// Rotate mode
@@ -289,7 +357,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 			}
 			
 			// Update the editor selected object UI
-			Editor.updateSelectedObjectUI(player);
+			Editor.updateSelectedObjectsUI(player);
 			
 		}
 		

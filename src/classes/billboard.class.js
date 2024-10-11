@@ -10,12 +10,12 @@ class Billboard extends THREE.Mesh
 	/**
 	 * Initializes a new billboard for use in the game world.
 	 *
-	 * @param {width} float The billboard object's width.
-	 * @param {height} float The billboard object's height.
-	 * @param {texture} three.texture The billboard's texture. This is also explicitly the billboard's front-facing texture if side and rear textures are provided.
-	 * @param {texture_back} three.texture The billboard's back-facing texture.
-	 * @param {texture_left} three.texture The billboard's left-facing texture.
-	 * @param {texture_right} three.texture The billboard's right-facing texture.
+	 * @param {float} width The billboard object's width.
+	 * @param {float} height The billboard object's height.
+	 * @param {THREE.Texture} texture The billboard's texture. This is also explicitly the billboard's front-facing texture if side and rear textures are provided.
+	 * @param {THREE.Texture} texture_back The billboard's back-facing texture.
+	 * @param {THREE.Texture} texture_left The billboard's left-facing texture.
+	 * @param {THREE.Texture} texture_right The billboard's right-facing texture.
 	 */
 	constructor(width, height, texture, texture_back = null, texture_left = null, texture_right = null)
 	{
@@ -37,7 +37,7 @@ class Billboard extends THREE.Mesh
 		
 		// Parent Constructor
 		
-		// Call the billboard's parent class constructor (THREE.Mesh()) to initialize it
+		// Call the billboard's parent class (THREE.Mesh) constructor to finish initializing it
 		super(billboard_geometry, billboard_material);
 		
 		

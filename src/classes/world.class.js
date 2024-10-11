@@ -56,6 +56,9 @@ class World
 		// Initialize an array to hold all other objects
 		this.objects = [];
 		
+		// Initialize an array to hold all non-outlined objects (only really useful if the OutlineEffect is enabled)
+		this.objects_no_outline = [];
+		
 		
 		// Steps/Stairs/Ramps
 		
@@ -70,7 +73,7 @@ class World
 	/**
 	 * Custom JSON serialization method to prevent unwanted class variables from being saved when exporting the class to JSON using JSON.stringify().
 	 *
-	 * @return {world} A simplified version of the world with some attributes removed.
+	 * @return {World} A simplified version of the world with some attributes removed.
 	 */
 	toJSON()
 	{
@@ -78,7 +81,8 @@ class World
 			name: this.name,
 			player_position: this.player_position,
 			terrain: this.terrain.map(mesh => mesh.toJSON()),
-			objects: this.objects.map(mesh => mesh.toJSON())
+			objects: this.objects.map(mesh => mesh.toJSON()),
+			objects_no_outline: this.objects_no_outline.map(mesh => mesh.toJSON())
 		};
 	}
 	
@@ -86,16 +90,30 @@ class World
 	// Properties
 	
 	/**
-	 * All game world objects including terrain.
+	 * All game world objects including non-outlined objects.
 	 */
 	get all_objects()
 	{
 		let all_objects = [];
 		
 		all_objects = all_objects.concat(this.objects);
-		all_objects = all_objects.concat(this.terrain);
+		all_objects = all_objects.concat(this.objects_no_outline);
 		
 		return all_objects;
+	}
+	
+	/**
+	 * All game world objects including non-outlined objects and terrain.
+	 */
+	get all_objects_and_terrain()
+	{
+		let all_objects_and_terrain = [];
+		
+		all_objects_and_terrain = all_objects_and_terrain.concat(this.objects);
+		all_objects_and_terrain = all_objects_and_terrain.concat(this.objects_no_outline);
+		all_objects_and_terrain = all_objects_and_terrain.concat(this.terrain);
+		
+		return all_objects_and_terrain;
 	}
 	
 	
@@ -152,7 +170,7 @@ class World
 	/**
 	 * Loads a world from a JSON object.
 	 *
-	 * @param {object} path The JSON object to load.
+	 * @param {THREE.Object3D} path The JSON object to load.
 	 */
 	loadFromJSON(json)
 	{
@@ -164,21 +182,39 @@ class World
 		let world = new World();
 		
 		// Get world properties
-		world.name = json.name;
-		world.player_position = new THREE.Vector3(json.player_position.x, json.player_position.y, json.player_position.z);
+		if (json.name)
+		{
+			world.name = json.name;
+		}
+		if (json.player_position)
+		{
+			world.player_position = new THREE.Vector3(json.player_position.x, json.player_position.y, json.player_position.z);
+		}
 		
-		// Get world objects and terrain
-		world.terrain = json.terrain.map(meshJSON => {
-			return loader.parse(meshJSON);
-		});
-		world.objects = json.objects.map(meshJSON => {
-			return loader.parse(meshJSON);
-		});
+		// Get world objects (including non-outlined objects) and terrain
+		if (json.objects)
+		{
+			world.objects = json.objects.map(meshJSON => {
+				return loader.parse(meshJSON);
+			});
+		}
+		if (json.objects_no_outline)
+		{
+			world.objects_no_outline = json.objects_no_outline.map(meshJSON => {
+				return loader.parse(meshJSON);
+			});
+		}
+		if (json.terrain)
+		{
+			world.terrain = json.terrain.map(meshJSON => {
+				return loader.parse(meshJSON);
+			});
+		}
 		
 		// Add all world objects to the scene
-		for (let i = 0; i < world.all_objects.length; i++)
+		for (let i = 0; i < world.all_objects_and_terrain.length; i++)
 		{
-			world.scene.add(world.all_objects[i]);
+			world.scene.add(world.all_objects_and_terrain[i]);
 		}
 		
 		// Replace current world with new world
@@ -189,7 +225,7 @@ class World
 	/**
 	 * Adds a terrain object to world.
 	 *
-	 * @param {object} object The terrain object to be added to the world.
+	 * @param {THREE.Object3D} object The terrain object to be added to the world.
 	 */
 	addTerrain(object)
 	{
@@ -205,7 +241,7 @@ class World
 	/**
 	 * Adds an object to the world.
 	 *
-	 * @param {object} object The object to be added to the world.
+	 * @param {THREE.Object3D} object The object to be added to the world.
 	 */
 	addObject(object)
 	{
@@ -221,7 +257,7 @@ class World
 	/**
 	 * Removes an object from the world.
 	 *
-	 * @param {object} object The object to be removed from the world.
+	 * @param {THREE.Object3D} object The object to be removed from the world.
 	 */
 	removeObject(object)
 	{
@@ -233,6 +269,44 @@ class World
 		if (index > -1)
 		{
 			this.objects.splice(index, 1);
+		}
+		
+		// Remove object from scene
+		this.scene.remove(object);
+		
+	}
+	
+	/**
+	 * Adds a non-outlined object to the world.
+	 *
+	 * @param {THREE.Object3D} object The object to be added to the world.
+	 */
+	addNonOutlinedObject(object)
+	{
+		
+		// Add object to non-outlined object array
+		this.objects_no_outline.push(object);
+		
+		// Add object to scene
+		this.scene.add(object);
+		
+	}
+	
+	/**
+	 * Removes a non-outlined object from the world.
+	 *
+	 * @param {THREE.Object3D} object The object to be removed from the world.
+	 */
+	removeNonOutlinedObject(object)
+	{
+		
+		// Get object's index from non-outlined object array
+		let index = this.objects_no_outline.indexOf(object);
+		
+		// Remove object from non-outlined object array
+		if (index > -1)
+		{
+			this.objects_no_outline.splice(index, 1);
 		}
 		
 		// Remove object from scene
@@ -254,6 +328,7 @@ class World
 		
 		// Reset object arrays
 		this.objects = [];
+		this.objects_no_outline = [];
 		this.terrain = [];
 		
 	}
@@ -261,19 +336,22 @@ class World
 	/**
 	 * Updates rotating billboard objects so that they're always facing the player.
 	 *
-	 * @param {player} player The player which the billboard objects will be facing.
+	 * @param {Player} player The player which the billboard objects will be facing.
 	 */
 	updateBillboards(player)
 	{
 		
+		// Get an array of all objects
+		let all_objects = this.all_objects;
+		
 		// Iterate through each world object to update only billboard objects
-		for (let i = 0; i < this.objects.length; i++)
+		for (let i = 0; i < all_objects.length; i++)
 		{
-			if (this.objects[i] instanceof Billboard)
+			if (all_objects[i] instanceof Billboard)
 			{
 				
 				// Get the current billboard
-				let billboard = this.objects[i];
+				let billboard = all_objects[i];
 				
 				// Get the billboard's position
 				const billboard_position = new THREE.Vector3();
@@ -345,8 +423,8 @@ class World
 	/**
 	 * Detect collision between the player and any collidable objects in the world.
 	 *
-	 * @param {player} player The player to be tested for collision with world objects.
-	 * @param {three.vector3} intended_position The player's intended position.
+	 * @param {Player} player The player to be tested for collision with world objects.
+	 * @param {THREE.Vector3} intended_position The player's intended position.
 	 * @return {boolean} Boolean value indicating whether player collision was detected.
 	 */
 	detectPlayerCollision(player, intended_position)
@@ -364,9 +442,11 @@ class World
 		//		  one single point at a time, and we kinda need to check if the player's whole 3D volume collides with anything, not just like,
 		//		  their feet or something. The only way to make this more efficient would be to somehow narrow down the size of this.objects to
 		//		  whatever's in some kinda range of the player? But just the act of doing that would take more processing time? Idk.
-		for (let i = 0; i < this.objects.length; i++)
+		//		  UPDATE TO THIS NOTE: Maybe eventually using a Set() will make more sense. TBD.
+		let all_objects = this.all_objects;
+		for (let i = 0; i < all_objects.length; i++)
 		{
-			this.objects[i].traverse((child) => {
+			all_objects[i].traverse((child) => {
 				if (child.isMesh)
 				{
 					// Create world object's bounding box
@@ -375,7 +455,7 @@ class World
 					let skip = false;
 					
 					// Detect billboard collision
-					if (this.objects[i] instanceof Billboard)
+					if (all_objects[i] instanceof Billboard)
 					{
 						
 						// Add some extra height to billboard bounding boxes
@@ -423,7 +503,7 @@ class World
 	/**
 	 * Detect the y-axis position of the surface of whichever object is directly below the player.
 	 *
-	 * @param {player} player The player to look for other objects beneath.
+	 * @param {Player} player The player to look for other objects beneath.
 	 * @return {float} The y-axis value representing the surface height of the object directly below the player.
 	 */
 	detectObjectSurfaceBelowPlayer(player)
@@ -441,7 +521,7 @@ class World
 		let object_surface_height = player.position.y - player.height;
 		
 		// Check intersections with all world objects
-		const intersects = player.raycaster.intersectObjects(this.all_objects, true);
+		const intersects = player.raycaster.intersectObjects(this.all_objects_and_terrain, true);
 		if (intersects.length > 0)
 		{
 			
@@ -471,11 +551,11 @@ class World
 	}
 	
 	/**
-	 * Detect the y-axis position of a point on the surface of a PlaneGeometry object, accounting for rotation, using crazy ass math that I still don't understand.
+	 * Detect the y-axis position of a point on the surface of a plane, accounting for rotation, using crazy ass math that I still don't understand.
 	 *
-	 * @param {point} three.vector3 The point on the surface of the PlaneGeometry at which to detect the surface's height.
-	 * @param {plane} three.planegeometry The PlaneGeometry object on which to detect the provided point's surface height.
-	 * @return {float} The y-axis value representing the surface height at the specified point on the provided PlaneGeometry object.
+	 * @param {THREE.Vector3} point The point on the surface of the PlaneGeometry at which to detect the surface's height.
+	 * @param {THREE.Object3D} plane The plane on which to detect the provided point's surface height.
+	 * @return {float} The y-axis value representing the surface height at the specified point on the provided plane.
 	 */
 	detectPlaneSurfaceAtPoint(point, plane)
 	{

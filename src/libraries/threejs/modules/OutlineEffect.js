@@ -1,3 +1,5 @@
+// NOTE: This module has been slightly yassified to work with the game's world class,
+//		 so a bunch of undocumented differences exist between this and the original three.js version.
 import {
 	BackSide,
 	Color,
@@ -430,7 +432,7 @@ class OutlineEffect {
 
 		}
 
-		this.render = function ( scene, camera ) {
+		this.render = function ( world, player ) {
 
 			let renderTarget;
 			let forceClear = false;
@@ -455,7 +457,7 @@ class OutlineEffect {
 
 			if ( this.enabled === false ) {
 
-				renderer.render( scene, camera );
+				renderer.render( world.scene, player.camera );
 				return;
 
 			}
@@ -463,36 +465,42 @@ class OutlineEffect {
 			const currentAutoClear = renderer.autoClear;
 			renderer.autoClear = this.autoClear;
 
-			renderer.render( scene, camera );
+			renderer.render( world.scene, player.camera );
 
 			renderer.autoClear = currentAutoClear;
 
-			this.renderOutline( scene, camera );
+			this.renderOutline( world, player );
 
 		};
 
-		this.renderOutline = function ( scene, camera ) {
+		this.renderOutline = function ( world, player ) {
 
 			const currentAutoClear = renderer.autoClear;
-			const currentSceneAutoUpdate = scene.autoUpdate;
-			const currentSceneBackground = scene.background;
+			const currentSceneAutoUpdate = world.scene.autoUpdate;
+			const currentSceneBackground = world.scene.background;
 			const currentShadowMapEnabled = renderer.shadowMap.enabled;
 
-			scene.autoUpdate = false;
-			scene.background = null;
+			world.scene.autoUpdate = false;
+			world.scene.background = null;
 			renderer.autoClear = false;
 			renderer.shadowMap.enabled = false;
+			
+			for (let i = 0; i < world.objects.length; i++)
+			{
+				world.objects[i].traverse( setOutlineMaterial );
+			}
 
-			scene.traverse( setOutlineMaterial );
-
-			renderer.render( scene, camera );
-
-			scene.traverse( restoreOriginalMaterial );
+			renderer.render( world.scene, player.camera );
+			
+			for (let i = 0; i < world.objects.length; i++)
+			{
+				world.objects[i].traverse( restoreOriginalMaterial );
+			}
 
 			cleanupCache();
 
-			scene.autoUpdate = currentSceneAutoUpdate;
-			scene.background = currentSceneBackground;
+			world.scene.autoUpdate = currentSceneAutoUpdate;
+			world.scene.background = currentSceneBackground;
 			renderer.autoClear = currentAutoClear;
 			renderer.shadowMap.enabled = currentShadowMapEnabled;
 

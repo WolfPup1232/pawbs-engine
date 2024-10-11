@@ -40,59 +40,89 @@
 		
 		<!-- Editor Title Window / Spawn Objects -->
 		<div id="editor-title" class="row">
-			<div class="editor-window col-12 col-lg-7 col-xl-5">
+			<div class="editor-window col-12 col-lg-10 col-xl-8">
 				<div class="card p-2 mt-3 shadow-sm">
 					<div class="input-group">
-						<div class="card-title fw-bold input-group-text w-100 m-0">
+						<div class="row w-100 m-0 overflow-hidden">
 							
 							<!-- Editor Title -->
-							Edit World
+							<div class="col p-0" style="max-width: 21em;">
+								<div class="card-title fw-bold input-group-text mx-1 my-1">
+									Edit World
+									
+									<div class="vr ms-3"></div>
+									
+									<!-- World Name -->
+									<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
+									data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								</div>
+							</div>
 							
-							<div class="vr ms-3"></div>
+							<div class="col p-0 text-nowrap" style="max-width: 9.2em;">
+								<div class="card-title input-group-text mx-1 my-1">
+									<!-- New/Load/Save World -->
+									<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+									data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-file-earmark"></i>
+									</button>
+									<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Import world from JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-folder2-open"></i>
+									</button>
+									<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-0 my-0"
+									data-bs-title="Export world to JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-floppy"></i>
+									</button>
+								</div>
+							</div>
 							
-							<!-- World Name -->
-							<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
-							data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<div class="col p-0 text-nowrap" style="max-width: 14.2em;">
+								<div class="card-title input-group-text mx-1 my-1">
+									<!-- Spawn Objects -->
+									<button id="editor-world-geometry-billboard" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+									data-bs-title="Spawn a new billboard object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-image"></i>
+									</button>
+									<button id="editor-world-geometry-plane" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Spawn a new plane object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-square"></i>
+									</button>
+									<button id="editor-world-geometry-box" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Spawn a new box object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-box"></i>
+									</button>
+									<button id="editor-world-geometry-cylinder" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Spawn a new cylinder object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-database"></i>
+									</button>
+									<button id="editor-world-geometry-sphere" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Spawn a new sphere object." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-globe"></i>
+									</button>
+								</div>
+							</div>
 							
-							<div class="vr me-3"></div>
-							
-							<!-- New/Load/Save World -->
-							<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
-							data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-file-earmark"></i>
-							</button>
-							<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1"
-							data-bs-title="Import world from JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-folder2-open"></i>
-							</button>
-							<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-0"
-							data-bs-title="Export world to JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-floppy"></i>
-							</button>
-							
-							<div class="vr mx-3"></div>
-							
-							<!-- Spawn Objects -->
-							<button id="editor-world-geometry-billboard" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1"
-							data-bs-title="Spawn a new billboard object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-image"></i>
-							</button>
-							<button id="editor-world-geometry-plane" type="button" class="btn btn-sm btn-outline-secondary mx-1"
-							data-bs-title="Spawn a new plane object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-square"></i>
-							</button>
-							<button id="editor-world-geometry-box" type="button" class="btn btn-sm btn-outline-secondary mx-1"
-							data-bs-title="Spawn a new box object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-box"></i>
-							</button>
-							<button id="editor-world-geometry-cylinder" type="button" class="btn btn-sm btn-outline-secondary mx-1"
-							data-bs-title="Spawn a new cylinder object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-database"></i>
-							</button>
-							<button id="editor-world-geometry-sphere" type="button" class="btn btn-sm btn-outline-secondary mx-1"
-							data-bs-title="Spawn a new sphere object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-globe"></i>
-							</button>
+							<div class="col p-0 text-nowrap" style="max-width: 8em;">
+								<div class="card-title input-group-text mx-1 my-1">
+									<input id="editor-world-select-objects" name="editor-world-select-types" value="objects" class="btn-check" type="radio" checked>
+									<label for="editor-world-select-objects" class="btn btn-outline-secondary px-1 pt-0 pb-2px me-1 mt-2px mb-0"
+									data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-box-seam"></i>
+									</label>
+									
+									<input id="editor-world-select-faces" name="editor-world-select-types" value="faces" class="btn-check" type="radio">
+									<label for="editor-world-select-faces" class="btn btn-outline-secondary px-1 pt-0 pb-2px mx-1 mt-2px mb-0"
+									data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-box2"></i>
+									</label>
+									
+									<input id="editor-world-select-vertices" name="editor-world-select-types" value="vertices" class="btn-check" type="radio">
+									<label for="editor-world-select-vertices" class="btn btn-outline-secondary px-1 pt-0 pb-2px ms-1 mt-2px mb-0"
+									data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-bounding-box-circles"></i>
+									</label>
+								</div>
+							</div>
 							
 						</div>
 					</div>
@@ -410,6 +440,7 @@
 		import * as THREE from './libraries/threejs/three.js';
 		import { PointerLockControls } from './libraries/threejs/modules/PointerLockControls.js';
 		import { TransformControls } from './libraries/threejs/modules/TransformControls.js';
+		import { OutlineEffect } from './libraries/threejs/modules/OutlineEffect.js';
 		
 		// Class Imports
 		import Player from './classes/player.class.js';
@@ -429,7 +460,7 @@
 		// Game Declarations
 		
 		// three.js Game Renderer
-		let renderer, render_once, stop_animating;
+		let renderer, render_once, stop_animating, effect;
 		
 		// Game Player
 		let player;
@@ -452,6 +483,9 @@
 			render_once = false;
 			stop_animating = false;
 			$('#renderer').append(renderer.domElement);
+			
+			// Initialize cel shader effect
+			effect = new OutlineEffect(renderer, { defaultThickness: 0.0032 });
 			
 			// Initialize worlds
 			worlds = {};
@@ -511,11 +545,23 @@
 				// Update the player (movement, collision detection, etc.)
 				player.update(world);
 				
-				// Update in-game editor
-				Editor.update(world, player);
+				// Check if editor is enabled...
+				if (Editor.enabled)
+				{
+					
+					// Update in-game editor
+					Editor.update(world, player);
+					
+				}
 				
-				// Update in-game debugger
-				Debug.update(world, player);
+				// Check if debugger is enabled...
+				if (Debug.enabled)
+				{
+					
+					// Update in-game debugger
+					Debug.update(world, player);
+					
+				}
 				
 			}
 			else
@@ -526,7 +572,13 @@
 			// Render the frame (or break game loop if flag is set)
 			if (!stop_animating)
 			{
-				renderer.render(world.scene, player.camera);
+				
+				// (Uncomment this to render normally)
+				//renderer.render(world.scene, player.camera);
+				
+				// Render with cel shader effect
+				effect.render(world, player);
+				
 			}
 			else
 			{
@@ -572,8 +624,14 @@
 			// Update game renderer
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			
-			// Resized editor UI elements.
-			Editor.resize();
+			// Check if editor is enabled...
+			if (Editor.enabled)
+			{
+				
+				// Resized editor UI elements.
+				Editor.resize();
+				
+			}
 			
 		});
 		

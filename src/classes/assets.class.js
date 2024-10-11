@@ -30,6 +30,9 @@ class Assets
 	
 	/**
 	* Initializes game textures list according to the list of textures in the textures.json file.
+	*
+	* @param {Object} texture_paths The key/value pair list of texture names and their associated paths loaded from the textures.json file.
+	* @param {Function} callback The callback function which is invoked when all textures have been loaded.
 	*/
 	static loadTextures(texture_paths, callback)
 	{

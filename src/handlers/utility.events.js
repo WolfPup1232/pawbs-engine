@@ -1,4 +1,6 @@
-// Utility UI Event Handlers
+/**
+ * Initializes the Utility UI event handlers.
+ */
 export default function initializeUtilityUIEventHandlers()
 {
 	
