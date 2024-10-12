@@ -38,86 +38,101 @@
 	<!-- Editor UI -->
 	<div id="editor" class="mx-3" style="display: none;">
 		
-		<!-- Editor Title Window / Spawn Objects -->
-		<div id="editor-title" class="row">
+		<!-- Editor Main Menu -->
+		<div id="editor-menu" class="row">
 			<div class="editor-window col-12 col-lg-10 col-xl-8">
 				<div class="card p-2 mt-3 shadow-sm">
 					<div class="input-group">
 						<div class="row w-100 m-0 overflow-hidden">
 							
-							<!-- Editor Title -->
-							<div class="col p-0" style="max-width: 21em;">
+							<!-- World Options -->
+							<div class="col p-0" style="max-width: 35.8em;">
 								<div class="card-title fw-bold input-group-text mx-1 my-1">
-									Edit World
+									🐾 Edit World
 									
 									<div class="vr ms-3"></div>
 									
 									<!-- World Name -->
 									<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
 									data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								</div>
-							</div>
-							
-							<div class="col p-0 text-nowrap" style="max-width: 9.2em;">
-								<div class="card-title input-group-text mx-1 my-1">
+									
+									<div class="vr"></div>
+									
 									<!-- New/Load/Save World -->
-									<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+									<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-1 my-0"
 									data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-file-earmark"></i>
 									</button>
 									<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Import world from JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									data-bs-title="Load existing world." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-folder2-open"></i>
 									</button>
-									<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-0 my-0"
-									data-bs-title="Export world to JSON." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
+									data-bs-title="Save current world." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-floppy"></i>
 									</button>
+									
+									<div class="vr"></div>
+									
+									<!-- World Event Triggers -->
+									<button id="editor-world-triggers" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
+									data-bs-title="World event triggers." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>
+										<i class="bi bi-list-check"></i>
+									</button>
 								</div>
 							</div>
 							
-							<div class="col p-0 text-nowrap" style="max-width: 14.2em;">
+							<!-- Sub-Editors (Modes) -->
+							<div class="col p-0 text-nowrap" style="max-width: 6.6em;">
 								<div class="card-title input-group-text mx-1 my-1">
-									<!-- Spawn Objects -->
-									<button id="editor-world-geometry-billboard" type="button" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-									data-bs-title="Spawn a new billboard object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-image"></i>
-									</button>
-									<button id="editor-world-geometry-plane" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Spawn a new plane object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-square"></i>
-									</button>
-									<button id="editor-world-geometry-box" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Spawn a new box object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-box"></i>
-									</button>
-									<button id="editor-world-geometry-cylinder" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Spawn a new cylinder object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-database"></i>
-									</button>
-									<button id="editor-world-geometry-sphere" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Spawn a new sphere object." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-globe"></i>
-									</button>
+									<input id="editor-mode-prefabs" name="editor-mode-types" value="prefabs" class="btn-check" type="checkbox" disabled>
+									<label for="editor-mode-prefabs" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+									data-bs-title="Object editor." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-shop"></i>
+									</label>
+									
+									<input id="editor-mode-npcs" name="editor-mode-types" value="npcs" class="btn-check" type="checkbox" disabled>
+									<label for="editor-mode-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="NPC editor." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-person-arms-up"></i>
+									</label>
 								</div>
 							</div>
 							
-							<div class="col p-0 text-nowrap" style="max-width: 8em;">
+							<!-- Tools -->
+							<div class="col p-0 text-nowrap" style="max-width: 6.6em;">
+								<div class="card-title input-group-text mx-1 my-1">
+									<input id="editor-tool-spawn" name="editor-tool-types" value="spawn" class="btn-check" type="checkbox">
+									<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+									data-bs-title="Spawn/build tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-lamp"></i>
+									</label>
+									
+									<input id="editor-tool-cinematics" name="editor-tool-types" value="cinematics" class="btn-check" type="checkbox" disabled>
+									<label for="editor-tool-cinematics" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Cinematics tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-camera-reels"></i>
+									</label>
+								</div>
+							</div>
+							
+							<!-- Object Selection Types -->
+							<div class="col p-0 text-nowrap" style="max-width: 9em;">
 								<div class="card-title input-group-text mx-1 my-1">
 									<input id="editor-world-select-objects" name="editor-world-select-types" value="objects" class="btn-check" type="radio" checked>
-									<label for="editor-world-select-objects" class="btn btn-outline-secondary px-1 pt-0 pb-2px me-1 mt-2px mb-0"
+									<label for="editor-world-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
 									data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-box-seam"></i>
 									</label>
 									
 									<input id="editor-world-select-faces" name="editor-world-select-types" value="faces" class="btn-check" type="radio">
-									<label for="editor-world-select-faces" class="btn btn-outline-secondary px-1 pt-0 pb-2px mx-1 mt-2px mb-0"
+									<label for="editor-world-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
 									data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-box2"></i>
 									</label>
 									
 									<input id="editor-world-select-vertices" name="editor-world-select-types" value="vertices" class="btn-check" type="radio">
-									<label for="editor-world-select-vertices" class="btn btn-outline-secondary px-1 pt-0 pb-2px ms-1 mt-2px mb-0"
+									<label for="editor-world-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-0 my-0"
 									data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-bounding-box-circles"></i>
 									</label>
@@ -136,9 +151,11 @@
 				<div id="editor-selected-objects-inner" class="card pt-2 ps-2 pe-2 pb-2 mt-3 shadow-sm">
 					<div class="accordion">
 						
-						<!-- Transform Title -->
+						<!-- Selected Objects General -->
 						<div class="card-title fw-bold input-group-text d-block w-100 mb-2">
 							<div class="d-flex">
+							
+								<!-- Cut/Copy/Paste Objects -->
 								<div class="me-1">
 									<input id="editor-selected-objects-cut" class="btn-check" type="button">
 									<label for="editor-selected-objects-cut" class="btn btn-outline-secondary px-1 py-0"
@@ -165,6 +182,7 @@
 								
 								<div class="vr mx-2"></div>
 								
+								<!-- Delete Objects -->
 								<div class="mx-1">
 									<input id="editor-selected-objects-delete" class="btn-check" type="button">
 									<label for="editor-selected-objects-delete" class="btn btn-outline-secondary px-1 py-0"
@@ -173,6 +191,7 @@
 									</label>
 								</div>
 								
+								<!-- Group/Ungroup Objects -->
 								<div class="ms-auto">
 									<input id="editor-selected-objects-group" class="btn-check" type="button">
 									<label id="editor-selected-objects-group-label" for="editor-selected-objects-group" class="btn btn-outline-secondary px-1 py-0"
@@ -189,7 +208,7 @@
 							</div>
 						</div>
 						
-						<!-- Transform -->
+						<!-- Selected Objects Transforms -->
 						<div class="accordion-item">
 							
 							<!-- Transform Title -->
@@ -203,7 +222,7 @@
 							
 							<div id="editor-selected-objects-transform" class="accordion-collapse collapse show p-2">
 								
-								<!-- Transform Modes -->
+								<!-- Transform Modes (Position/Scale/Rotation) -->
 								<div id="editor-selected-objects-transform-modes" class="pb-2 mb-2 border-bottom">
 									<div class="d-flex">
 										<div class="mx-1">
@@ -347,7 +366,7 @@
 							
 						</div>
 						
-						<!-- Materials -->
+						<!-- Selected Objects Materials -->
 						<div class="accordion-item">
 						
 							<!-- Materials Title -->
@@ -369,7 +388,7 @@
 										data-bs-title="Pick a custom colour." data-bs-toggle="tooltip" data-bs-placement="bottom">
 									</div>
 									
-									<!-- Material Texture Remove -->
+									<!-- Material Texture Remover -->
 									<div class="d-flex flex-row-reverse w-100">
 										<div class="text-end">
 											<label id="editor-selected-objects-materials-texture-reset-button" class="btn btn-outline-secondary px-1 py-0 mt-2px float-end"
@@ -391,6 +410,55 @@
 							
 						</div>
 						
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Editor Spawn Tool -->
+		<div id="editor-spawn-tool" class="row fixed-bottom mx-1 my-3" style="display: none;">
+			<div class="editor-window col-12 col-lg-9 col-xl-7 mx-auto">
+				<div class="card p-2 shadow-sm">
+					<div class="input-group">
+						<div class="row w-100 m-0 overflow-hidden">
+							
+							<!-- Spawn Types -->
+							<div class="col p-0 text-nowrap" style="max-width: 14.2em;">
+								<div class="card-title input-group-text mx-1 my-1">
+									<input id="editor-spawn-objects" name="editor-spawn-types" value="objects" class="btn-check" type="radio" checked>
+									<label for="editor-spawn-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+									data-bs-title="Spawn objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-box"></i>
+									</label>
+									
+									<input id="editor-spawn-npcs" name="editor-spawn-types" value="npcs" class="btn-check" type="radio">
+									<label for="editor-spawn-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Spawn NPCs" data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-person-arms-up"></i>
+									</label>
+									
+									<div class="vr mx-2"></div>
+									
+									<input id="editor-spawn-walls" name="editor-spawn-types" value="walls" class="btn-check" type="radio">
+									<label for="editor-spawn-walls" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="Wall tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-bricks"></i>
+									</label>
+								</div>
+							</div>
+							
+						</div>
+						<div class="row w-100 m-0 overflow-hidden">
+							
+							<!-- Spawn Categories  -->
+							<div class="col p-0 text-nowrap" style="max-width: 14.2em;">
+								<div class="card-title input-group-text mx-1 my-1">
+									<select id="editor-spawn-category-select" class="form-select form-select-sm"
+									data-bs-title="Select an object category." data-bs-toggle="tooltip" data-bs-placement="bottom"></select>
+								</div>
+							</div>
+							
+						</div>
 					</div>
 				</div>
 			</div>
@@ -604,9 +672,18 @@
 			
 			// ---------------- TODO: REMOVE EVERYTHING BETWEEN THESE LINES  ----------------
 			
+			// This is just debug stuff to jump into testing specific things faster...
+			
 			$('#menu').hide();
 			init();
-			setTimeout(function() { Editor.toggle(world, player); }, 500)
+			setTimeout(function() {
+				
+				Editor.toggle(world, player);
+				
+				//$("#editor-tool-spawn").prop("checked", true);
+				//$("#editor-tool-spawn").trigger("change");
+				
+			}, 500)
 			
 			// ---------------- TODO: REMOVE EVERYTHING BETWEEN THESE LINES  ----------------
 			

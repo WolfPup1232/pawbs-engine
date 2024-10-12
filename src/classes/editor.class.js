@@ -443,7 +443,7 @@ class Editor
 	{
 		
 		// Set selected objects window maximum height
-		$("#editor-selected-objects-inner").css({"max-height": "calc(" + ($('#renderer').height() - $('#editor-title').height()) + "px - 2rem)"});
+		$("#editor-selected-objects-inner").css({"max-height": "calc(" + ($('#renderer').height() - $('#editor-menu').height()) + "px - 2rem)"});
 		
 	}
 	
@@ -633,7 +633,7 @@ class Editor
 			{
 				
 				// Spawn Billboard
-				spawn_object = new Billboard(1, 1, Assets.textures.campfire);
+				spawn_object = new Billboard(1, 1, Assets.textures.apple1);
 				
 			}
 			else if (spawn_object instanceof THREE.PlaneGeometry)
