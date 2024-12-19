@@ -101,7 +101,7 @@ class Player
 	}
 	set position(new_position)
 	{
-		this.camera.position = new_position;
+		this.camera.position.set(new_position.x, new_position.y, new_position.z);
 	}
 	
 	/**
@@ -113,7 +113,7 @@ class Player
 	}
 	set rotation(new_rotation)
 	{
-		this.camera.rotation = new_rotation;
+		this.camera.rotation.set(new_rotation.x, new_rotation.y, new_rotation.z, new_rotation.order);
 	}
 	
 	/**
@@ -270,8 +270,9 @@ class Player
 		
 		// Player Movement Cont'd
 		
-		// Track the player's last known position in the world
+		// Track the player's last known position and rotation in the world
 		world.player_position = this.position;
+		world.player_rotation = this.rotation;
 		
 		// Reduce player's velocity (smooths player's movement)
 		this.velocity.multiplyScalar(0.95);

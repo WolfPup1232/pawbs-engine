@@ -18,7 +18,6 @@
 </head>
 <body>
 	
-	<!-- Special UIs -->
 	
 	<!-- Debug UI -->
 	<div id="debug" class="mx-3" style="display: none;">
@@ -82,30 +81,19 @@
 								</div>
 							</div>
 							
-							<!-- Sub-Editors (Modes) -->
-							<div class="col p-0 text-nowrap" style="max-width: 6.6em;">
-								<div class="card-title input-group-text mx-1 my-1">
-									<input id="editor-mode-prefabs" name="editor-mode-types" value="prefabs" class="btn-check" type="checkbox" disabled>
-									<label for="editor-mode-prefabs" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-									data-bs-title="Object editor." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-shop"></i>
-									</label>
-									
-									<input id="editor-mode-npcs" name="editor-mode-types" value="npcs" class="btn-check" type="checkbox" disabled>
-									<label for="editor-mode-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="NPC editor." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-person-arms-up"></i>
-									</label>
-								</div>
-							</div>
-							
 							<!-- Tools -->
-							<div class="col p-0 text-nowrap" style="max-width: 6.6em;">
+							<div class="col p-0 text-nowrap" style="max-width: 9em;">
 								<div class="card-title input-group-text mx-1 my-1">
 									<input id="editor-tool-spawn" name="editor-tool-types" value="spawn" class="btn-check" type="checkbox">
 									<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
 									data-bs-title="Spawn/build tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-lamp"></i>
+									</label>
+									
+									<input id="editor-tool-npcs" name="editor-tool-types" value="npcs" class="btn-check" type="checkbox" disabled>
+									<label for="editor-tool-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									data-bs-title="NPC editor tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-person-arms-up"></i>
 									</label>
 									
 									<input id="editor-tool-cinematics" name="editor-tool-types" value="cinematics" class="btn-check" type="checkbox" disabled>
@@ -154,9 +142,85 @@
 						<!-- Selected Objects General -->
 						<div class="card-title fw-bold input-group-text d-block w-100 mb-2">
 							<div class="d-flex">
-							
-								<!-- Cut/Copy/Paste Objects -->
+								
+								<!-- Save Objects -->
 								<div class="me-1">
+									<input id="editor-selected-objects-save" class="btn-check" type="button" data-bs-toggle="modal" data-bs-target="#editor-selected-objects-save-modal">
+									<label for="editor-selected-objects-save" class="btn btn-outline-secondary px-1 py-0"
+									data-bs-title="Save selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-floppy"></i>
+									</label>
+								</div>
+								
+								<!-- Save Objects Modal -->
+								<div id="editor-selected-objects-save-modal" class="modal fade editor-window" tabindex="-1">
+									<div class="modal-dialog modal-lg">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h3 class="modal-title fs-5">Save Selected Objects As Prefab</h1>
+												<button class="btn-close" type="button" data-bs-dismiss="modal"></button>
+											</div>
+											<div class="modal-body text-start text-wrap fw-normal">
+												<div class="row">
+													<div class="col-2"></div>
+													<div class="col-8">
+														<div class="card my-4">
+															<div class="card-header">
+																<h5 class="card-title mb-0">
+																	Step 1 - Save Your Prefab 
+																	<span id="editor-selected-objects-save-modal-prefab-save-checkbox-bg" class="badge text-warning-emphasis bg-warning-subtle border border-warning-subtle float-end"><i id="editor-selected-objects-save-modal-prefab-save-checkbox" class="bi bi-dash-lg"></i></span>
+																</h5>
+															</div>
+															<div class="card-body">
+																<p class="card-text" data-bs-title="Save your selected objects as a prefab JSON file to your local hard drive." data-bs-toggle="tooltip" data-bs-placement="top">
+																	Save the selected objects as a new prefab object.
+																</p>
+																<div class="input-group" data-bs-title="Give your new prefab a relevant name. (e.g., large_tree1)" data-bs-toggle="tooltip" data-bs-placement="top">
+																	<span class="input-group-text">Name&nbsp;<span class="text-danger">*</span></span>
+																	<input id="editor-selected-objects-save-modal-prefab-name" class="form-control" placeholder="large_tree1" type="text">
+																</div>
+																<p id="editor-selected-objects-save-modal-prefab-name-warning" class="text-danger text-center small mt-2 mb-0"></p>
+																<div class="text-center mt-3">
+																	<button id="editor-selected-objects-save-modal-prefab-save" class="btn btn-secondary" type="button" disabled>Save Prefab</button>
+																</div>
+															</div>
+														</div>
+														<div class="card mt-3 mb-5">
+															<div class="card-header fw-normal">
+																<h5 class="card-title mb-0">
+																	Step 2 - Update objects.json File
+																	<span id="editor-selected-objects-save-modal-objects-save-checkbox-bg" class="badge text-warning-emphasis bg-warning-subtle border border-warning-subtle float-end"><i id="editor-selected-objects-save-modal-objects-save-checkbox" class="bi bi-dash-lg"></i></span>
+																</h5>
+															</div>
+															<div class="card-body">
+																<p class="card-text" data-bs-title="JavaScript doesn't give access to the local filesystem, so I can't automatically scan all of your prefabs for you :(" data-bs-toggle="tooltip" data-bs-placement="top">
+																	<span class="fst-italic">/pawbs-engine/src/objects/objects.json</span> needs to be updated in order to access your new prefab from the object spawn tool.
+																</p>
+																<div class="input-group mb-3" data-bs-title="This should be the same name as your prefab." data-bs-toggle="tooltip" data-bs-placement="top">
+																	<span class="input-group-text">Name&nbsp;</span>
+																	<input id="editor-selected-objects-save-modal-objects-name" class="form-control" type="text" disabled>
+																</div>
+																<div class="input-group mb-3" data-bs-title="The relative path to your prefab JSON file on your hard drive. (e.g., ./objects/trees/large_tree1.json)" data-bs-toggle="tooltip" data-bs-placement="top">
+																	<span class="input-group-text">Path&nbsp;<span class="text-danger">*</span>&nbsp;</span>
+																	<input id="editor-selected-objects-save-modal-objects-path" class="form-control" placeholder="./objects/trees/large_tree1.json" type="text">
+																</div>
+																<div class="text-center">
+																	<button id="editor-selected-objects-save-modal-objects-save" class="btn btn-secondary" type="button" disabled>Save objects.json</button>
+																</div>
+															</div>
+														</div>
+													</div>
+													<div class="col-2"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="vr mx-2"></div>
+								
+								<!-- Cut/Copy/Paste Objects -->
+								<div class="mx-1">
 									<input id="editor-selected-objects-cut" class="btn-check" type="button">
 									<label for="editor-selected-objects-cut" class="btn btn-outline-secondary px-1 py-0"
 									data-bs-title="Cut selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
@@ -213,7 +277,7 @@
 							
 							<!-- Transform Title -->
 							<div class="card-title accordion-title w-100 mb-0">
-								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-transform" aria-expanded="true" aria-controls="editor-selected-objects-transform">
+								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-transform">
 									<span data-bs-title="Move/scale/rotate objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										Transform
 									</span>
@@ -226,7 +290,7 @@
 								<div id="editor-selected-objects-transform-modes" class="pb-2 mb-2 border-bottom">
 									<div class="d-flex">
 										<div class="mx-1">
-											<input id="editor-selected-objects-transform-position-radio" name="editor-selected-objects-transforms" class="btn-check" value="position" type="radio" checked>
+											<input id="editor-selected-objects-transform-position-radio" name="editor-selected-objects-transforms" value="position" class="btn-check" type="radio" checked>
 											<label for="editor-selected-objects-transform-position-radio" class="btn btn-outline-secondary px-1 py-0"
 											data-bs-title="Move selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
 												<i class="bi bi-arrows-move"></i>
@@ -234,7 +298,7 @@
 										</div>
 										
 										<div class="mx-1">
-											<input id="editor-selected-objects-transform-scale-radio" name="editor-selected-objects-transforms" class="btn-check" value="scale" type="radio">
+											<input id="editor-selected-objects-transform-scale-radio" name="editor-selected-objects-transforms" value="scale" class="btn-check" type="radio">
 											<label for="editor-selected-objects-transform-scale-radio" class="btn btn-outline-secondary px-1 py-0"
 											data-bs-title="Scale selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
 												<i class="bi bi-arrows-angle-expand"></i>
@@ -242,7 +306,7 @@
 										</div>
 										
 										<div class="mx-1">
-											<input id="editor-selected-objects-transform-rotation-radio" name="editor-selected-objects-transforms" class="btn-check" value="rotation" type="radio">
+											<input id="editor-selected-objects-transform-rotation-radio" name="editor-selected-objects-transforms" value="rotation" class="btn-check" type="radio">
 											<label for="editor-selected-objects-transform-rotation-radio" class="btn btn-outline-secondary px-1 py-0"
 											data-bs-title="Rotate selected objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
 												<i class="bi bi-arrow-clockwise"></i>
@@ -371,7 +435,7 @@
 						
 							<!-- Materials Title -->
 							<div class="card-title accordion-title w-100 mt-2 mb-0">
-								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-materials" aria-expanded="true" aria-controls="editor-selected-objects-materials">
+								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-materials">
 									<span data-bs-title="Change colours/textures." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										Materials
 									</span>
@@ -384,7 +448,7 @@
 								<div id="editor-selected-objects-materials-colour-picker" class="pb-2 mb-2 border-bottom">
 									<div class="editor-selected-objects-materials-colour-grid mt-1 mb-2"></div>
 									<div class="editor-selected-objects-materials-colour-info my-1">
-										<input id="editor-selected-objects-materials-selected-colour" class="form-control form-control-color" value="#CCCCCC" type="color"
+										<input id="editor-selected-objects-materials-selected-colour" value="#CCCCCC" class="form-control form-control-color" type="color"
 										data-bs-title="Pick a custom colour." data-bs-toggle="tooltip" data-bs-placement="bottom">
 									</div>
 									
@@ -403,7 +467,7 @@
 								<div id="editor-selected-objects-materials-texture-picker" class="mt-3">
 									<select id="editor-selected-objects-materials-texture-select" class="form-select form-select-sm"
 									data-bs-title="Select a texture category." data-bs-toggle="tooltip" data-bs-placement="bottom"></select>
-									<div class="editor-selected-objects-materials-texture-grid my-1"></div>
+									<div id="editor-selected-objects-materials-texture-grid" class="my-1"></div>
 								</div>
 								
 							</div>
@@ -418,47 +482,358 @@
 		<!-- Editor Spawn Tool -->
 		<div id="editor-spawn-tool" class="row fixed-bottom mx-1 my-3" style="display: none;">
 			<div class="editor-window col-12 col-lg-9 col-xl-7 mx-auto">
-				<div class="card p-2 shadow-sm">
-					<div class="input-group">
-						<div class="row w-100 m-0 overflow-hidden">
+				<div id="editor-spawn-tool-container" class="card px-2 pt-2 pb-0 shadow-sm overflow-hidden">
+					<div id="editor-spawn-tool-scroll" class="row h-138px overflow-scroll">
+						
+						<div class="col-6 col-sm-5 col-md-4 col-xl-3  pe-1">
+							<div class="row w-100 m-0 overflow-hidden">
+								
+								<!-- Spawn Types -->
+								<div class="col p-0 text-nowrap">
+									<div class="card-title input-group-text mx-1 my-1">
+										<input id="editor-spawn-objects" name="editor-spawn-types" value="objects" class="btn-check" type="radio" checked>
+										<label for="editor-spawn-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+										data-bs-title="Spawn objects." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-box"></i>
+										</label>
+										
+										<input id="editor-spawn-npcs" name="editor-spawn-types" value="npcs" class="btn-check" type="radio" disabled>
+										<label for="editor-spawn-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+										data-bs-title="Spawn NPCs" data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-person-arms-up"></i>
+										</label>
+										
+										<div class="vr mx-2"></div>
+										
+										<input id="editor-spawn-walls" name="editor-spawn-types" value="walls" class="btn-check" type="radio" disabled>
+										<label for="editor-spawn-walls" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+										data-bs-title="Wall tool." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-bricks"></i>
+										</label>
+									</div>
+								</div>
+								
+							</div>
+							<div class="row w-100 m-0 overflow-hidden">
+								
+								<!-- Spawn Categories  -->
+								<div class="col p-0 text-nowrap">
+									<div class="card-title input-group-text mx-1 my-1">
+										<select id="editor-spawn-category-select" class="form-select form-select-sm"
+										data-bs-title="Select an object category." data-bs-toggle="tooltip" data-bs-placement="top"></select>
+									</div>
+								</div>
+								
+							</div>
+						</div>
+						
+						<!-- Spawn Grid -->
+						<div class="col-6 col-sm-7 col-md-8 col-xl-9 ps-1">
+							<div id="editor-spawn-grid" class="my-1"></div>
 							
-							<!-- Spawn Types -->
-							<div class="col p-0 text-nowrap" style="max-width: 14.2em;">
-								<div class="card-title input-group-text mx-1 my-1">
-									<input id="editor-spawn-objects" name="editor-spawn-types" value="objects" class="btn-check" type="radio" checked>
-									<label for="editor-spawn-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-									data-bs-title="Spawn objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-box"></i>
-									</label>
-									
-									<input id="editor-spawn-npcs" name="editor-spawn-types" value="npcs" class="btn-check" type="radio">
-									<label for="editor-spawn-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Spawn NPCs" data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-person-arms-up"></i>
-									</label>
-									
-									<div class="vr mx-2"></div>
-									
-									<input id="editor-spawn-walls" name="editor-spawn-types" value="walls" class="btn-check" type="radio">
-									<label for="editor-spawn-walls" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Wall tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-bricks"></i>
-									</label>
+							<!-- Spawn Cube Primitive -->
+							<div id="editor-spawn-panel-cube" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Width: </label>
+												<input id="editor-spawn-cube-width" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cube x-axis size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Height: </label>
+												<input id="editor-spawn-cube-height" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cube y-axis size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Depth: </label>
+												<input id="editor-spawn-cube-depth" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cube z-axis size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">W. Segments: </label>
+												<input id="editor-spawn-cube-width-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="X-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">H. Segments: </label>
+												<input id="editor-spawn-cube-height-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Y-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">D. Segments: </label>
+												<input id="editor-spawn-cube-depth-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Z-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-cube-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-cube-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
 								</div>
 							</div>
 							
-						</div>
-						<div class="row w-100 m-0 overflow-hidden">
-							
-							<!-- Spawn Categories  -->
-							<div class="col p-0 text-nowrap" style="max-width: 14.2em;">
-								<div class="card-title input-group-text mx-1 my-1">
-									<select id="editor-spawn-category-select" class="form-select form-select-sm"
-									data-bs-title="Select an object category." data-bs-toggle="tooltip" data-bs-placement="bottom"></select>
+							<!-- Spawn Sphere Primitive -->
+							<div id="editor-spawn-panel-sphere" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Diameter: </label>
+												<input id="editor-spawn-sphere-diameter" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Sphere diameter size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">W. Segments: </label>
+												<input id="editor-spawn-sphere-width-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="X-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">H. Segments: </label>
+												<input id="editor-spawn-sphere-height-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Y-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-sphere-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-sphere-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
 								</div>
 							</div>
 							
+							<!-- Spawn Cylinder Primitive -->
+							<div id="editor-spawn-panel-cylinder" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">T. Diameter: </label>
+												<input id="editor-spawn-cylinder-top-diameter" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cylinder top diameter." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">B. Diameter: </label>
+												<input id="editor-spawn-cylinder-bottom-diameter" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cylinder bottom diameter." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Height: </label>
+												<input id="editor-spawn-cylinder-height" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cylinder y-axis size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">R. Segments: </label>
+												<input id="editor-spawn-cylinder-width-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Radial segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">H. Segments: </label>
+												<input id="editor-spawn-cylinder-height-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Y-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-cylinder-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-cylinder-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
+								</div>
+							</div>
+							
+							<!-- Spawn Cone Primitive -->
+							<div id="editor-spawn-panel-cone" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Diameter: </label>
+												<input id="editor-spawn-cone-diameter" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cone diameter size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Height: </label>
+												<input id="editor-spawn-cone-height" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Cone y-axis size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">R. Segments: </label>
+												<input id="editor-spawn-cone-width-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Radial segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">H. Segments: </label>
+												<input id="editor-spawn-cone-height-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Y-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-cone-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-cone-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
+								</div>
+							</div>
+							
+							<!-- Spawn Torus Primitive -->
+							<div id="editor-spawn-panel-torus" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Diameter: </label>
+												<input id="editor-spawn-torus-diameter" value="0.75" default="0.75" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Torus size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">T. Diameter: </label>
+												<input id="editor-spawn-torus-tube-diameter" value="0.375" default="0.375" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Tube thickness." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">R. Segments: </label>
+												<input id="editor-spawn-torus-radial-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Radial segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">T. Segments: </label>
+												<input id="editor-spawn-torus-tubular-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Tube segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-torus-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-torus-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
+								</div>
+							</div>
+							
+							<!-- Spawn Plane Primitive -->
+							<div id="editor-spawn-panel-plane" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Width: </label>
+												<input id="editor-spawn-plane-width" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Plane x-axis size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Height: </label>
+												<input id="editor-spawn-plane-height" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Plane y-axis size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">W. Segments: </label>
+												<input id="editor-spawn-plane-width-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="X-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">H. Segments: </label>
+												<input id="editor-spawn-plane-height-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Y-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-plane-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-plane-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
+								</div>
+							</div>
+							
+							<!-- Spawn Circle Primitive -->
+							<div id="editor-spawn-panel-circle" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Diameter: </label>
+												<input id="editor-spawn-circle-diameter" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Circle size." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Segments: </label>
+												<input id="editor-spawn-circle-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Radial segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												&nbsp;
+											</div>
+											<div class="flex-fill mx-1">
+												&nbsp;
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-circle-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-circle-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
+								</div>
+							</div>
+							
+							<!-- Spawn Ring Primitive -->
+							<div id="editor-spawn-panel-ring" class="my-1 small" style="display: none;">
+								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+									<div class="col-8 pe-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">I. Diameter: </label>
+												<input id="editor-spawn-ring-inner-diameter" value="0.5" default="0.5" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Inner ring diameter." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">O. Diameter: </label>
+												<input id="editor-spawn-ring-outer-diameter" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Outer ring diameter." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">R. Segments: </label>
+												<input id="editor-spawn-plane-radial-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Radial segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">H. Segments: </label>
+												<input id="editor-spawn-plane-height-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="X-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+									</div>
+									<div id="editor-spawn-panel-ring-thumbnail" class="col d-flex ps-3 pe-0"></div>
+									<span class="w-0 ps-0 pe-20px pt-1 text-secondary">
+										<i id="editor-spawn-panel-ring-close" class="bi bi-x-lg cursor-pointer"
+										data-bs-title="Close." data-bs-toggle="tooltip" data-bs-placement="top"></i>
+									</span>
+								</div>
+							</div>
 						</div>
+						
 					</div>
 				</div>
 			</div>
@@ -507,8 +882,8 @@
 		// three.js Imports
 		import * as THREE from './libraries/threejs/three.js';
 		import { PointerLockControls } from './libraries/threejs/modules/PointerLockControls.js';
-		import { TransformControls } from './libraries/threejs/modules/TransformControls.js';
-		import { OutlineEffect } from './libraries/threejs/modules/OutlineEffect.js';
+		import { CustomTransformControls } from './libraries/threejs/modules/CustomTransformControls.js';
+		import { CustomOutlineEffect } from './libraries/threejs/modules/CustomOutlineEffect.js';
 		
 		// Class Imports
 		import Player from './classes/player.class.js';
@@ -553,7 +928,7 @@
 			$('#renderer').append(renderer.domElement);
 			
 			// Initialize cel shader effect
-			effect = new OutlineEffect(renderer, { defaultThickness: 0.0032 });
+			effect = new CustomOutlineEffect(renderer, { defaultThickness: 0.0032 });
 			
 			// Initialize worlds
 			worlds = {};
@@ -561,34 +936,44 @@
 			// Load textures
 			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { Assets.loadTextures(texture_paths, function() {
 				
-				// Load worlds
-				fetch('./worlds/worlds.json').then(response => response.json()).then(worlds => {
-										
-					// Initialize world
-					world = new World();
-					world.load(worlds.TestWorld)
+				// Load objects
+				fetch('./objects/objects.json').then(response => response.json()).then(object_paths => { Assets.loadObjects(object_paths, function() {
 					
-					// Initialize player
-					player = new Player(window, document, renderer, world);
+					// Load worlds
+					fetch('./worlds/worlds.json').then(response => response.json()).then(worlds => {
+											
+						// Initialize world
+						world = new World();
+						world.load(worlds.TestWorld)
+						
+						// Initialize player
+						player = new Player(window, document, renderer, world);
+						
+						// Initialize UI event handlers
+						initializeUtilityUIEventHandlers();
+						initializeEditorUIEventHandlers(world, player);
+						
+						// Start game loop
+						animate();
+						
+					}).catch(error => {
+						
+						// Error loading worlds
+						console.error("Error loading ./world/worlds.json: ", error);
+						
+					});
 					
-					// Initialize UI event handlers
-					initializeEditorUIEventHandlers(world, player);
-					initializeUtilityUIEventHandlers();
+				}); }).catch(error => {
 					
-					// Start game loop
-					animate();
-					
-				}).catch(error => {
-					
-					// Error loading worlds
-					console.error("Error loading worlds.json: ", error);
+					// Error loading objects
+					console.error("Error loading ./objects/objects.json: ", error);
 					
 				});
 				
 			}); }).catch(error => {
 				
 				// Error loading textures
-				console.error("Error loading textures.json: ", error);
+				console.error("Error loading ./textures/textures.json: ", error);
 				
 			});
 			
@@ -601,7 +986,7 @@
 		{
 			
 			// Request a frame to be rendered using this method as a callback
-			const frame_id = requestAnimationFrame(animate);
+			const request_id = requestAnimationFrame(animate);
 			
 			// Make sure at least one frame is rendered (This is workaround for collision bounding boxes before handling ANY collision detection...)
 			//
@@ -650,7 +1035,7 @@
 			}
 			else
 			{
-				cancelAnimationFrame(frame_id);
+				cancelAnimationFrame(request_id);
 				
 				// TODO: Game loop broken. Do something? Show main menu?
 			}
@@ -680,8 +1065,8 @@
 				
 				Editor.toggle(world, player);
 				
-				//$("#editor-tool-spawn").prop("checked", true);
-				//$("#editor-tool-spawn").trigger("change");
+				// $("#editor-tool-spawn").prop("checked", true);
+				// $("#editor-tool-spawn").trigger("change");
 				
 			}, 500)
 			

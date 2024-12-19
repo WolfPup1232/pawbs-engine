@@ -15,7 +15,7 @@ import {
  *
  * 1. Traditional
  *
- * const effect = new OutlineEffect( renderer );
+ * const effect = new CustomOutlineEffect( renderer );
  *
  * function render() {
  *
@@ -25,7 +25,7 @@ import {
  *
  * 2. VR compatible
  *
- * const effect = new OutlineEffect( renderer );
+ * const effect = new CustomOutlineEffect( renderer );
  * let renderingOutline = false;
  *
  * scene.onAfterRender = function () {
@@ -47,7 +47,7 @@ import {
  * }
  *
  * // How to set default outline parameters
- * new OutlineEffect( renderer, {
+ * new CustomOutlineEffect( renderer, {
  * 	defaultThickness: 0.01,
  * 	defaultColor: [ 0, 0, 0 ],
  * 	defaultAlpha: 0.8,
@@ -64,7 +64,7 @@ import {
  * };
  */
 
-class OutlineEffect {
+class CustomOutlineEffect {
 
 	constructor( renderer, parameters = {} ) {
 
@@ -178,7 +178,7 @@ class OutlineEffect {
 		function createMaterial() {
 
 			return new ShaderMaterial( {
-				type: 'OutlineEffect',
+				type: 'CustomOutlineEffect',
 				uniforms: UniformsUtils.merge( [
 					UniformsLib[ 'fog' ],
 					UniformsLib[ 'displacementmap' ],
@@ -432,24 +432,20 @@ class OutlineEffect {
 
 		}
 
-		this.render = function ( world, player ) {
-
+		this.render = function ( world = null, player = null, scene = null, camera = null ) {
+			
+			if (world != null)
+			{
+				scene = world.scene;
+			}
+			
+			if (player != null)
+			{
+				camera = player.camera;
+			}
+			
 			let renderTarget;
 			let forceClear = false;
-
-			if ( arguments[ 2 ] !== undefined ) {
-
-				console.warn( 'THREE.OutlineEffect.render(): the renderTarget argument has been removed. Use .setRenderTarget() instead.' );
-				renderTarget = arguments[ 2 ];
-
-			}
-
-			if ( arguments[ 3 ] !== undefined ) {
-
-				console.warn( 'THREE.OutlineEffect.render(): the forceClear argument has been removed. Use .clear() instead.' );
-				forceClear = arguments[ 3 ];
-
-			}
 
 			if ( renderTarget !== undefined ) renderer.setRenderTarget( renderTarget );
 
@@ -457,7 +453,7 @@ class OutlineEffect {
 
 			if ( this.enabled === false ) {
 
-				renderer.render( world.scene, player.camera );
+				renderer.render( scene, camera );
 				return;
 
 			}
@@ -465,42 +461,66 @@ class OutlineEffect {
 			const currentAutoClear = renderer.autoClear;
 			renderer.autoClear = this.autoClear;
 
-			renderer.render( world.scene, player.camera );
+			renderer.render( scene, camera );
 
 			renderer.autoClear = currentAutoClear;
 
-			this.renderOutline( world, player );
+			this.renderOutline( world, player, scene, camera );
 
 		};
 
-		this.renderOutline = function ( world, player ) {
-
+		this.renderOutline = function ( world = null, player = null, scene = null, camera = null ) {
+			
+			if (world != null)
+			{
+				scene = world.scene;
+			}
+			
+			if (player != null)
+			{
+				camera = player.camera;
+			}
+			
 			const currentAutoClear = renderer.autoClear;
-			const currentSceneAutoUpdate = world.scene.autoUpdate;
-			const currentSceneBackground = world.scene.background;
+			const currentSceneAutoUpdate = scene.autoUpdate;
+			const currentSceneBackground = scene.background;
 			const currentShadowMapEnabled = renderer.shadowMap.enabled;
 
-			world.scene.autoUpdate = false;
-			world.scene.background = null;
+			scene.autoUpdate = false;
+			scene.background = null;
 			renderer.autoClear = false;
 			renderer.shadowMap.enabled = false;
 			
-			for (let i = 0; i < world.objects.length; i++)
+			if (world != null)
 			{
-				world.objects[i].traverse( setOutlineMaterial );
+				for (let i = 0; i < world.objects.length; i++)
+				{
+					world.objects[i].traverse( setOutlineMaterial );
+				}
+			}
+			else
+			{
+				scene.traverse( setOutlineMaterial );
 			}
 
-			renderer.render( world.scene, player.camera );
+			renderer.render( scene, camera );
 			
-			for (let i = 0; i < world.objects.length; i++)
+			if (world != null)
 			{
-				world.objects[i].traverse( restoreOriginalMaterial );
+				for (let i = 0; i < world.objects.length; i++)
+				{
+					world.objects[i].traverse( restoreOriginalMaterial );
+				}
+			}
+			else
+			{
+				scene.traverse( restoreOriginalMaterial );
 			}
 
 			cleanupCache();
 
-			world.scene.autoUpdate = currentSceneAutoUpdate;
-			world.scene.background = currentSceneBackground;
+			scene.autoUpdate = currentSceneAutoUpdate;
+			scene.background = currentSceneBackground;
 			renderer.autoClear = currentAutoClear;
 			renderer.shadowMap.enabled = currentShadowMapEnabled;
 
@@ -510,9 +530,9 @@ class OutlineEffect {
 		 * See #9918
 		 *
 		 * The following property copies and wrapper methods enable
-		 * OutlineEffect to be called from other *Effect, like
+		 * CustomOutlineEffect to be called from other *Effect, like
 		 *
-		 * effect = new StereoEffect( new OutlineEffect( renderer ) );
+		 * effect = new StereoEffect( new CustomOutlineEffect( renderer ) );
 		 *
 		 * function render () {
 		 *
@@ -582,4 +602,4 @@ class OutlineEffect {
 
 }
 
-export { OutlineEffect };
+export { CustomOutlineEffect as CustomOutlineEffect };

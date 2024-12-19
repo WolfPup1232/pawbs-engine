@@ -1,5 +1,5 @@
 /**
- * Initializes the Utility UI event handlers.
+ * Initializes the Utility UI event handlers, which must be loaded first because these are used across all UIs.
  */
 export default function initializeUtilityUIEventHandlers()
 {
@@ -36,6 +36,32 @@ export default function initializeUtilityUIEventHandlers()
 		}
 		
 		// Set the input to the numeric value
+		$(this).val(value);
+		
+	});
+	
+	/**
+	 * Number input textbox text change event.
+	 */
+	$('.number-input').change(function()
+	{
+		
+		// Get element's value
+		let value = $(this).val();
+		
+		// If value is empty, attempt to set to the default value
+		if (value == "" && $(this).is('[default]'))
+		{
+			value = $(this).attr('default');
+		}
+		
+		// If value is decimal with no numbers, set to zero
+		if (value == ".")
+		{
+			value = "0";
+		}
+		
+		// Set the input to the potentially modified value
 		$(this).val(value);
 		
 	});

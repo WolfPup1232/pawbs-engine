@@ -41,6 +41,12 @@ class Billboard extends THREE.Mesh
 		super(billboard_geometry, billboard_material);
 		
 		
+		// Billboard Properties
+		
+		// Specify the mesh type for three.js
+		this.type = 'Billboard';
+		
+		
 		// Billboard Textures
 		
 		// Initialize the billboard's textures
@@ -48,6 +54,32 @@ class Billboard extends THREE.Mesh
 		this.texture_back = texture_back;
 		this.texture_left = texture_left;
 		this.texture_right = texture_right;
+		
+	}
+	
+	
+	// Serialization
+	
+	/**
+	 * Custom JSON serialization method.
+	 */
+	toJSON(meta)
+	{
+		// Call parent class serialization method
+		const data = super.toJSON(meta);
+		
+		// Set object type
+		data.object.type = 'Billboard';
+		
+		// Include custom properties
+		// data.object.customProperty = this.customProperty;
+		// data.object.texture = this.texture;
+		// data.object.texture_back = this.texture_back;
+		// data.object.texture_left = this.texture_left;
+		// data.object.texture_right = this.texture_right;
+		
+		// Return JSON
+		return data;
 		
 	}
 	

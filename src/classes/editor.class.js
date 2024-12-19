@@ -2,6 +2,9 @@
 import * as THREE from '../libraries/threejs/three.js';
 
 // Class Imports
+import World from './world.class.js';
+import Player from './player.class.js';
+import Controls from './controls.class.js';
 import Billboard from './billboard.class.js';
 
 // Static Class Imports
@@ -114,7 +117,7 @@ class Editor
 	static clipboard_objects = new THREE.Group();
 	
 	
-	// Spawned objects
+	// Spawn tool
 	
 	// The colour of spawned objects
 	static spawned_object_colour = 0xd3d3d3;
@@ -346,12 +349,8 @@ class Editor
 			// Hide editor UI
 			$("#editor").hide();
 			
-			// Reset any highlighted or selected objects
-			this.resetHighlightedObjects();
-			this.resetSelectedObjects(world, player);
-			
-			// Reset any highlighted or selected object faces
-			this.resetHighlightedAndSelectedFaces(world);
+			// Reset all highlighted or selected objects, faces, and vertices
+			this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
 			
 			// Remove player transform controls from the world
 			world.scene.remove(player.controls.transform_controls);
@@ -375,8 +374,11 @@ class Editor
 			// Update selected object material colours UI
 			this.updateSelectedObjectMaterialColoursUI();
 			
-			// Updated selected object material textures UI
-			this.updateSelectedObjectMaterialTextureFolders();
+			// Update selected object material textures UI
+			this.updateSelectedObjectMaterialTexturesUI(world, player);
+			
+			// Update object spawn tool UI
+			this.updateSpawnToolUI(world, player);
 			
 			// Resize UI elements
 			this.resize();
@@ -456,9 +458,8 @@ class Editor
 	static newWorld(world, player)
 	{
 		
-		// Reset any highlighted or selected objects
-		this.resetHighlightedObjects();
-		this.resetSelectedObjects(world, player);
+		// Reset all highlighted or selected objects, faces, and vertices
+		this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
 		
 		// Remove all objects from the world
 		world.removeAllObjects();
@@ -477,10 +478,10 @@ class Editor
 		world.addTerrain(plane);
 		
 		// Initialize default objects
-		const campfire = new Billboard(1.5, 1.5, Assets.textures.campfire);
-		campfire.position.set(0, 0.75, -5);
-		campfire.name = "campfire";
-		world.addObject(campfire);
+		const apple = new Billboard(1.5, 1.5, Assets.textures.apple1);
+		apple.position.set(0, 0.75, -5);
+		apple.name = "apple";
+		world.addObject(apple);
 		
 		// Reset the player's position
 		player.position.x = 0;
@@ -501,9 +502,8 @@ class Editor
 	static loadWorld(world, player)
 	{
 		
-		// Reset any highlighted or selected objects
-		this.resetHighlightedObjects();
-		this.resetSelectedObjects(world, player);
+		// Reset all highlighted or selected objects, faces, and vertices
+		this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
 		
 		// Initialize a temporary file input element to trigger an open file dialog
 		let file_input = $('<input type="file" accept=".json" style="display:none;">');
@@ -575,9 +575,8 @@ class Editor
 	static saveWorld(world, player)
 	{
 		
-		// Reset any highlighted or selected objects
-		this.resetHighlightedObjects();
-		this.resetSelectedObjects(world, player);
+		// Reset all highlighted or selected objects, faces, and vertices
+		this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
 	
 		// Create a temporary link element to trigger a save file dialog
 		let link = document.createElement('a');
@@ -602,11 +601,11 @@ class Editor
 	/**
 	 * Spawns a new object into the world at the location the player is facing.
 	 *
-	 * @param {THREE.Mesh} Geometry The class of geometry to be spawned.
+	 * @param {THREE.Object3D} obect The object to be spawned.
 	 * @param {World} world The current game world.
 	 * @param {Player} player The player editing the game world.
 	 */
-	static spawn(Geometry, world, player)
+	static spawn(object, world, player)
 	{
 		
 		// Cast a ray from the player's position in the direction the player is looking
@@ -616,123 +615,61 @@ class Editor
 		player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = player.raycaster.intersectObjects(world.all_objects_and_terrain);
+		const intersects = player.raycaster.intersectObjects(world.all_objects_and_terrain, true);
 		if (intersects.length > 0)
 		{
-		
+			
 			// Get the first object object that the player is looking at
-			let intersect_object = intersects[0].object;
 			let intended_position = intersects[0].point;
 			
-			// Initialize object to be spawned
-			let spawn_object = new Geometry();
-			let spawn_object_material = new THREE.MeshBasicMaterial({ color: this.spawned_object_colour });
-			
-			// Re-initialize object to be spawned by specified type
-			if (spawn_object instanceof Billboard)
-			{
-				
-				// Spawn Billboard
-				spawn_object = new Billboard(1, 1, Assets.textures.apple1);
-				
-			}
-			else if (spawn_object instanceof THREE.PlaneGeometry)
-			{
-				
-				// Spawn Plane
-				spawn_object = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), spawn_object_material);
-				
-			}
-			else if (spawn_object instanceof THREE.BoxGeometry)
-			{
-				
-				// Spawn Box
-				spawn_object = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), spawn_object_material);
-				
-			}
-			if (spawn_object instanceof THREE.CylinderGeometry)
-			{
-				
-				// Spawn Cylinder
-				spawn_object = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1), spawn_object_material);
-				
-			}
-			if (spawn_object instanceof THREE.SphereGeometry)
-			{
-				
-				// Spawn Sphere
-				spawn_object = new THREE.Mesh(new THREE.SphereGeometry(0.5), spawn_object_material);
-				
-			}
-			
-			// Get the spawn object's bounding box
-			let spawn_object_box = new THREE.Box3();
-			let spawn_object_size = new THREE.Vector3();
-			
-			spawn_object.geometry.computeBoundingSphere();
-			spawn_object.geometry.computeBoundingBox();
-			spawn_object.geometry.boundingBox.getSize(spawn_object_size);
-			
-			spawn_object_box.setFromCenterAndSize(intended_position, spawn_object_size);
-				
-			// Get the intersect object's bounding box
-			let intersect_object_box = new THREE.Box3().setFromObject(intersect_object);
-				
-			intersect_object.updateMatrixWorld();
-			intersect_object_box.applyMatrix4(intersect_object.matrixWorld);
-			
-			// Check for intersection between the object being spawned and the intersect object
-			if (spawn_object_box.intersectsBox(intersect_object_box))
-			{
-				
-				// Check for horizontal collision between the object being spawned and the intersect object
-				if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.max.y)
+			// Initialize a bounding box for positioning the object being spawned
+			let bounding_box = new THREE.Box3();
+			object.traverse((child) => {
+				if (child.isMesh && child.geometry)
 				{
 					
-					// Adjust horizontal axis to avoid collision
-					let overlap_x = Math.min(spawn_object_box.max.x - intersect_object_box.min.x, intersect_object_box.max.x - spawn_object_box.min.x);
-					let overlap_z = Math.min(spawn_object_box.max.z - intersect_object_box.min.z, intersect_object_box.max.z - spawn_object_box.min.z);
+					// Update the child's world matrix to ensure the bounding box is accurate
+					child.updateWorldMatrix(true, false);
 					
-					// Adjust spawned object's horizontal intended position
-					if (overlap_x < overlap_z)
-					{
-						intended_position.x -= (spawn_object_box.min.x < intersect_object_box.min.x) ? overlap_x : -overlap_x;
-					}
-					else
-					{
-						intended_position.z -= (spawn_object_box.min.z < intersect_object_box.min.z) ? overlap_z : -overlap_z;
-					}
+					// Compute the bounding box of the child in world coordinates
+					const child_bounding_box = new THREE.Box3().setFromObject(child);
+					
+					// Expand the main box to include the child's bounding box
+					bounding_box.union(child_bounding_box);
 					
 				}
-				
-				// Check for vertical collision between the object being spawned and the intersect object's upper surface
-				if (spawn_object_box.min.y < intersect_object_box.max.y && spawn_object_box.max.y > intersect_object_box.max.y)
-				{
-					
-					// Adjust spawned object's vertical intended position
-					intended_position.y += (intersect_object_box.max.y - spawn_object_box.min.y);
-					
-				}
-				
-				// Check for vertical collision between the object being spawned and the intersect object's lower surface
-				if (spawn_object_box.max.y > intersect_object_box.min.y && spawn_object_box.min.y < intersect_object_box.min.y)
-				{
-					
-					// Adjust spawned object's vertical intended position
-					intended_position.y -= (spawn_object_box.max.y - intersect_object_box.min.y);
-					
-				}
-			}
+			});
 			
-			// Set the position of the object being spawned
-			spawn_object.position.x = intended_position.x;
-			spawn_object.position.y = intended_position.y + ((spawn_object_box.max.y - spawn_object_box.min.y) / 2);
-			spawn_object.position.z = intended_position.z;
+			// Position the object so its lowest point touches the intersection point
+			intended_position.y += (object.position.y - bounding_box.min.y);
+			object.position.copy(intended_position);
 			
 			// Spawn the object
-			world.addObject(spawn_object);
+			world.addObject(object);
 			
 		}
+		
+	}
+	
+	/**
+	 * Resets all highlighted and selected objects, faces, and vertices.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static resetHighlightedAndSelectedObjectsFacesVertices(world, player)
+	{
+		
+		// Reset highlighted and selected objects
+		this.resetHighlightedObjects();
+		this.resetSelectedObjects(world, player);
+		
+		// Reset highlighted and selected faces
+		this.resetHighlightedAndSelectedFaces(world, player);
+		
+		// Reset highlighted and selected vertices
+		this.resetHighlightedVertices();
+		this.resetSelectedVertices(world, player);
 		
 	}
 	
@@ -1084,6 +1021,88 @@ class Editor
 	}
 	
 	/**
+	 * Saves the selected objects to a JSON file using a save file dialog.
+	 *
+	 * @param {string} prefab_name The name of the prefab to be saved.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static saveSelectedObjects(prefab_name, player)
+	{
+		
+		// If any object is selected...
+		if (this.selected_objects.children.length > 0)
+		{
+			
+			// Get a clone of the selected objects, that way we don't screw up the actual selected objects
+			let selected_objects = this.selected_objects.deepClone();
+			
+			// Detatch transform controls if they're attached to anything
+			player.controls.transform_controls.detach();
+			
+			// Reset selected object's materials
+			selected_objects.traverse((child) => {
+				if (child.isMesh)
+				{
+					if (child.userData.original_material != null)
+					{
+						child.material = child.userData.original_material.clone();
+						delete child.userData.original_material;
+					}
+				}
+			});
+			
+			// If the selected objects group only has one child object...
+			if (selected_objects.children.length == 1)
+			{
+					
+				// Get a clone of the selected objects group's only child
+				let selected_object = selected_objects.children[0].clone(true);
+				
+				// Get child's position/scale/rotation
+				let selected_object_position = selected_object.position.clone();
+				let selected_object_scale = selected_object.scale.clone();
+				let selected_object_rotation = selected_object.quaternion.clone();
+				
+				// Calculate the child's new position/scale/rotation relative to the world instead of the selected objects group
+				selected_object_rotation.premultiply(selected_objects.quaternion);
+				selected_object_position.applyQuaternion(selected_objects.quaternion);
+				selected_object_position.multiply(selected_objects.scale);
+				selected_object_position.add(selected_objects.position);
+				selected_object_scale.multiply(selected_objects.scale);
+				
+				// Set the child's new position/scale/rotation
+				selected_object.position.copy(selected_object_position);
+				selected_object.scale.copy(selected_object_scale);
+				selected_object.quaternion.copy(selected_object_rotation);
+				
+				// Prepare the child object to be deselected
+				selected_objects = selected_object;
+				
+			}
+			
+			// Create a temporary link element to trigger a save file dialog
+			let link = document.createElement('a');
+			
+			// Serialize the game world's contents to an object URL for download
+			link.href = URL.createObjectURL(new Blob([JSON.stringify(selected_objects.toJSON())], { type: "application/json" }));
+			
+			// Set the download file name
+			link.download = prefab_name;
+			
+			// Append the link element to the document body
+			document.body.appendChild(link);
+			
+			// Trigger the save file dialog
+			link.click();
+			
+			// Remove the link element from the document body
+			document.body.removeChild(link);
+		
+		}
+		
+	}
+	
+	/**
 	 * Cuts the selected objects.
 	 *
 	 * @param {World} world The current game world.
@@ -1166,7 +1185,7 @@ class Editor
 			// Remove each selected object from the world
 			for (let i = 0; i < this.selected_objects.children.length; i++)
 			{
-				world.removeObject(this.selected_objects[i]);
+				world.removeObject(this.selected_objects.children[i]);
 			}
 			
 			// Remove the selected objects froup from the world
@@ -2526,31 +2545,62 @@ class Editor
 	}
 	
 	/**
-	 * Updates the selected object material texture folders UI element.
+	 * Updates the selected object material textures UI elements.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
-	static updateSelectedObjectMaterialTextureFolders()
+	static updateSelectedObjectMaterialTexturesUI(world, player)
 	{
 		
-		// Get a reference to this editor to pass into the texture folder change event
-		let self = this;
+		// Update selected object material textures UI
+		this.updateAssetPickerFolders(Assets.textures, "#editor-selected-objects-materials-texture-select", "#editor-selected-objects-materials-texture-grid", world, player);
 		
-		// Get the texture folder select element and add a default option to it
-		let select = $('#editor-selected-objects-materials-texture-select');
+	}
+	
+	/**
+	 * Updates the spawn tool UI elements.
+	 *
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static updateSpawnToolUI(world, player)
+	{
+		
+		// Update object spawn tool prefabs UI
+		this.updateAssetPickerFolders(Assets.objects, "#editor-spawn-category-select", "#editor-spawn-grid", world, player);
+		
+	}
+	
+	/**
+	 * Updates an asset picker's list of asset folders using the provided array of assets. Triggers updating an asset picker's list of asset thumbnails as well.
+	 *
+	 * @param {array} assets The array of assets to generate thumbnails and a folder structure listing with.
+	 * @param {string} dropdown_element The ID of the HTML DOM select element to list the assets folder structure in.
+	 * @param {string} grid_element The ID of the HTML DOM grid element to fill with asset thumbnails.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
+	 */
+	static updateAssetPickerFolders(assets, dropdown_element, grid_element, world, player)
+	{
+		
+		// Get the asset folder select element and add a default option to it
+		let select = $(dropdown_element);
 		select.empty();
 		$('<option>', { value: "/", text: "Uncategorized" }).appendTo(select);
 		
-		// Generate texture folder options by iterating through every texture file path
-		for (let [name, texture] of Object.entries(Assets.textures))
+		// Generate asset folder options by iterating through every asset file path
+		for (let [name, asset] of Object.entries(assets))
 		{
 			
-			// Get texture file path parts
-			let parts = texture.path.split('/');
+			// Get asset file path parts
+			let parts = asset.path.split('/');
 			
 			// Initialize empty option element values
 			let text = "";
 			let value = "/";
 			
-			// Get just the relevant parts of the texture file path
+			// Get just the relevant parts of the asset file path
 			for (let i = 2; i < parts.length - 1; i++)
 			{
 				
@@ -2565,19 +2615,19 @@ class Editor
 			// Remove the trailing slash from the label
 			text = text.slice(0,-1);
 			
-			// Make sure the texture folder isn't already in the texture folders select element
-			let option = $('#editor-selected-objects-materials-texture-select option:contains("' + text + '")');
+			// Make sure the asset folder isn't already in the asset folders select element
+			let option = $(dropdown_element + ' option:contains("' + text + '")');
 			if (option.length === 0)
 			{
 				
-				// Add the texture folder to the texture folders select element
+				// Add the asset folder to the asset folders select element
 				$('<option>', { value: value, text: text }).appendTo(select);
 				
 			}
 			
 		}
 		
-		// Get a list of all the options that have been added to the texture folders select element
+		// Get a list of all the options that have been added to the asset folders select element
 		let options = select.find('option');
 		
 		// Sort all the options alphabetically
@@ -2603,90 +2653,214 @@ class Editor
 			
 		});
 		
-		// Empty the texture folders select element and add the newly sorted options to it
+		// Empty the asset folders select element and add the newly sorted options to it
 		select.empty().append(options);
 		
-		// Select the default texture folder option
-		select.val($("#editor-selected-objects-materials-texture-select option:first").val());
+		// Select the default asset folder option
+		select.val($(dropdown_element + ' option:first').val());
 		
-		// Update the list of textures in the texture picker
-		this.updateSelectedObjectMaterialTexturePicker();
-		
-		// Texture folder change event
-		$('#editor-selected-objects-materials-texture-select').on('change', function()
+		// Initialize asset folder select element change event based on asset type...
+		if (assets == Assets.textures)
 		{
 			
-			// Update the list of textures in the texture picker
-			self.updateSelectedObjectMaterialTexturePicker();
+			// Texture folder change event
+			$(dropdown_element).on('change', function()
+			{
+				
+				// Update the list of textures in the texture picker
+				Editor.updateAssetPicker(Assets.textures, dropdown_element, grid_element, world, player);
+				
+			});
 			
-		});
+		}
+		else if (assets == Assets.objects)
+		{
+			
+			// Object folder change event
+			$(dropdown_element).on('change', function()
+			{
+				
+				// Stop animating object thumbnails
+				Assets.objectThumbnailsStopAnimating().then(() => {
+					
+					// If spawn tool is enabled...
+					if ($("#editor-tool-spawn").is(':checked'))
+					{
+						
+						// Update the list of prefab objects in the spawn tool
+						Editor.updateAssetPicker(Assets.objects, dropdown_element, grid_element, world, player);
+						
+					}
+					
+				});
+				
+			});
+			
+		}
+		
+		// Update the list of assets in the asset picker
+		this.updateAssetPicker(assets, dropdown_element, grid_element, world, player);
 		
 	}
 	
 	/**
-	 * Updates the selected object material texture picker UI elements.
+	 * Updates an asset picker's list of assets using the provided array of assets.
+	 *
+	 * @param {array} assets The array of assets to generate thumbnails and a folder structure listing with.
+	 * @param {string} dropdown_element The ID of the HTML DOM select element to list the assets folder structure in.
+	 * @param {string} grid_element The ID of the HTML DOM spawn grid element to fill with asset thumbnails.
+	 * @param {World} world The current game world.
+	 * @param {Player} player The player editing the game world.
 	 */
-	static updateSelectedObjectMaterialTexturePicker()
+	static updateAssetPicker(assets, dropdown_element, grid_element, world, player)
 	{
 		
-		// Get a reference to this editor to pass into the texture picker click event
-		let self = this;
+		// Hide anything that could be obscuring the spawn grid
+		$(".tooltip").hide();
+		$("div[id^='editor-spawn-panel-']").hide();
+		$("div[id^='editor-spawn-primitive-']").remove();
 		
-		// Empty the texture picker of any previous textures
-		$('.editor-selected-objects-materials-texture-grid').empty();
+		// Empty the asset picker of any previous assets
+		$(grid_element).empty();
 		
-		// Generate texture list by iterating through every texture file path
-		for (let [key, texture] of Object.entries(Assets.textures))
+		// Generate asset list by iterating through every asset file path
+		for (let [key, asset] of Object.entries(assets))
 		{
 			
-			// Get texture file path parts
-			let parts = texture.path.split('/');
+			// Skip if asset file path is empty
+			if (asset.path == "")
+			{
+				continue;
+			}
 			
-			// Get just the relevant parts of the texture file path to use later to get only textures from the selected texture folder
+			// Get asset file path parts
+			let parts = asset.path.split('/');
+			
+			// Get just the relevant parts of the asset file path to use later to get only assets from the selected asset folder
 			let value = "/";
 			for (let i = 2; i < parts.length - 1; i++)
 			{
 				value += parts[i] + "/";
 			}
 			
-			// Check if the current texture belongs to the selected texture folder
-			if ($('#editor-selected-objects-materials-texture-select').find(':selected').val() == value)
+			// Check if the current asset belongs to the selected asset folder
+			if ($(dropdown_element).find(':selected').val() == value)
 			{
 				
-				// Initialize a new texture element for the texture picker UI
-				const cell = $('<div class="editor-selected-objects-materials-texture-cell"><img src="' + texture.path + '" class="editor-selected-objects-materials-texture-image img-fluid" alt="' + key + '" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
-				
-				// Add the new texture element to the texture picker UI
-				$('.editor-selected-objects-materials-texture-grid').append(cell);
+				// Initialize texture picker...
+				if (assets == Assets.textures)
+				{
+					
+					// Initialize a new texture element for the texture picker UI
+					const cell = $('<div class="editor-selected-objects-materials-texture-cell"><img src="' + asset.path + '" class="editor-selected-objects-materials-texture-image img-fluid" alt="' + key + '" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
+					
+					// Add the new texture element to the texture picker UI
+					$(grid_element).append(cell);
+					
+					// Texture element click event
+					$('.editor-selected-objects-materials-texture-image').on('click', function()
+					{
+						
+						// Set the selected object's new texture
+						if (Editor.selected_objects.children.length > 0)
+						{
+							
+							// Get the texture from the textures list by finding its key using its file path
+							let texture =  Assets.textures[Object.keys(Assets.textures).find(key => Assets.textures[key].path === $(this).attr('src'))];
+							
+							// Set the selected object's new texture
+							Editor.selected_objects.traverse((child) => {
+								if (child.isMesh)
+								{
+									child.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+									child.userData.original_material = child.material.clone();
+									child.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, wireframe: true });
+								}
+							});
+							
+						}
+						
+					});
+					
+					
+				} // Initialize object picker...
+				else if (assets == Assets.objects)
+				{
+					
+					// Initialize a new prefab object thumbnail for the spawn tool UI
+					$(grid_element).append($('<div id="editor-spawn-cell-' + key + '" class="editor-spawn-cell" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>'));
+					Assets.createObjectThumbnail(Assets.objects[key].deepClone(), "#editor-spawn-cell-" + key);
+					
+					// Thumbnail element click event
+					$('#editor-spawn-cell-' + key).on('click', function()
+					{
+						
+						// If a primitive object's thumbnail was clicked...
+						if (asset.path.startsWith("./objects/primitives/"))
+						{
+							
+							// Hide the spawn grid
+							$('#editor-spawn-grid').hide();
+							
+							// Initialize a new primitive object thumbnail for the selected primitive's spawn panel UI
+							$('#editor-spawn-panel-' + key + '-thumbnail').append($('<div id="editor-spawn-primitive-' + key + '" class="editor-spawn-cell" data-bs-title="Spawn ' + key + '." data-bs-toggle="tooltip" data-bs-placement="top"></div>'));
+							Assets.createObjectThumbnail(asset.deepClone(), "#editor-spawn-primitive-" + key);
+							
+							// Show the selected primitive's spawn panel UI
+							$('#editor-spawn-panel-' + key).show();
+							
+							// Primitive object element click event
+							$('#editor-spawn-primitive-' + key).on('click', function()
+							{
+								
+								// Spawn primitive
+								Editor.spawn(Assets.objects["primitive_" + key].deepClone(), world, player);
+								
+							});
+							
+							// Primitive spawn panel close button click event
+							$('#editor-spawn-panel-' + key + '-close').click(function()
+							{
+								
+								// Hide the selected primitive's spawn panel UI
+								$('#editor-spawn-panel-' + key).hide();
+								
+								// Stop animating the selected primitive's spawn panel UI thumbnail
+								Assets.objectThumbnailStopAnimating($("#editor-spawn-primitive-" + key).attr("animation_id")).then(() => {
+									
+									// Remove the primitive object thumbnail
+									$("#editor-spawn-primitive-" + key).remove();
+									
+								});
+								
+								// Show the spawn grid
+								$('#editor-spawn-grid').show();
+								
+							});
+							
+							
+						} // Otherwise, if a regular object's thumbnail was clicked...
+						else
+						{
+							
+							// Spawn object
+							Editor.spawn(asset.deepClone(), world, player);
+							
+						}
+						
+						// Re-initialize tooltips so previously hidden elements' tooltips render
+						$('[data-bs-toggle="tooltip"]').each(function() { let tooltip = new bootstrap.Tooltip($(this)); $(this).on('click', function() { tooltip.hide(); }); });
+						
+					});
+					
+				}
 				
 			}
 			
 		}
 		
-		// Texture element click event
-		$('.editor-selected-objects-materials-texture-image').on('click', function()
-		{
-			
-			// Set the selected object's new texture
-			if (self.selected_objects.children.length > 0)
-			{
-				
-				// Get the texture from the textures list by finding its key using its file path
-				let texture =  Assets.textures[Object.keys(Assets.textures).find(key => Assets.textures[key].path === $(this).attr('src'))];
-				
-				// Set the selected object's new texture
-				self.selected_objects.traverse((child) => {
-					if (child.isMesh)
-					{
-						child.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-						child.userData.original_material = child.material.clone();
-						child.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, wireframe: true });
-					}
-				});
-				
-			}
-			
-		});
+		// Show the spawn grid
+		$('#editor-spawn-grid').show();
 		
 		// Re-initialize tooltips so the colour cell tooltips render
 		$('[data-bs-toggle="tooltip"]').each(function() { let tooltip = new bootstrap.Tooltip($(this)); $(this).on('click', function() { tooltip.hide(); }); });

@@ -1,5 +1,6 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
+import { CustomObjectLoader } from '../libraries/threejs/modules/CustomObjectLoader.js';
 
 // Class Imports
 import Billboard from './billboard.class.js';
@@ -25,6 +26,37 @@ class World
 		this.scene = new THREE.Scene();
 		
 		
+		// World Attributes
+		
+		// Initialize the name of the world
+		this.name = "";
+		
+		// Initialize the player's position within the world
+		this.player_position = new THREE.Vector3(0, 0, 0);
+		this.player_rotation = new THREE.Euler(0, 0, 0, 'XYZ');
+		
+		
+		// World Terrain
+		
+		// Initialize an array to hold terrain objects
+		this.terrain = [];
+		
+		
+		// World Objects
+		
+		// Initialize an array to hold all other objects
+		this.objects = [];
+		
+		// Initialize an array to hold all non-outlined objects (only really useful if the CustomOutlineEffect is enabled)
+		this.objects_no_outline = [];
+		
+		
+		// Steps/Stairs/Ramps
+		
+		// The maximum height an object which can be considered a traversible stair
+		this.stair_height = 0.75;
+		
+		
 		// World Skybox
 		
 		// Set the world's skybox to a solid colour
@@ -39,51 +71,6 @@ class World
 		//]);
 		//this.scene.background = skybox;
 		
-		
-		// World attributes
-		this.name = "";
-		this.player_position = new THREE.Vector3(0, 0, 0)
-		
-		
-		// World Terrain
-		
-		// Initialize an array to hold terrain objects
-		this.terrain = [];
-		
-		
-		// World Objects
-		
-		// Initialize an array to hold all other objects
-		this.objects = [];
-		
-		// Initialize an array to hold all non-outlined objects (only really useful if the OutlineEffect is enabled)
-		this.objects_no_outline = [];
-		
-		
-		// Steps/Stairs/Ramps
-		
-		// The maximum height an object which can be considered a traversible stair
-		this.stair_height = 0.75;
-		
-	}
-	
-	
-	// Serialization
-	
-	/**
-	 * Custom JSON serialization method to prevent unwanted class variables from being saved when exporting the class to JSON using JSON.stringify().
-	 *
-	 * @return {World} A simplified version of the world with some attributes removed.
-	 */
-	toJSON()
-	{
-		return {
-			name: this.name,
-			player_position: this.player_position,
-			terrain: this.terrain.map(mesh => mesh.toJSON()),
-			objects: this.objects.map(mesh => mesh.toJSON()),
-			objects_no_outline: this.objects_no_outline.map(mesh => mesh.toJSON())
-		};
 	}
 	
 	
@@ -117,6 +104,59 @@ class World
 	}
 	
 	
+	// Serialization
+	
+	/**
+	 * Custom JSON serialization method to add additional class variables and prevent unwanted class variables from being saved when exporting the class to JSON using JSON.stringify().
+	 *
+	 * @return {World} A simplified version of the world with some attributes added and some removed.
+	 */
+	toJSON()
+	{
+		return {
+			name: this.name,
+			player_position: this.player_position,
+			player_rotation: this.player_rotation,
+			terrain: this.terrain.map(mesh => {
+				const meshJSON = mesh.toJSON();
+				meshJSON.position = mesh.position.toArray();
+				meshJSON.rotation = {
+					x: mesh.rotation.x,
+					y: mesh.rotation.y,
+					z: mesh.rotation.z,
+					order: mesh.rotation.order,
+				};
+				meshJSON.scale = mesh.scale.toArray();
+				return meshJSON;
+			}),
+			objects: this.objects.map(mesh => {
+				const meshJSON = mesh.toJSON();
+				meshJSON.position = mesh.position.toArray();
+				meshJSON.rotation = {
+					x: mesh.rotation.x,
+					y: mesh.rotation.y,
+					z: mesh.rotation.z,
+					order: mesh.rotation.order,
+				};
+				meshJSON.scale = mesh.scale.toArray();
+				return meshJSON;
+			}),
+			objects_no_outline: this.objects_no_outline.map(mesh => {
+				const meshJSON = mesh.toJSON();
+				meshJSON.position = mesh.position.toArray();
+				meshJSON.rotation = {
+					x: mesh.rotation.x,
+					y: mesh.rotation.y,
+					z: mesh.rotation.z,
+					order: mesh.rotation.order,
+				};
+				meshJSON.scale = mesh.scale.toArray();
+				return meshJSON;
+			}),
+		};
+	}
+	
+	
 	// Methods
 	
 	/**
@@ -139,6 +179,7 @@ class World
 				throw new Error('Error fetching world.');
 			}
 			
+			// World loaded successfully
 			return response.json();
 			
 		})
@@ -153,8 +194,10 @@ class World
 			}
 			catch (error)
 			{
+				
 				// Error loading world
 				console.error("Error loading world: ", error);
+				
 			}
 			
 		})
@@ -176,7 +219,7 @@ class World
 	{
 		
 		// Initialize a three.js object loader to convert JSON objects to valid three.js objects
-		let loader = new THREE.ObjectLoader();
+		let loader = new CustomObjectLoader();
 		
 		// Initialize a new world
 		let world = new World();
@@ -190,30 +233,81 @@ class World
 		{
 			world.player_position = new THREE.Vector3(json.player_position.x, json.player_position.y, json.player_position.z);
 		}
+		if (json.player_rotation)
+		{
+			world.player_rotation = new THREE.Euler(json.player_rotation._x, json.player_rotation._y, json.player_rotation._z, json.player_rotation._order);
+		}
 		
-		// Get world objects (including non-outlined objects) and terrain
-		if (json.objects)
-		{
-			world.objects = json.objects.map(meshJSON => {
-				return loader.parse(meshJSON);
-			});
-		}
-		if (json.objects_no_outline)
-		{
-			world.objects_no_outline = json.objects_no_outline.map(meshJSON => {
-				return loader.parse(meshJSON);
-			});
-		}
+		// Get world terrain and apply transformations
 		if (json.terrain)
 		{
-			world.terrain = json.terrain.map(meshJSON => {
-				return loader.parse(meshJSON);
+			world.terrain = json.terrain.map(mesh_json => {
+				let mesh = loader.parse(mesh_json);
+				if (mesh_json.position)
+				{
+					mesh.position.fromArray(mesh_json.position);
+				}
+				if (mesh_json.rotation)
+				{
+					mesh.rotation.set(mesh_json.rotation.x, mesh_json.rotation.y, mesh_json.rotation.z, mesh_json.rotation.order);
+				}
+				if (mesh_json.scale)
+				{
+					mesh.scale.fromArray(mesh_json.scale);
+				}
+				mesh.updateMatrix();
+				return mesh;
+			});
+		}
+		
+		// Get world objects and apply transformations
+		if (json.objects)
+		{
+			world.objects = json.objects.map(mesh_json => {
+				let mesh = loader.parse(mesh_json);
+				if (mesh_json.position)
+				{
+					mesh.position.fromArray(mesh_json.position);
+				}
+				if (mesh_json.rotation)
+				{
+					mesh.rotation.set(mesh_json.rotation.x, mesh_json.rotation.y, mesh_json.rotation.z, mesh_json.rotation.order);
+				}
+				if (mesh_json.scale)
+				{
+					mesh.scale.fromArray(mesh_json.scale);
+				}
+				mesh.updateMatrix();
+				return mesh;
+			});
+		}
+		
+		// Get non-outlined world objects and apply transformations
+		if (json.objects_no_outline)
+		{
+			world.objects_no_outline = json.objects_no_outline.map(mesh_json => {
+				let mesh = loader.parse(mesh_json);
+				if (mesh_json.position)
+				{
+					mesh.position.fromArray(mesh_json.position);
+				}
+				if (mesh_json.rotation)
+				{
+					mesh.rotation.set(mesh_json.rotation.x, mesh_json.rotation.y, mesh_json.rotation.z, mesh_json.rotation.order);
+				}
+				if (mesh_json.scale)
+				{
+					mesh.scale.fromArray(mesh_json.scale);
+				}
+				mesh.updateMatrix();
+				return mesh;
 			});
 		}
 		
 		// Add all world objects to the scene
 		for (let i = 0; i < world.all_objects_and_terrain.length; i++)
 		{
+			world.all_objects_and_terrain[i].updateMatrix();
 			world.scene.add(world.all_objects_and_terrain[i]);
 		}
 		

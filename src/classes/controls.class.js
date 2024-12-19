@@ -1,6 +1,6 @@
 // three.js Imports
 import { PointerLockControls } from '../libraries/threejs/modules/PointerLockControls.js';
-import { TransformControls } from '../libraries/threejs/modules/TransformControls.js';
+import { CustomTransformControls } from '../libraries/threejs/modules/CustomTransformControls.js';
 
 // Static Class Imports
 import Debug from './debug.class.js';
@@ -40,7 +40,7 @@ class Controls
 		this.is_mouse_locked = false;
 		
 		// three.js transform controls
-		this.transform_controls = new TransformControls(player.camera, renderer.domElement);
+		this.transform_controls = new CustomTransformControls(player.camera, renderer.domElement);
 		this.transform_controls.setMode('translate');
 		this.transform_controls.translationSnap = 0.1;
 		this.transform_controls.scaleSnap = 0.25;
@@ -201,7 +201,7 @@ class Controls
 		};
 		
 		/**
-		 * TransformControls mouse dragging changed event, used by three.js TransformControls when the mouse is beginning or ending dragging the gizmo.
+		 * CustomTransformControls mouse dragging changed event, used by three.js CustomTransformControls when the mouse is beginning or ending dragging the gizmo.
 		 */
 		this.onTransformControlsDraggingChanged = function(event, player)
 		{
@@ -227,7 +227,7 @@ class Controls
 		};
 		
 		/**
-		 * TransformControls object changed event, used by three.js TransformControls when the gizmo has modified the object its attached to.
+		 * CustomTransformControls object changed event, used by three.js CustomTransformControls when the gizmo has modified the object its attached to.
 		 */
 		this.onTransformControlsObjectChanged = function(event, player)
 		{

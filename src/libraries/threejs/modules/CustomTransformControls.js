@@ -38,7 +38,7 @@ const _mouseDownEvent = { type: 'mouseDown' };
 const _mouseUpEvent = { type: 'mouseUp', mode: null };
 const _objectChangeEvent = { type: 'objectChange' };
 
-class TransformControls extends Object3D {
+class CustomTransformControls extends Object3D {
 
 	constructor( camera, domElement ) {
 
@@ -46,7 +46,7 @@ class TransformControls extends Object3D {
 
 		if ( domElement === undefined ) {
 
-			console.warn( 'THREE.TransformControls: The second parameter "domElement" is now mandatory.' );
+			console.warn( 'THREE.CustomTransformControls: The second parameter "domElement" is now mandatory.' );
 			domElement = document;
 
 		}
@@ -54,11 +54,11 @@ class TransformControls extends Object3D {
 		this.visible = false;
 		this.domElement = domElement;
 
-		const _gizmo = new TransformControlsGizmo();
+		const _gizmo = new CustomTransformControlsGizmo();
 		this._gizmo = _gizmo;
 		this.add( _gizmo );
 
-		const _plane = new TransformControlsPlane();
+		const _plane = new CustomTransformControlsPlane();
 		this._plane = _plane;
 		this.add( _plane );
 
@@ -176,7 +176,7 @@ class TransformControls extends Object3D {
 
 			if ( this.object.parent === null ) {
 
-				console.error( 'TransformControls: The attached 3D object must be a part of the scene graph.' );
+				console.error( 'CustomTransformControls: The attached 3D object must be a part of the scene graph.' );
 
 			} else {
 
@@ -624,13 +624,13 @@ class TransformControls extends Object3D {
 
 	update() {
 
-		console.warn( 'THREE.TransformControls: update function has no more functionality and therefore has been deprecated.' );
+		console.warn( 'THREE.CustomTransformControls: update function has no more functionality and therefore has been deprecated.' );
 
 	}
 
 }
 
-TransformControls.prototype.isTransformControls = true;
+CustomTransformControls.prototype.isTransformControls = true;
 
 function intersectObjectWithRay( object, raycaster, includeInvisible ) {
 
@@ -671,13 +671,13 @@ const _v1 = new Vector3();
 const _v2 = new Vector3();
 const _v3 = new Vector3();
 
-class TransformControlsGizmo extends Object3D {
+class CustomTransformControlsGizmo extends Object3D {
 
 	constructor() {
 
 		super();
 
-		this.type = 'TransformControlsGizmo';
+		this.type = 'CustomTransformControlsGizmo';
 
 		// shared materials
 
@@ -1499,11 +1499,11 @@ class TransformControlsGizmo extends Object3D {
 
 }
 
-TransformControlsGizmo.prototype.isTransformControlsGizmo = true;
+CustomTransformControlsGizmo.prototype.isTransformControlsGizmo = true;
 
 //
 
-class TransformControlsPlane extends Mesh {
+class CustomTransformControlsPlane extends Mesh {
 
 	constructor() {
 
@@ -1512,7 +1512,7 @@ class TransformControlsPlane extends Mesh {
 			new MeshBasicMaterial( { visible: false, wireframe: true, side: DoubleSide, transparent: true, opacity: 0.1, toneMapped: false } )
 		);
 
-		this.type = 'TransformControlsPlane';
+		this.type = 'CustomTransformControlsPlane';
 
 	}
 
@@ -1594,6 +1594,6 @@ class TransformControlsPlane extends Mesh {
 
 }
 
-TransformControlsPlane.prototype.isTransformControlsPlane = true;
+CustomTransformControlsPlane.prototype.isTransformControlsPlane = true;
 
-export { TransformControls, TransformControlsGizmo, TransformControlsPlane };
+export { CustomTransformControls, CustomTransformControlsGizmo, CustomTransformControlsPlane };
