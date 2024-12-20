@@ -258,6 +258,12 @@ class Controls
 				return;
 			}
 			
+			// Prevent Ctrl-key browser events when the mouse is locked		
+			if (player.controls.is_mouse_locked)
+			{
+				event.preventDefault();
+			}
+			
 			// Handle key press event
 			switch (event.code)
 			{
@@ -280,7 +286,7 @@ class Controls
 					player.controls.modifier_shift_left_pressed = true;
 					break;
 				case 'ControlLeft':
-					player.controls.is_control_left_pressed = true;
+					player.controls.modifier_control_left_pressed = true;
 					break;
 			}
 			
@@ -329,7 +335,7 @@ class Controls
 					}
 					break;
 				case 'KeyC':
-					if (player.controls.is_control_left_pressed)
+					if (player.controls.modifier_shift_left_pressed)
 					{
 						// ShiftLeft + KeyC
 						
@@ -350,7 +356,7 @@ class Controls
 					}
 					break;
 				case 'KeyX':
-					if (player.controls.is_control_left_pressed)
+					if (player.controls.modifier_shift_left_pressed)
 					{
 						// ShiftLeft + KeyX
 						
@@ -371,7 +377,7 @@ class Controls
 					}
 					break;
 				case 'KeyV':
-					if (player.controls.is_control_left_pressed)
+					if (player.controls.modifier_shift_left_pressed)
 					{
 						// ShiftLeft + KeyV
 						
@@ -392,7 +398,7 @@ class Controls
 					}
 					break;
 				case 'KeyZ':
-					if (player.controls.is_control_left_pressed)
+					if (player.controls.modifier_shift_left_pressed)
 					{
 						// ShiftLeft + KeyZ
 						
@@ -433,7 +439,7 @@ class Controls
 					player.controls.modifier_shift_left_pressed = false;
 					break;
 				case 'ControlLeft':
-					player.controls.is_control_left_pressed = false;
+					player.controls.modifier_control_left_pressed = false;
 					break;
 			}
 			

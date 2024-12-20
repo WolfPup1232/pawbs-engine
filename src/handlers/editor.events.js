@@ -79,59 +79,34 @@ export default function initializeEditorUIEventHandlers(world, player)
 		//#endregion
 		
 		
-		//#region [Tools]
+		//#region [Camera Modes]
 			
 			/**
-			 * Editor tool type selected checkbox change event.
+			 * Editor walk mode button click event.
 			 */
-			$('input[type="checkbox"][name="editor-tool-types"]').change(function()
+			$("#editor-camera-walk").click(function()
 			{
-					
-				// Get editor tool type selected checkbox value
+				
+				// Get editor camera mode selected checkbox value
 				let selected_value = $(this).val();
 				
-				// Hide all editor tools
-				$("#editor-spawn-tool").hide();
-				
-				// Spawn Tool
-				if (selected_value === 'spawn')
+				// Walk Mode
+				if (selected_value === 'walk')
 				{
 					
-					// Uncheck other tools
-					$("#editor-tool-cinematics").prop("checked", false);
-					
-					// Show/hide spawn tool
-					if ($("#editor-tool-spawn").is(':checked'))
+					// Enable/disable walk mode
+					if ($(this).is(':checked'))
 					{
 						
-						// Show spawn tool
-						$("#editor-spawn-tool").show();
-						
-						// Update object spawn tool UI
-						Editor.updateSpawnToolUI(world, player);
+						// Walk mode enabled
+						player.noclip = false;
 						
 					}
 					else
 					{
 						
-						// Disable spawn tool animations
-						Assets.objectThumbnailsStopAnimating();
-						
-					}
-					
-					
-				} // Cinematics Tool
-				else if (selected_value === 'cinematics')
-				{
-					
-					// Uncheck other tools
-					$("#editor-tool-spawn").prop("checked", false);
-					
-					// Show/hide cinematics tool
-					if ($("#editor-tool-cinematics").is(':checked'))
-					{
-						
-						// Do something.
+						// Walk mode disabled
+						player.noclip = true;
 						
 					}
 					
@@ -187,6 +162,70 @@ export default function initializeEditorUIEventHandlers(world, player)
 				
 				// Update the editor selected objects UI
 				Editor.updateSelectedObjectsUI(player);
+				
+			});
+			
+		//#endregion
+		
+		
+		//#region [Tools]
+			
+			/**
+			 * Editor tool type selected checkbox change event.
+			 */
+			$('input[type="checkbox"][name="editor-tool-types"]').change(function()
+			{
+					
+				// Get editor tool type selected checkbox value
+				let selected_value = $(this).val();
+				
+				// Hide all editor tools
+				$("#editor-spawn-tool").hide();
+				Assets.objectThumbnailsStopAnimating();
+				
+				// Spawn Tool
+				if (selected_value === 'spawn')
+				{
+					
+					// Uncheck other tools
+					$("#editor-tool-cinematics").prop("checked", false);
+					
+					// Show/hide spawn tool
+					if ($(this).is(':checked'))
+					{
+						
+						// Show spawn tool
+						$("#editor-spawn-tool").show();
+						
+						// Update object spawn tool UI
+						Editor.updateSpawnToolUI(world, player);
+						
+					}
+					else
+					{
+						
+						// Disable spawn tool animations
+						Assets.objectThumbnailsStopAnimating();
+						
+					}
+					
+					
+				} // Cinematics Tool
+				else if (selected_value === 'cinematics')
+				{
+					
+					// Uncheck other tools
+					$("#editor-tool-spawn").prop("checked", false);
+					
+					// Show/hide cinematics tool
+					if ($(this).is(':checked'))
+					{
+						
+						// Do something.
+						
+					}
+					
+				}
 				
 			});
 			

@@ -864,8 +864,8 @@ class Editor
 				// Remove the new selected objects from the world in preparation to add it to the selected objects group
 				world.removeObject(new_selected_object);
 				
-				// Select multiple objects if shift key is held down...
-				if (player.controls.modifier_shift_left_pressed)
+				// Select multiple objects if shift or control key is held down...
+				if (player.controls.modifier_shift_left_pressed || player.controls.modifier_control_left_pressed)
 				{
 					
 					// Remove the selected objects group from the world because it may already be in it if multiple objects are being selected

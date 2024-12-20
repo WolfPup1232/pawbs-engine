@@ -50,6 +50,12 @@ class Player
 		
 		// Player Jumping
 		
+		// Whether or not the player has unrestricted free-flying camera movement
+		this.noclip = false;
+		
+		// The player's noclip movement speed
+		this.noclip_speed = 0.175;
+		
 		// Whether or not the player is currently jumping
 		this.is_jumping = false;
 		
@@ -202,43 +208,80 @@ class Player
 		if (this.controls.is_player_moving_left) this.direction.add(left);
 		this.direction.normalize();
 		
-		// Update player velocity based on direction
-		this.velocity.x = this.direction.x * this.speed;
-		this.velocity.z = this.direction.z * this.speed;
+		// Update player velocity based on direction and speed (or noclip speed if it's enabled)
+		this.velocity.x = this.direction.x * (this.noclip ? this.noclip_speed : this.speed);
+		this.velocity.z = this.direction.z * (this.noclip ? this.noclip_speed : this.speed);
 		
 		
 		// Player Steps/Stairs/Ramp Movement
 		
 		// Update player movement over steps/stairs/ramps in all movement directions
-		if (this.controls.is_player_moving_forward) this.stepInDirection(world, forward);
-		if (this.controls.is_player_moving_backward) this.stepInDirection(world, backward);
-		if (this.controls.is_player_moving_right) this.stepInDirection(world, right);
-		if (this.controls.is_player_moving_left) this.stepInDirection(world, left);
+		if (!this.noclip)
+		{
+			if (this.controls.is_player_moving_forward) this.stepInDirection(world, forward);
+			if (this.controls.is_player_moving_backward) this.stepInDirection(world, backward);
+			if (this.controls.is_player_moving_right) this.stepInDirection(world, right);
+			if (this.controls.is_player_moving_left) this.stepInDirection(world, left);
+		}
 		
 		
 		// Player Jumping
 		
-		// If the player is already in the air over any world object...
-		if (this.position.y > (world.detectObjectSurfaceBelowPlayer(this) + this.height))
+		// If noclip is enabled...
+		if (this.noclip)
 		{
 			
-			// Make the player fall downward
-			this.jump_velocity -= this.jump_gravity;
+			// Reset player jump velocity
+			this.jump_velocity = 0;
+			
+			// If player is jumping...
+			if (this.controls.is_player_jumping)
+			{
+				
+				// Make the player fly upward
+				this.jump_velocity = this.noclip_speed;
+				
+				
+			} // Otherwise, if shift key is being pressed...
+			else if (this.controls.modifier_shift_left_pressed)
+			{
+				
+				// Make the player fly downward
+				this.jump_velocity = -this.noclip_speed;
+				
+			}
 			
 			
-		} // Otherwise, if the player is not yet in the air...
+		} // Otherwise, apply regular gravity...
 		else
 		{
 			
-			// Reset player jump
-			this.jump_velocity = 0;
-			this.is_jumping = false;
-			
-			// Detect player jumping
-			if (this.controls.is_player_jumping)
+			// If the player is already in the air over any world object, and noclip is disabled...
+			if (this.position.y > (world.detectObjectSurfaceBelowPlayer(this) + this.height))
 			{
-				this.is_jumping = true;
-				this.jump_velocity = this.jump_height;
+				
+				// Make the player fall downward
+				this.jump_velocity -= this.jump_gravity;
+				
+				
+			} // Otherwise, if the player is not yet in the air...
+			else
+			{
+				
+				// Reset player jump
+				this.jump_velocity = 0;
+				this.is_jumping = false;
+				
+				// If player is jumping...
+				if (this.controls.is_player_jumping)
+				{
+					
+					// Set player jumping flag and jump velocity
+					this.is_jumping = true;
+					this.jump_velocity = this.jump_height;
+					
+				}
+				
 			}
 			
 		}
@@ -253,7 +296,7 @@ class Player
 		const intended_position = this.position.clone().add(this.velocity.clone());
 		
 		// Detect collision between the player's intended position and any collidable objects in the world
-		if (!world.detectPlayerCollision(this, intended_position))
+		if (!world.detectPlayerCollision(this, intended_position) || this.noclip)
 		{
 			
 			// No collision was detected, move the player to the intended position
