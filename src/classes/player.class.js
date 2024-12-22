@@ -1,8 +1,8 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
 
-// Class Imports
-import Controls from './controls.class.js';
+// Static Class Imports
+import Game from './game.class.js';
 
 /**
  * A player in the game world.
@@ -12,13 +12,8 @@ class Player
 	
 	/**
 	 * Initializes a new player for use in the current game world.
-	 *
-	 * @param {Window} window_interface A reference to the web browser window, which contains the DOM document.
-	 * @param {Document} dom_document A reference to the DOM document within the web browser window.
-	 * @param {THREE.WebGLRenderer} renderer A reference to the three.js renderer element.
-	 * @param {World} world The current game world.
 	 */
-	constructor(window_interface, dom_document, renderer, world)
+	constructor()
 	{
 		
 		// Class Declarations/Initialization
@@ -75,7 +70,7 @@ class Player
 		// three.js Camera
 		
 		// The player is actually just this camera
-		this.camera = new THREE.PerspectiveCamera(75, window_interface.innerWidth / window_interface.innerHeight, 0.1, 1000);
+		this.camera = new THREE.PerspectiveCamera(75, Game.window_interface.innerWidth / Game.window_interface.innerHeight, 0.1, 1000);
 		this.camera.name = "player";
 		
 		// Set the player's height
@@ -86,12 +81,6 @@ class Player
 		
 		// Initialize new raycaster to be re-used for all raycasting
 		this.raycaster = new THREE.Raycaster();
-		
-		
-		// Player Controls
-		
-		// Initialize player's keyboard/mouse controls
-		this.controls = new Controls(dom_document, renderer, world, this);
 		
 	}
 	
@@ -186,10 +175,8 @@ class Player
 	
 	/**
 	 * Updates the player in the game world (movement, collision detection, etc).
-	 *
-	 * @param {World} world The current game world.
 	 */
-	update(world)
+	update()
 	{
 		
 		// Player Movement
@@ -218,10 +205,10 @@ class Player
 		// Update player movement over steps/stairs/ramps in all movement directions
 		if (!this.noclip)
 		{
-			if (this.controls.is_player_moving_forward) this.stepInDirection(world, forward);
-			if (this.controls.is_player_moving_backward) this.stepInDirection(world, backward);
-			if (this.controls.is_player_moving_right) this.stepInDirection(world, right);
-			if (this.controls.is_player_moving_left) this.stepInDirection(world, left);
+			if (this.controls.is_player_moving_forward) this.stepInDirection(forward);
+			if (this.controls.is_player_moving_backward) this.stepInDirection(backward);
+			if (this.controls.is_player_moving_right) this.stepInDirection(right);
+			if (this.controls.is_player_moving_left) this.stepInDirection(left);
 		}
 		
 		
@@ -257,7 +244,7 @@ class Player
 		{
 			
 			// If the player is already in the air over any world object, and noclip is disabled...
-			if (this.position.y > (world.detectObjectSurfaceBelowPlayer(this) + this.height))
+			if (this.position.y > (Game.world.detectObjectSurfaceBelowPlayer() + this.height))
 			{
 				
 				// Make the player fall downward
@@ -296,7 +283,7 @@ class Player
 		const intended_position = this.position.clone().add(this.velocity.clone());
 		
 		// Detect collision between the player's intended position and any collidable objects in the world
-		if (!world.detectPlayerCollision(this, intended_position) || this.noclip)
+		if (!Game.world.detectPlayerCollision(this, intended_position) || this.noclip)
 		{
 			
 			// No collision was detected, move the player to the intended position
@@ -308,14 +295,14 @@ class Player
 		// World Object Movement (in direct relation to the player's movement)
 		
 		// Update billboard object rotations
-		world.updateBillboards(this);
+		Game.world.updateBillboards(this);
 		
 		
 		// Player Movement Cont'd
 		
 		// Track the player's last known position and rotation in the world
-		world.player_position = this.position;
-		world.player_rotation = this.rotation;
+		Game.world.player_position = this.position;
+		Game.world.player_rotation = this.rotation;
 		
 		// Reduce player's velocity (smooths player's movement)
 		this.velocity.multiplyScalar(0.95);
@@ -325,14 +312,13 @@ class Player
 	/**
 	 * Updates player movement over steps or stairs and ramps.
 	 *
-	 * @param {World} world The current game world.
 	 * @param {THREE.Vector3} direction The direction in which to check for steps/stairs/ramps to traverse.
 	 */
-	stepInDirection(world, direction)
+	stepInDirection(direction)
 	{
 		
 		// Get the position the player's feet, plus half a stair's height, to cast a ray from
-		const player_feet_ray_position = new THREE.Vector3(this.position.x, (this.position.y - this.height) + (world.stair_height / 2), this.position.z);
+		const player_feet_ray_position = new THREE.Vector3(this.position.x, (this.position.y - this.height) + (Game.world.stair_height / 2), this.position.z);
 		
 		// Cast a ray in the specified direction from the ray's calculated position
 		this.raycaster.set(player_feet_ray_position, direction.clone().setY(0).normalize());
@@ -340,7 +326,7 @@ class Player
 		this.raycaster.far = this.stair_check_distance;
 		
 		// Check intersections with all world objects
-		const intersects = this.raycaster.intersectObjects(world.all_objects_and_terrain, true);
+		const intersects = this.raycaster.intersectObjects(Game.world.all_objects, true);
 		if (intersects.length > 0)
 		{
 			
@@ -353,10 +339,10 @@ class Player
 			{
 				
 				// Calculate the difference in height between where the player's feet are and the closest object's height
-				const height_difference = world.detectPlaneSurfaceAtPoint(new THREE.Vector3(this.position.x, 0, this.position.z), closest_object) - (this.position.y - this.height);
+				const height_difference = Game.world.detectPlaneSurfaceAtPoint(new THREE.Vector3(this.position.x, 0, this.position.z), closest_object) - (this.position.y - this.height);
 				
 				// If the height difference implies the object is a step or ramp, step the player up onto the object
-				if (height_difference > 0 && height_difference <= world.stair_height)
+				if (height_difference > 0 && height_difference <= Game.world.stair_height)
 				{
 					this.position.y += height_difference;
 				}
@@ -388,7 +374,7 @@ class Player
 				const height_difference = (closest_object_position.y + (closest_object_height / 2)) - (this.position.y - this.height);
 				
 				// If the height difference implies the object is a step, step the player up onto the object
-				if (height_difference > 0 && height_difference <= world.stair_height)
+				if (height_difference > 0 && height_difference <= Game.world.stair_height)
 				{
 					this.position.y += height_difference;
 				}

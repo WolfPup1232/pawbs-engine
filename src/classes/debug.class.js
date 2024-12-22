@@ -1,3 +1,6 @@
+// Static Class Imports
+import Game from './game.class.js';
+
 /**
 * The in-game debugger.
 */
@@ -57,34 +60,28 @@ class Debug
 	
 	/**
 	* Handles debugger processes that update every frame.
-	*
-	* @param {World} world The game world to debug.
-	* @param {Player} player The player to debug.
 	*/
-	static update(world, player)
+	static update()
 	{
 		
 		// Handle debugger UI output
-		this.output(world, player);
+		this.output();
 		
 	}
 	
 	/**
 	* Handles debugger UI output.
-	*
-	* @param {World} world The game world to debug.
-	* @param {Player} player The player to debug.
 	*/
-	static output(world, player)
+	static output()
 	{
 		
 		// Output debug info to UI
-		$("#debug-text").html("player.position.x    = " + player.position.x + "<br />" + 
-							  "player.position.y    = " + player.position.y + "<br />" + 
-							  "player.position.z    = " + player.position.z + "<br />" + 
-							  "player.controls.is_mouse_left_down    = " + player.controls.is_mouse_left_down + "<br />" + 
-							  "player.controls.is_mouse_dragging     = " + player.controls.is_mouse_dragging + "<br />" +
-							  "player.controls.transform_controls.dragging    = " + player.controls.transform_controls.dragging + "<br />");
+		$("#debug-text").html("player.position.x    = " + Game.player.position.x + "<br />" + 
+							  "player.position.y    = " + Game.player.position.y + "<br />" + 
+							  "player.position.z    = " + Game.player.position.z + "<br />" + 
+							  "player.controls.is_mouse_left_down    = " + Game.player.controls.is_mouse_left_down + "<br />" + 
+							  "player.controls.is_mouse_dragging     = " + Game.player.controls.is_mouse_dragging + "<br />" +
+							  "player.controls.transform_controls.dragging    = " + Game.player.controls.transform_controls.dragging + "<br />");
 		
 	}
 	

@@ -2,12 +2,10 @@
 import * as THREE from '../libraries/threejs/three.js';
 
 // Class Imports
-import World from './world.class.js';
-import Player from './player.class.js';
-import Controls from './controls.class.js';
 import Billboard from './billboard.class.js';
 
 // Static Class Imports
+import Game from './game.class.js';
 import Assets from './assets.class.js';
 import Shaders from './shaders.class.js';
 import Debug from './debug.class.js';
@@ -23,6 +21,9 @@ class Editor
 	// Editor enabled/disabled flag
 	static enabled = false;
 	
+	
+	// Selection modes
+	
 	// Select objects flag
 	static select_objects = true;
 	
@@ -31,6 +32,36 @@ class Editor
 	
 	// Select object vertices
 	static select_vertices = false;
+	
+	// Select terrain flag
+	static select_terrain = false;
+	
+	
+	// Tool modes
+	
+	// Spawn tool flag
+	static tool_spawn = false;
+	
+	// NPCs tool flag
+	static tool_npcs = false;
+	
+	// Cinematics tool flag
+	static tool_cinematics = false;
+	
+	
+	// Spawn tool modes
+	
+	// Spawn objects flag
+	static spawn_objects = true;
+	
+	// Spawn NPCs flag
+	static spawn_npcs = false;
+	
+	// Spawn walls flag
+	static spawn_walls = false;
+	
+	// Spawn terrain flag
+	static spawn_terrain = false;
 	
 	
 	// Highlighted objects
@@ -219,14 +250,12 @@ class Editor
 	
 	/**
 	 * Handles player left mouse down.
-	 *
-	 * @param {Player} player The player to handle mouse input for.
 	 */
-	static handleLeftMouseDown(event, player)
+	static handleLeftMouseDown(event)
 	{
 		
 		// If the mouse is locked to the renderer...
-		if (player.controls.is_mouse_locked)
+		if (Game.player.controls.is_mouse_locked)
 		{
 			
 			// Prevent shift-clicking from highlighting text
@@ -236,7 +265,7 @@ class Editor
 			}
 			
 			// Handle transform controls mouse down event
-			player.controls.transform_controls.mouseDown(player);
+			Game.player.controls.transform_controls.mouseDown();
 			
 		}
 		
@@ -244,23 +273,20 @@ class Editor
 	
 	/**
 	 * Handles player left mouse up.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player to handle mouse input for.
 	 */
-	static handleLeftMouseUp(world, player)
+	static handleLeftMouseUp()
 	{
 		
 		// If the mouse is locked to the renderer...
-		if (player.controls.is_mouse_locked)
+		if (Game.player.controls.is_mouse_locked)
 		{
 			
 			// If the mouse is currently dragging...
-			if (player.controls.is_mouse_dragging)
+			if (Game.player.controls.is_mouse_dragging)
 			{
 				
 				// Handle transform controls mouse up event
-				player.controls.transform_controls.mouseUp(player);
+				Game.player.controls.transform_controls.mouseUp();
 				
 				
 			} // Otherwise, if the mouse is not currently dragging...
@@ -270,19 +296,19 @@ class Editor
 				// Select the object that the player is facing
 				if (this.select_objects)
 				{
-					this.selectObjects(world, player);
+					this.selectObjects();
 				}
 				
 				// Select the object face that the player is facing
 				if (this.select_faces)
 				{
-					this.selectFace(world, player);
+					this.selectFace();
 				}
 				
 				// Select the object vertex that the player is facing
 				if (this.select_vertices)
 				{
-					this.selectVertex(world, player)
+					this.selectVertex()
 				}
 				
 			}
@@ -303,25 +329,21 @@ class Editor
 	
 	/**
 	 * Handles player right mouse up.
-	 *
-	 * @param {Document} dom_document A reference to the DOM document within the web browser window.
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player to handle mouse input for.
 	 */
-	static handleRightMouseUp(dom_document, world, player)
+	static handleRightMouseUp()
 	{
 		
 		// If the mouse is locked to the renderer...
-		if (player.controls.is_mouse_locked)
+		if (Game.player.controls.is_mouse_locked)
 		{
 			
 			// Unlock the mouse from the renderer
-			player.controls.pointer_lock_controls.unlock();
-			//player.controls.is_mouse_dragging = false;
-			player.controls.transform_controls.dragging = false;
+			Game.player.controls.pointer_lock_controls.unlock();
+			//Game.player.controls.is_mouse_dragging = false;
+			Game.player.controls.transform_controls.dragging = false;
 			
 			// Disable right-click menu
-			$(dom_document).one('contextmenu', function(event)
+			$(Game.dom_document).one('contextmenu', function(event)
 			{
 				event.preventDefault();
 			});
@@ -335,11 +357,8 @@ class Editor
 	
 	/**
 	 * Toggle editor on/off.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static toggle(world, player)
+	static toggle()
 	{
 		
 		// Check if editor is enabled
@@ -350,10 +369,13 @@ class Editor
 			$("#editor").hide();
 			
 			// Reset all highlighted or selected objects, faces, and vertices
-			this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
+			this.resetHighlightedAndSelectedObjectsFacesVertices();
 			
 			// Remove player transform controls from the world
-			world.scene.remove(player.controls.transform_controls);
+			Game.world.scene.remove(Game.player.controls.transform_controls);
+			
+			// Disable noclip
+			Game.player.noclip = false;
 			
 			// Disable editor
 			this.enabled = false;
@@ -366,19 +388,20 @@ class Editor
 			this.enabled = true;
 			
 			// Add player transform controls to the world
-			world.scene.add(player.controls.transform_controls);
+			Game.world.scene.add(Game.player.controls.transform_controls);
 			
 			// Initialize UI elements
-			$("#editor-world-name").val(world.name);
+			$("#editor-world-name").val(Game.world.name);
+			$("#editor-camera-walk").prop("checked", !Game.player.noclip);
 			
 			// Update selected object material colours UI
 			this.updateSelectedObjectMaterialColoursUI();
 			
 			// Update selected object material textures UI
-			this.updateSelectedObjectMaterialTexturesUI(world, player);
+			this.updateSelectedObjectMaterialTexturesUI();
 			
 			// Update object spawn tool UI
-			this.updateSpawnToolUI(world, player);
+			this.updateSpawnToolUI();
 			
 			// Resize UI elements
 			this.resize();
@@ -392,48 +415,45 @@ class Editor
 	
 	/**
 	 * Updates editor processes every frame.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static update(world, player)
+	static update()
 	{
 		
 		// If the player is dragging with the left mouse button...
-		if (player.controls.is_mouse_left_down && player.controls.is_mouse_dragging)
+		if (Game.player.controls.is_mouse_left_down && Game.player.controls.is_mouse_dragging)
 		{
 			
 			// Handle transform controls mouse move event
-			player.controls.transform_controls.mouseMove(player);
+			Game.player.controls.transform_controls.mouseMove();
 			
 			// Update selected object UI elements
-			this.updateSelectedObjectsUI(player);
+			this.updateSelectedObjectsUI();
 			
 		}
 		else
 		{
 			
 			// Handle transform controls mouse hover event
-			player.controls.transform_controls.mouseHover(player);
+			Game.player.controls.transform_controls.mouseHover();
 			
 		}
 		
 		// Update object highlighting
 		if (this.select_objects)
 		{
-			this.highlightObjects(world, player);
+			this.highlightObjects();
 		}
 		
 		// Update object face highlighting
 		if (this.select_faces)
 		{
-			this.highlightFace(world, player);
+			this.highlightFace();
 		}
 		
 		// Update object vertex highlighting
 		if (this.select_vertices)
 		{
-			this.highlightVertices(world, player);
+			this.highlightVertices();
 		}
 		
 	}
@@ -451,21 +471,18 @@ class Editor
 	
 	/**
 	 * Resets the current world using some hard-coded defaults.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static newWorld(world, player)
+	static newWorld()
 	{
 		
 		// Reset all highlighted or selected objects, faces, and vertices
-		this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
+		this.resetHighlightedAndSelectedObjectsFacesVertices();
 		
-		// Remove all objects from the world
-		world.removeAllObjects();
+		// Remove all objects and terrain from the world
+		Game.world.removeAllObjects();
 		
 		// Initialize the world's properties
-		world.name = "";
+		Game.world.name = "";
 		
 		// Initialize default terrain
 		const plane_geometry = new THREE.PlaneGeometry(100, 100);
@@ -475,35 +492,32 @@ class Editor
 		plane.position.y = 0;
 		plane.position.z = 0;
 		plane.name = "plane";
-		world.addTerrain(plane);
+		Game.world.addTerrain(plane);
 		
 		// Initialize default objects
 		const apple = new Billboard(1.5, 1.5, Assets.textures.apple1);
 		apple.position.set(0, 0.75, -5);
 		apple.name = "apple";
-		world.addObject(apple);
+		Game.world.addObject(apple);
 		
 		// Reset the player's position
-		player.position.x = 0;
-		player.position.y = player.height;
-		player.position.z = 0;
+		Game.player.position.x = 0;
+		Game.player.position.y = Game.player.height;
+		Game.player.position.z = 0;
 		
 		// Add player transform controls to the world
-		world.scene.add(player.controls.transform_controls);
+		Game.world.scene.add(Game.player.controls.transform_controls);
 		
 	}
 	
 	/**
 	 * Loads a world from a saved JSON file using an open file dialog.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static loadWorld(world, player)
+	static loadWorld()
 	{
 		
 		// Reset all highlighted or selected objects, faces, and vertices
-		this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
+		this.resetHighlightedAndSelectedObjectsFacesVertices();
 		
 		// Initialize a temporary file input element to trigger an open file dialog
 		let file_input = $('<input type="file" accept=".json" style="display:none;">');
@@ -529,21 +543,21 @@ class Editor
 					let json = JSON.parse(event.target.result);
 					
 					// Load world from JSON file contents
-					world.loadFromJSON(json);
+					Game.world.loadFromJSON(json);
 					
 					// Add player transform controls to the scene
-					world.scene.add(player.controls.transform_controls);
+					Game.world.scene.add(Game.player.controls.transform_controls);
 					
 					// Update player position and rotation
-					player.position.x = world.player_position.x;
-					player.position.y = world.player_position.y;
-					player.position.z = world.player_position.z;
-					player.rotation.x = 0;
-					player.rotation.y = 0;
-					player.rotation.z = 0;
+					Game.player.position.x = Game.world.player_position.x;
+					Game.player.position.y = Game.world.player_position.y;
+					Game.player.position.z = Game.world.player_position.z;
+					Game.player.rotation.x = 0;
+					Game.player.rotation.y = 0;
+					Game.player.rotation.z = 0;
 					
 					// Initialize UI elements
-					$("#editor-world-name").val(world.name);
+					$("#editor-world-name").val(Game.world.name);
 					
 					
 				}
@@ -568,24 +582,21 @@ class Editor
 	
 	/**
 	 * Saves the world to a JSON file using a save file dialog.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static saveWorld(world, player)
+	static saveWorld()
 	{
 		
 		// Reset all highlighted or selected objects, faces, and vertices
-		this.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
+		this.resetHighlightedAndSelectedObjectsFacesVertices();
 	
 		// Create a temporary link element to trigger a save file dialog
 		let link = document.createElement('a');
 		
 		// Serialize the game world's contents to an object URL for download
-		link.href = URL.createObjectURL(new Blob([JSON.stringify(world.toJSON())], { type: "application/json" }));
+		link.href = URL.createObjectURL(new Blob([JSON.stringify(Game.world.toJSON())], { type: "application/json" }));
 		
 		// Set the download file name
-		link.download = world.name + ".json";
+		link.download = Game.world.name + ".json";
 		
 		// Append the link element to the document body
 		document.body.appendChild(link);
@@ -602,20 +613,18 @@ class Editor
 	 * Spawns a new object into the world at the location the player is facing.
 	 *
 	 * @param {THREE.Object3D} obect The object to be spawned.
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static spawn(object, world, player)
+	static spawn(object)
 	{
 		
 		// Cast a ray from the player's position in the direction the player is looking
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = player.raycaster.intersectObjects(world.all_objects_and_terrain, true);
+		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -645,54 +654,108 @@ class Editor
 			object.position.copy(intended_position);
 			
 			// Spawn the object
-			world.addObject(object);
+			this.addObject(object);
 			
 		}
 		
 	}
 	
 	/**
-	 * Resets all highlighted and selected objects, faces, and vertices.
+	 * Gets all world objects according to the object selection type enabled in the editor.
 	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
+	 * @return {array} Returns all world objects by selected type.
 	 */
-	static resetHighlightedAndSelectedObjectsFacesVertices(world, player)
+	static getObjects()
+	{
+		
+		// Return all world objects by selected type
+		if (this.select_terrain)
+		{
+			return Game.world.terrain;
+		}
+		else
+		{
+			return Game.world.objects;
+		}
+		
+	}
+	
+	/**
+	 * Adds the specified object to the world according to the object selection type enabled in the editor.
+	 *
+	 * @param {THREE.Object3D} obect The object to be added to the world.
+	 */
+	static addObject(object)
+	{
+		
+		// Add world object by selected type
+		if (this.select_terrain)
+		{
+			Game.world.addTerrain(object);
+		}
+		else
+		{
+			Game.world.addObject(object);
+		}
+		
+	}
+	
+	/**
+	 * Removes the specified object from the world according to the object selection type enabled in the editor.
+	 *
+	 * @param {THREE.Object3D} obect The object to be removed from the world.
+	 */
+	static removeObject(object)
+	{
+		
+		// Remove world object by selected type
+		if (this.select_terrain)
+		{
+			Game.world.removeTerrain(object);
+		}
+		else
+		{
+			Game.world.removeObject(object);
+		}
+		
+	}
+	
+	/**
+	 * Resets all highlighted and selected objects, faces, and vertices.
+	 */
+	static resetHighlightedAndSelectedObjectsFacesVertices()
 	{
 		
 		// Reset highlighted and selected objects
 		this.resetHighlightedObjects();
-		this.resetSelectedObjects(world, player);
+		this.resetSelectedObjects();
 		
 		// Reset highlighted and selected faces
-		this.resetHighlightedAndSelectedFaces(world, player);
+		this.resetHighlightedAndSelectedFaces();
 		
 		// Reset highlighted and selected vertices
 		this.resetHighlightedVertices();
-		this.resetSelectedVertices(world, player);
+		this.resetSelectedVertices();
 		
 	}
 	
 	/**
 	 * Highlights whichever objects the player is looking at.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static highlightObjects(world, player)
+	static highlightObjects()
 	{
 		
 		// Initialize potential new highlighted objects
 		let new_highlighted_objects = null;
 		
 		// Cast a ray from the player's position in the direction the player is looking
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -800,24 +863,21 @@ class Editor
 	
 	/**
 	 * Selects whichever objects the player is looking at.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static selectObjects(world, player)
+	static selectObjects()
 	{
 		
 		// Detatch transform controls if they're attached to anything
-		player.controls.transform_controls.detach();
+		Game.player.controls.transform_controls.detach();
 		
 		// Cast a ray from the player's position in the direction the player is looking
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -862,14 +922,14 @@ class Editor
 				}
 				
 				// Remove the new selected objects from the world in preparation to add it to the selected objects group
-				world.removeObject(new_selected_object);
+				this.removeObject(new_selected_object);
 				
 				// Select multiple objects if shift or control key is held down...
-				if (player.controls.modifier_shift_left_pressed || player.controls.modifier_control_left_pressed)
+				if (Game.player.controls.modifier_shift_left_pressed || Game.player.controls.modifier_control_left_pressed)
 				{
 					
 					// Remove the selected objects group from the world because it may already be in it if multiple objects are being selected
-					world.removeObject(this.selected_objects);
+					this.removeObject(this.selected_objects);
 					
 					
 				} // Otherwise, if only one object is being selected...
@@ -877,7 +937,7 @@ class Editor
 				{
 					
 					// Reset the selected objects if only one object is being selected
-					this.resetSelectedObjects(world, player);
+					this.resetSelectedObjects();
 					
 				}
 				
@@ -904,13 +964,13 @@ class Editor
 				this.selected_objects.add(new_selected_object);
 				
 				// Add (or re-add) the selected object group back to the world
-				world.addObject(this.selected_objects);
+				this.addObject(this.selected_objects);
 				
 				// Attach transform controls to the selected objects group
-				player.controls.transform_controls.attach(this.selected_objects);
+				Game.player.controls.transform_controls.attach(this.selected_objects);
 				
 				// Update selected objects UI
-				this.updateSelectedObjectsUI(player);
+				this.updateSelectedObjectsUI();
 				
 				
 			} // Otherwise, if the new selected object is the same as the current selected object...
@@ -918,7 +978,7 @@ class Editor
 			{
 				
 				// Reset the selected objects
-				this.resetSelectedObjects(world, player);
+				this.resetSelectedObjects();
 				
 			}
 			
@@ -928,7 +988,7 @@ class Editor
 		{
 			
 			// Reset the selected objects
-			this.resetSelectedObjects(world, player);
+			this.resetSelectedObjects();
 			
 		}
 		
@@ -936,11 +996,8 @@ class Editor
 	
 	/**
 	 * Resets the selected objects.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static resetSelectedObjects(world, player)
+	static resetSelectedObjects()
 	{
 		
 		// If any object is selected...
@@ -948,7 +1005,7 @@ class Editor
 		{
 			
 			// Detatch transform controls if they're attached to anything
-			player.controls.transform_controls.detach();
+			Game.player.controls.transform_controls.detach();
 			
 			// Reset selected object's materials
 			this.selected_objects.traverse((child) => {
@@ -963,7 +1020,7 @@ class Editor
 			});
 			
 			// Remove the selected objects from the world to re-add them to the world outside of the selected objects group
-			world.removeObject(this.selected_objects);
+			this.removeObject(this.selected_objects);
 			
 			// Prepare the selected objects to be deselected by iterating through the selected objects group's children
 			let objects_to_deselect = [];
@@ -1006,7 +1063,7 @@ class Editor
 				this.selected_objects.remove(selected_object);
 				
 				// Re-add the child to the world
-				world.addObject(selected_object);
+				this.addObject(selected_object);
 				
 			}
 			
@@ -1014,7 +1071,7 @@ class Editor
 			this.selected_objects = new THREE.Group();
 			
 			// Update selected objects UI
-			this.updateSelectedObjectsUI(player);
+			this.updateSelectedObjectsUI();
 			
 		}
 		
@@ -1024,9 +1081,8 @@ class Editor
 	 * Saves the selected objects to a JSON file using a save file dialog.
 	 *
 	 * @param {string} prefab_name The name of the prefab to be saved.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static saveSelectedObjects(prefab_name, player)
+	static saveSelectedObjects(prefab_name)
 	{
 		
 		// If any object is selected...
@@ -1037,7 +1093,7 @@ class Editor
 			let selected_objects = this.selected_objects.deepClone();
 			
 			// Detatch transform controls if they're attached to anything
-			player.controls.transform_controls.detach();
+			Game.player.controls.transform_controls.detach();
 			
 			// Reset selected object's materials
 			selected_objects.traverse((child) => {
@@ -1104,18 +1160,15 @@ class Editor
 	
 	/**
 	 * Cuts the selected objects.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static cutSelectedObjects(world, player)
+	static cutSelectedObjects()
 	{
 		
 		// Detatch transform controls
-		player.controls.transform_controls.detach();
+		Game.player.controls.transform_controls.detach();
 		
 		// Remove selected objects from the world
-		world.removeObject(this.selected_objects);
+		this.removeObject(this.selected_objects);
 		
 		// Copy the selected objects to the clipboard
 		this.clipboard_objects = this.selected_objects.deepClone();
@@ -1124,7 +1177,7 @@ class Editor
 		this.selected_objects = new THREE.Group();
 		
 		// Update selected object UI
-		this.updateSelectedObjectsUI(player);
+		this.updateSelectedObjectsUI(Game.player);
 		
 	}
 	
@@ -1141,38 +1194,32 @@ class Editor
 	
 	/**
 	 * Pastes the clipboard objects.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static pasteClipboardObjects(world, player)
+	static pasteClipboardObjects()
 	{
 		
 		// Reset the selected objects
-		this.resetSelectedObjects(world, player);
+		this.resetSelectedObjects();
 		
 		// Copy the selected objects to the clipboard
 		this.selected_objects = this.clipboard_objects.deepClone();
 		
 		// Re-add the group back to the world
-		world.addObject(this.selected_objects);
+		this.addObject(this.selected_objects);
 		this.selected_objects.updateMatrixWorld();
 		
 		// Attach transform controls to new selected object
-		player.controls.transform_controls.attach(this.selected_objects);
+		Game.player.controls.transform_controls.attach(this.selected_objects);
 		
 		// Update selected object UI
-		this.updateSelectedObjectsUI(player);
+		this.updateSelectedObjectsUI();
 		
 	}
 	
 	/**
 	 * Deletes the selected objects.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static deleteSelectedObjects(world, player)
+	static deleteSelectedObjects()
 	{
 		
 		// If an object is selected...
@@ -1180,22 +1227,16 @@ class Editor
 		{
 			
 			// Detatch transform controls from object
-			player.controls.transform_controls.detach();
-			
-			// Remove each selected object from the world
-			for (let i = 0; i < this.selected_objects.children.length; i++)
-			{
-				world.removeObject(this.selected_objects.children[i]);
-			}
+			Game.player.controls.transform_controls.detach();
 			
 			// Remove the selected objects froup from the world
-			world.removeObject(this.selected_objects);
+			this.removeObject(this.selected_objects);
 			
 			// Reset the selected objects group
 			this.selected_objects = new THREE.Group();
 			
 			// Update selected object UI
-			this.updateSelectedObjectsUI(player);
+			this.updateSelectedObjectsUI();
 			
 		}
 		
@@ -1203,11 +1244,8 @@ class Editor
 	
 	/**
 	 * Groups the selected objects.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static groupSelectedObjects(world, player)
+	static groupSelectedObjects()
 	{
 		
 		// If an object is selected...
@@ -1215,10 +1253,10 @@ class Editor
 		{
 			
 			// Detatch transform controls from object
-			player.controls.transform_controls.detach();
+			Game.player.controls.transform_controls.detach();
 			
 			// Remove the selected objects froup from the world
-			world.removeObject(this.selected_objects);
+			this.removeObject(this.selected_objects);
 			
 			// The new object group will just be a clone of the selected objects group
 			let grouped_objects = this.selected_objects.deepClone();
@@ -1239,13 +1277,13 @@ class Editor
 			this.selected_objects.add(grouped_objects);
 			
 			// Re-add the group back to the world
-			world.addObject(this.selected_objects);
+			this.addObject(this.selected_objects);
 			
 			// Attach transform controls to new selected object
-			player.controls.transform_controls.attach(this.selected_objects);
+			Game.player.controls.transform_controls.attach(this.selected_objects);
 			
 			// Update selected object UI
-			this.updateSelectedObjectsUI(player);
+			this.updateSelectedObjectsUI();
 			
 		}
 		
@@ -1253,11 +1291,8 @@ class Editor
 	
 	/**
 	 * Un-groups the selected objects.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static ungroupSelectedObjects(world, player)
+	static ungroupSelectedObjects()
 	{
 		
 		// If an object is selected...
@@ -1265,10 +1300,10 @@ class Editor
 		{
 			
 			// Detatch transform controls from object
-			player.controls.transform_controls.detach();
+			Game.player.controls.transform_controls.detach();
 			
 			// Remove the selected objects froup from the world
-			world.removeObject(this.selected_objects);
+			this.removeObject(this.selected_objects);
 			
 			// Get the selected objects group's child
 			let selected_object_group = this.selected_objects.children[0];
@@ -1297,13 +1332,13 @@ class Editor
 			this.selected_objects = selected_object_group;
 			
 			// Re-add the child to the world
-			world.addObject(this.selected_objects);
+			this.addObject(this.selected_objects);
 			
 			// Attach transform controls to new selected object
-			player.controls.transform_controls.attach(this.selected_objects);
+			Game.player.controls.transform_controls.attach(this.selected_objects);
 			
 			// Update selected object UI
-			this.updateSelectedObjectsUI(player);
+			this.updateSelectedObjectsUI();
 			
 		}
 		
@@ -1311,21 +1346,18 @@ class Editor
 	
 	/**
 	 * Highlights whichever object face the player is looking at.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static highlightFace(world, player)
+	static highlightFace()
 	{
 		
 		// Cast a ray from the player's position in the direction the player is looking
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -1461,11 +1493,8 @@ class Editor
 	
 	/**
 	 * Selects whichever object face is currently highlighted.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static selectFace(world, player)
+	static selectFace()
 	{
 		
 		// If an object is being hovered over...
@@ -1480,11 +1509,11 @@ class Editor
 			const select_face_group = !(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id));
 
 			// If the player is not holding down the shift key to select multiple faces...
-			if (!player.controls.modifier_shift_left_pressed)
+			if (!Game.player.controls.modifier_shift_left_pressed)
 			{
 				
 				// Deselect all world object's faces...
-				world.all_objects.forEach((object) => {
+				this.getObjects().forEach((object) => {
 					object.traverse((child) => {
 						
 						// If any of the child object's faces are selected...
@@ -1526,7 +1555,7 @@ class Editor
 		{
 			
 			// Deselect all world object's faces...
-			world.all_objects.forEach((object) => {
+			this.getObjects().forEach((object) => {
 				object.traverse((child) => {
 					
 					// If any of the child object's faces are selected...
@@ -1559,14 +1588,12 @@ class Editor
 	
 	/**
 	 * Resets any highlighted or selected object faces.
-	 *
-	 * @param {World} world The current game world.
 	 */
-	static resetHighlightedAndSelectedFaces(world)
+	static resetHighlightedAndSelectedFaces()
 	{
 		
 		// Deselect all world object's faces...
-		world.all_objects.forEach((object) => {
+		this.getObjects().forEach((object) => {
 			object.traverse((child) => {
 				
 				// Convert the object back to indexed geometry if it's allowed to be (only it has no selected or deleted faces)...
@@ -1622,10 +1649,8 @@ class Editor
 	
 	/**
 	 * Deletes the selected object faces.
-	 *
-	 * @param {World} world The current game world.
 	 */
-	static deleteSelectedFaces(world)
+	static deleteSelectedFaces()
 	{
 		
 		// Check if object face selection is enabled...
@@ -1633,7 +1658,7 @@ class Editor
 		{
 			
 			// Iterate through all object looking for selected faces to delete...
-			world.all_objects.forEach((object) => {
+			this.getObjects().forEach((object) => {
 				object.traverse((child) => {
 					
 					// If the child object has any selected faces...
@@ -1836,21 +1861,18 @@ class Editor
 	
 	/**
 	 * Highlights the vertices of whichever object the player is looking at.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static highlightVertices(world, player)
+	static highlightVertices()
 	{
 		
 		// Cast a ray from the player's position in the direction the player is looking
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -2002,22 +2024,19 @@ class Editor
 	
 	/**
 	 * Selects the highlighted vertices object which the player is looking at. If the object is already selected, then selects whichever individual vertex the player is looking at.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static selectVertex(world, player)
+	static selectVertex()
 	{
 		
 		// Cast a ray from the player's position in the direction the player is looking
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
-		player.raycaster.params.Points.threshold = 0.1;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
+		Game.player.raycaster.params.Points.threshold = 0.1;
 		
 		// Check intersections with world objects
-		const intersects = player.raycaster.intersectObjects(world.all_objects, true);
+		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -2051,7 +2070,7 @@ class Editor
 				{
 					
 					// Clear any previous selected vertices object
-					this.resetSelectedVertices(world, player);
+					this.resetSelectedVertices();
 					
 					// Reset the highlighted vertices object (which is what's being intersected here, obviously) but preserve its object indices at positions because we still need them
 					this.resetHighlightedVertices(true);
@@ -2073,13 +2092,13 @@ class Editor
 				{
 					
 					// Cast a ray from the player's position in the direction the player is looking
-					player.raycaster.ray.origin.copy(player.position);
-					player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-					player.raycaster.near = 0;
-					player.raycaster.far = Infinity;
+					Game.player.raycaster.ray.origin.copy(Game.player.position);
+					Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+					Game.player.raycaster.near = 0;
+					Game.player.raycaster.far = Infinity;
 					
 					// Check intersections with any of the selected vertices object's vertices
-					const intersects = player.raycaster.intersectObject(this.selected_vertices_object.userData.vertices);
+					const intersects = Game.player.raycaster.intersectObject(this.selected_vertices_object.userData.vertices);
 					if (intersects.length > 0)
 					{
 						
@@ -2098,7 +2117,7 @@ class Editor
 						{
 							
 							// Clear any previous selected vertices if the shift key isn't being pressed...
-							if (!player.controls.modifier_shift_left_pressed)
+							if (!Game.player.controls.modifier_shift_left_pressed)
 							{
 								this.selected_vertices_object.userData.selected_vertex_indices.clear();
 							}
@@ -2120,7 +2139,7 @@ class Editor
 						{
 							
 							// Remove the selected vertex helper spheres group from the world
-							world.removeObject(this.selected_vertices_object.userData.selected_vertices);
+							this.removeObject(this.selected_vertices_object.userData.selected_vertices);
 							
 							// Re-initialize the group which will contain selected vertex helper spheres
 							this.selected_vertices_object.userData.selected_vertices = new THREE.Group();
@@ -2171,10 +2190,10 @@ class Editor
 							}
 							
 							// Add the selected vertex helper spheres group to the world
-							world.addObject(this.selected_vertices_object.userData.selected_vertices);
+							this.addObject(this.selected_vertices_object.userData.selected_vertices);
 							
 							// Attach the transform controls to the selected vertices group
-							player.controls.transform_controls.attach(this.selected_vertices_object.userData.selected_vertices);
+							Game.player.controls.transform_controls.attach(this.selected_vertices_object.userData.selected_vertices);
 							
 							
 						} // Otherwise, if no vertices were selected...
@@ -2182,7 +2201,7 @@ class Editor
 						{
 							
 							// Reset the selected vertices just in case
-							this.resetSelectedVertices(world, player);
+							this.resetSelectedVertices();
 							
 						}
 						
@@ -2194,7 +2213,7 @@ class Editor
 				{
 					
 					// Reset the selected vertices
-					this.resetSelectedVertices(world, player);
+					this.resetSelectedVertices();
 					
 				}
 				
@@ -2204,7 +2223,7 @@ class Editor
 			{
 				
 				// Reset the selected vertices
-				this.resetSelectedVertices(world, player);
+				this.resetSelectedVertices();
 				
 			}
 			
@@ -2214,7 +2233,7 @@ class Editor
 		{
 			
 			// Reset the selected vertices
-			this.resetSelectedVertices(world, player);
+			this.resetSelectedVertices();
 			
 		}
 		
@@ -2222,11 +2241,8 @@ class Editor
 	
 	/**
 	 * Resets the selected vertices object.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static resetSelectedVertices(world, player)
+	static resetSelectedVertices()
 	{
 		
 		// If vertices are selected...
@@ -2234,13 +2250,13 @@ class Editor
 		{
 			
 			// Detach the transform controls from the selected vertices object
-			player.controls.transform_controls.detach();
+			Game.player.controls.transform_controls.detach();
 			
 			// Remove the set of points from the selected vertices object
 			this.selected_vertices_object.remove(this.selected_vertices_object.userData.vertices);
 			
 			// Remove the helper spheres group from the world
-			world.removeObject(this.selected_vertices_object.userData.selected_vertices);
+			this.removeObject(this.selected_vertices_object.userData.selected_vertices);
 			
 			// Delete everything related to selected vertices from the object's userData
 			delete this.selected_vertices_object.userData.vertices;
@@ -2258,10 +2274,8 @@ class Editor
 	
 	/**
 	 * Updates the initial positions of the selected object vertices for calculating transforms.
-	 *
-	 * @param {Player} player The player editing the game world.
 	 */
-	static updateSelectedVertexInitialPositions(player)
+	static updateSelectedVertexInitialPositions()
 	{
 		
 		// If vertex selection mode is enabled...
@@ -2269,7 +2283,7 @@ class Editor
 		{
 			
 			// If the player's mouse is currently dragging...
-			if (player.controls.is_mouse_dragging)
+			if (Game.player.controls.is_mouse_dragging)
 			{
 				
 				// Get the selected vertices group's initial matrix
@@ -2365,10 +2379,8 @@ class Editor
 	
 	/**
 	 * Updates the main editor UI elements.
-	 *
-	 * @param {Player} player The player editing the game world.
 	 */
-	static updateEditorWorldUI(player)
+	static updateEditorWorldUI()
 	{
 		
 		// Do something.
@@ -2377,10 +2389,8 @@ class Editor
 	
 	/**
 	 * Updates the selected object UI elements.
-	 *
-	 * @param {Player} player The player editing the game world.
 	 */
-	static updateSelectedObjectsUI(player)
+	static updateSelectedObjectsUI()
 	{
 		
 		// Check if object selection mode is enabled and object is selected
@@ -2393,15 +2403,15 @@ class Editor
 			// Update grid snaps
 			if ($("#editor-selected-objects-transform-position-snap-checkbox").is(':checked'))
 			{
-				$("#editor-selected-objects-transform-position-snap").val(player.controls.transform_controls.translationSnap);
+				$("#editor-selected-objects-transform-position-snap").val(Game.player.controls.transform_controls.translationSnap);
 			}
 			if ($("#editor-selected-objects-transform-scale-snap-checkbox").is(':checked'))
 			{
-				$("#editor-selected-objects-transform-scale-snap").val(player.controls.transform_controls.scaleSnap);
+				$("#editor-selected-objects-transform-scale-snap").val(Game.player.controls.transform_controls.scaleSnap);
 			}
 			if ($("#editor-selected-objects-transform-rotation-snap-checkbox").is(':checked'))
 			{
-				$("#editor-selected-objects-transform-rotation-snap").val(player.controls.transform_controls.rotationSnap);
+				$("#editor-selected-objects-transform-rotation-snap").val(Game.player.controls.transform_controls.rotationSnap);
 			}
 			
 			// Update position
@@ -2442,7 +2452,7 @@ class Editor
 			}
 			
 			// If transform controls rotation mode is selected...
-			if (player.controls.transform_controls.mode == "rotate")
+			if (Game.player.controls.transform_controls.mode == "rotate")
 			{
 				
 				// Check if selected object is billboard
@@ -2546,29 +2556,23 @@ class Editor
 	
 	/**
 	 * Updates the selected object material textures UI elements.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static updateSelectedObjectMaterialTexturesUI(world, player)
+	static updateSelectedObjectMaterialTexturesUI()
 	{
 		
 		// Update selected object material textures UI
-		this.updateAssetPickerFolders(Assets.textures, "#editor-selected-objects-materials-texture-select", "#editor-selected-objects-materials-texture-grid", world, player);
+		this.updateAssetPickerFolders(Assets.textures, "#editor-selected-objects-materials-texture-select", "#editor-selected-objects-materials-texture-grid");
 		
 	}
 	
 	/**
 	 * Updates the spawn tool UI elements.
-	 *
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static updateSpawnToolUI(world, player)
+	static updateSpawnToolUI()
 	{
 		
 		// Update object spawn tool prefabs UI
-		this.updateAssetPickerFolders(Assets.objects, "#editor-spawn-category-select", "#editor-spawn-grid", world, player);
+		this.updateAssetPickerFolders(Assets.objects, "#editor-spawn-category-select", "#editor-spawn-panel-objects");
 		
 	}
 	
@@ -2578,10 +2582,8 @@ class Editor
 	 * @param {array} assets The array of assets to generate thumbnails and a folder structure listing with.
 	 * @param {string} dropdown_element The ID of the HTML DOM select element to list the assets folder structure in.
 	 * @param {string} grid_element The ID of the HTML DOM grid element to fill with asset thumbnails.
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static updateAssetPickerFolders(assets, dropdown_element, grid_element, world, player)
+	static updateAssetPickerFolders(assets, dropdown_element, grid_element)
 	{
 		
 		// Get the asset folder select element and add a default option to it
@@ -2668,7 +2670,7 @@ class Editor
 			{
 				
 				// Update the list of textures in the texture picker
-				Editor.updateAssetPicker(Assets.textures, dropdown_element, grid_element, world, player);
+				Editor.updateAssetPicker(Assets.textures, dropdown_element, grid_element);
 				
 			});
 			
@@ -2683,12 +2685,12 @@ class Editor
 				// Stop animating object thumbnails
 				Assets.objectThumbnailsStopAnimating().then(() => {
 					
-					// If spawn tool is enabled...
-					if ($("#editor-tool-spawn").is(':checked'))
+					// If object spawn tool is enabled...
+					if (Editor.tool_spawn && Editor.spawn_objects)
 					{
 						
 						// Update the list of prefab objects in the spawn tool
-						Editor.updateAssetPicker(Assets.objects, dropdown_element, grid_element, world, player);
+						Editor.updateAssetPicker(Assets.objects, dropdown_element, grid_element);
 						
 					}
 					
@@ -2699,7 +2701,7 @@ class Editor
 		}
 		
 		// Update the list of assets in the asset picker
-		this.updateAssetPicker(assets, dropdown_element, grid_element, world, player);
+		this.updateAssetPicker(assets, dropdown_element, grid_element);
 		
 	}
 	
@@ -2709,10 +2711,8 @@ class Editor
 	 * @param {array} assets The array of assets to generate thumbnails and a folder structure listing with.
 	 * @param {string} dropdown_element The ID of the HTML DOM select element to list the assets folder structure in.
 	 * @param {string} grid_element The ID of the HTML DOM spawn grid element to fill with asset thumbnails.
-	 * @param {World} world The current game world.
-	 * @param {Player} player The player editing the game world.
 	 */
-	static updateAssetPicker(assets, dropdown_element, grid_element, world, player)
+	static updateAssetPicker(assets, dropdown_element, grid_element)
 	{
 		
 		// Hide anything that could be obscuring the spawn grid
@@ -2799,8 +2799,8 @@ class Editor
 						if (asset.path.startsWith("./objects/primitives/"))
 						{
 							
-							// Hide the spawn grid
-							$('#editor-spawn-grid').hide();
+							// Hide the spawn objects panel
+							$('#editor-spawn-panel-objects').hide();
 							
 							// Initialize a new primitive object thumbnail for the selected primitive's spawn panel UI
 							$('#editor-spawn-panel-' + key + '-thumbnail').append($('<div id="editor-spawn-primitive-' + key + '" class="editor-spawn-cell" data-bs-title="Spawn ' + key + '." data-bs-toggle="tooltip" data-bs-placement="top"></div>'));
@@ -2814,7 +2814,7 @@ class Editor
 							{
 								
 								// Spawn primitive
-								Editor.spawn(Assets.objects["primitive_" + key].deepClone(), world, player);
+								Editor.spawn(Assets.objects["primitive_" + key].deepClone());
 								
 							});
 							
@@ -2833,8 +2833,8 @@ class Editor
 									
 								});
 								
-								// Show the spawn grid
-								$('#editor-spawn-grid').show();
+								// Show the spawn objects panel
+								$('#editor-spawn-panel-objects').show();
 								
 							});
 							
@@ -2844,7 +2844,7 @@ class Editor
 						{
 							
 							// Spawn object
-							Editor.spawn(asset.deepClone(), world, player);
+							Editor.spawn(asset.deepClone());
 							
 						}
 						
@@ -2859,8 +2859,8 @@ class Editor
 			
 		}
 		
-		// Show the spawn grid
-		$('#editor-spawn-grid').show();
+		// Show the spawn objects panel
+		$('#editor-spawn-panel-objects').show();
 		
 		// Re-initialize tooltips so the colour cell tooltips render
 		$('[data-bs-toggle="tooltip"]').each(function() { let tooltip = new bootstrap.Tooltip($(this)); $(this).on('click', function() { tooltip.hide(); }); });

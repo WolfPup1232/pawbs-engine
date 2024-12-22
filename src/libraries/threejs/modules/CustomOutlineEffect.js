@@ -1,5 +1,8 @@
 // NOTE: This module has been slightly yassified to work with the game's world class,
 //		 so a bunch of undocumented differences exist between this and the original three.js version.
+
+import Game from '../../../classes/game.class.js';
+
 import {
 	BackSide,
 	Color,
@@ -432,16 +435,16 @@ class CustomOutlineEffect {
 
 		}
 
-		this.render = function ( world = null, player = null, scene = null, camera = null ) {
+		this.render = function ( scene = null, camera = null ) {
 			
-			if (world != null)
+			if (Game.world != null)
 			{
-				scene = world.scene;
+				scene = Game.world.scene;
 			}
 			
-			if (player != null)
+			if (Game.player != null)
 			{
-				camera = player.camera;
+				camera = Game.player.camera;
 			}
 			
 			let renderTarget;
@@ -465,20 +468,20 @@ class CustomOutlineEffect {
 
 			renderer.autoClear = currentAutoClear;
 
-			this.renderOutline( world, player, scene, camera );
+			this.renderOutline( scene, camera );
 
 		};
 
-		this.renderOutline = function ( world = null, player = null, scene = null, camera = null ) {
+		this.renderOutline = function ( scene = null, camera = null ) {
 			
-			if (world != null)
+			if (Game.world != null)
 			{
-				scene = world.scene;
+				scene = Game.world.scene;
 			}
 			
-			if (player != null)
+			if (Game.player != null)
 			{
-				camera = player.camera;
+				camera = Game.player.camera;
 			}
 			
 			const currentAutoClear = renderer.autoClear;
@@ -491,11 +494,12 @@ class CustomOutlineEffect {
 			renderer.autoClear = false;
 			renderer.shadowMap.enabled = false;
 			
-			if (world != null)
+			if (Game.world != null)
 			{
-				for (let i = 0; i < world.objects.length; i++)
+				let objects = Game.world.all_objects;
+				for (let i = 0; i < objects.length; i++)
 				{
-					world.objects[i].traverse( setOutlineMaterial );
+					objects[i].traverse( setOutlineMaterial );
 				}
 			}
 			else
@@ -505,11 +509,12 @@ class CustomOutlineEffect {
 
 			renderer.render( scene, camera );
 			
-			if (world != null)
+			if (Game.world != null)
 			{
-				for (let i = 0; i < world.objects.length; i++)
+				let objects = Game.world.all_objects;
+				for (let i = 0; i < objects.length; i++)
 				{
-					world.objects[i].traverse( restoreOriginalMaterial );
+					objects[i].traverse( restoreOriginalMaterial );
 				}
 			}
 			else

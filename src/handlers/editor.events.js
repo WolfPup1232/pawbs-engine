@@ -1,20 +1,15 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
 
-// Class Imports
-import Billboard from '../classes/billboard.class.js';
-
 // Static Class Imports
-import Editor from '../classes/editor.class.js';
+import Game from '../classes/game.class.js';
 import Assets from '../classes/assets.class.js';
+import Editor from '../classes/editor.class.js';
 
 /**
  * Initializes the Editor UI event handlers.
- *
- * @param {World} world The current game world.
- * @param {Player} player The player editing the game world.
  */
-export default function initializeEditorUIEventHandlers(world, player)
+export default function initializeEditorUIEventHandlers()
 {
 	
 	//#region [Editor Main Menu]
@@ -29,7 +24,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 			{
 					
 				// Set world name
-				world.name = $("#editor-world-name").val();
+				Game.world.name = $("#editor-world-name").val();
 					
 			});
 			
@@ -40,7 +35,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 			{
 					
 				// Create a new empty world
-				Editor.newWorld(world, player);
+				Editor.newWorld();
 					
 			});
 			
@@ -51,7 +46,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 			{
 					
 				// Load a world from a JSON file
-				Editor.loadWorld(world, player);
+				Editor.loadWorld();
 					
 			});
 			
@@ -62,7 +57,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 			{
 					
 				// Save the selected world as a JSON file
-				Editor.saveWorld(world, player);
+				Editor.saveWorld();
 					
 			});
 			
@@ -94,19 +89,19 @@ export default function initializeEditorUIEventHandlers(world, player)
 				if (selected_value === 'walk')
 				{
 					
-					// Enable/disable walk mode
+					// Enable/disable noclip
 					if ($(this).is(':checked'))
 					{
 						
-						// Walk mode enabled
-						player.noclip = false;
+						// Noclip disabled
+						Game.player.noclip = false;
 						
 					}
 					else
 					{
 						
-						// Walk mode disabled
-						player.noclip = true;
+						// Noclip enabled
+						Game.player.noclip = true;
 						
 					}
 					
@@ -122,7 +117,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 			/**
 			 * Editor object selection type selected radio button change event.
 			 */
-			$('input[type="radio"][name="editor-world-select-types"]').change(function()
+			$('input[type="radio"][name="editor-select-types"]').change(function()
 			{
 				
 				// Get editor object selection type selected radio button value
@@ -134,7 +129,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				Editor.select_vertices = false;
 				
 				// Reset all highlighted or selected objects, faces, and vertices
-				Editor.resetHighlightedAndSelectedObjectsFacesVertices(world, player);
+				Editor.resetHighlightedAndSelectedObjectsFacesVertices();
 				
 				// Change object selection type mode based on selected radio button value
 				if (selected_value === 'objects')
@@ -156,12 +151,38 @@ export default function initializeEditorUIEventHandlers(world, player)
 					
 					// Vertex selection mode
 					Editor.select_vertices = true;
-					player.controls.transform_controls.setMode('translate');
+					Game.player.controls.transform_controls.setMode('translate');
 					
 				}
 				
 				// Update the editor selected objects UI
-				Editor.updateSelectedObjectsUI(player);
+				Editor.updateSelectedObjectsUI();
+				
+			});
+			
+			/**
+			 * Editor terrain selection button click event.
+			 */
+			$("#editor-select-terrain").click(function()
+			{
+				
+				// Enable/disable terrain selection
+				if ($(this).is(':checked'))
+				{
+					
+					// Terrain selection enabled
+					Editor.resetHighlightedAndSelectedObjectsFacesVertices();
+					Editor.select_terrain = true;
+					
+				}
+				else
+				{
+					
+					// Terrain selection disabled
+					Editor.resetHighlightedAndSelectedObjectsFacesVertices();
+					Editor.select_terrain = false;
+					
+				}
 				
 			});
 			
@@ -179,8 +200,17 @@ export default function initializeEditorUIEventHandlers(world, player)
 				// Get editor tool type selected checkbox value
 				let selected_value = $(this).val();
 				
+				// Disable all editor tools
+				Editor.tool_spawn = false;
+				Editor.tool_npcs = false;
+				Editor.tool_cinematics = false;
+				
 				// Hide all editor tools
 				$("#editor-spawn-tool").hide();
+				//$("#editor-npcs-tool").hide();
+				//$("#editor-cinematics-tool").hide();
+				
+				// Stop object thumbnails from animating
 				Assets.objectThumbnailsStopAnimating();
 				
 				// Spawn Tool
@@ -188,27 +218,44 @@ export default function initializeEditorUIEventHandlers(world, player)
 				{
 					
 					// Uncheck other tools
+					$("#editor-tool-npcs").prop("checked", false);
 					$("#editor-tool-cinematics").prop("checked", false);
 					
-					// Show/hide spawn tool
+					// Show spawn tool
 					if ($(this).is(':checked'))
 					{
+						
+						// Enable spawn tool
+						Editor.tool_spawn = true;
 						
 						// Show spawn tool
 						$("#editor-spawn-tool").show();
 						
 						// Update object spawn tool UI
-						Editor.updateSpawnToolUI(world, player);
-						
-					}
-					else
-					{
-						
-						// Disable spawn tool animations
-						Assets.objectThumbnailsStopAnimating();
+						Editor.updateSpawnToolUI();
 						
 					}
 					
+					
+				} // NPCs Tool
+				else if (selected_value === 'npcs')
+				{
+					
+					// Uncheck other tools
+					$("#editor-tool-spawn").prop("checked", false);
+					$("#editor-tool-cinematics").prop("checked", false);
+					
+					// Show cinematics tool
+					if ($(this).is(':checked'))
+					{
+						
+						// Enable NPCs tool
+						Editor.tool_npcs = true;
+						
+						// Show NPCs tool
+						//$("#editor-spawn-npcs").show();
+						
+					}
 					
 				} // Cinematics Tool
 				else if (selected_value === 'cinematics')
@@ -216,12 +263,17 @@ export default function initializeEditorUIEventHandlers(world, player)
 					
 					// Uncheck other tools
 					$("#editor-tool-spawn").prop("checked", false);
+					$("#editor-tool-npcs").prop("checked", false);
 					
-					// Show/hide cinematics tool
+					// Show cinematics tool
 					if ($(this).is(':checked'))
 					{
 						
-						// Do something.
+						// Enable cinematics tool
+						Editor.tool_cinematics = true;
+						
+						// Show cinematics tool
+						//$("#editor-cinematics-tool").show();
 						
 					}
 					
@@ -285,7 +337,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				{
 					
 					// Save prefab to a JSON file
-					Editor.saveSelectedObjects($("#editor-selected-objects-save-modal-prefab-name").val(), player);
+					Editor.saveSelectedObjects($("#editor-selected-objects-save-modal-prefab-name").val());
 					
 					// Update UI to show save success confirmations
 					$("#editor-selected-objects-save-modal-prefab-save-checkbox").removeClass();
@@ -445,7 +497,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				{
 					
 					// Cut selected objects
-					Editor.cutSelectedObjects(world, player);
+					Editor.cutSelectedObjects();
 					
 				});
 				
@@ -467,7 +519,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				{
 					
 					// Paste clipboard objects
-					Editor.pasteClipboardObjects(world, player);
+					Editor.pasteClipboardObjects();
 					
 				});
 				
@@ -483,7 +535,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				{
 					
 					// Delete selected objects
-					Editor.deleteSelectedObjects(world, player);
+					Editor.deleteSelectedObjects();
 					
 				});
 				
@@ -499,7 +551,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				{
 					
 					// Group selected objects
-					Editor.groupSelectedObjects(world, player);
+					Editor.groupSelectedObjects();
 					
 				});
 				
@@ -510,7 +562,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 				{
 					
 					// Ungroup selected objects
-					Editor.ungroupSelectedObjects(world, player);
+					Editor.ungroupSelectedObjects();
 					
 				});
 				
@@ -544,7 +596,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Translate mode
-						player.controls.transform_controls.setMode('translate');
+						Game.player.controls.transform_controls.setMode('translate');
 						
 						// Show translate controls
 						$("#editor-selected-objects-transform-position").show();
@@ -554,7 +606,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Scale mode
-						player.controls.transform_controls.setMode('scale');
+						Game.player.controls.transform_controls.setMode('scale');
 						
 						// Show scale controls
 						$("#editor-selected-objects-transform-scale").show();
@@ -564,7 +616,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Rotate mode
-						player.controls.transform_controls.setMode('rotate');
+						Game.player.controls.transform_controls.setMode('rotate');
 						
 						// Show rotation controls
 						$("#editor-selected-objects-transform-rotation").show();
@@ -572,7 +624,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 					}
 					
 					// Update the editor selected objects UI
-					Editor.updateSelectedObjectsUI(player);
+					Editor.updateSelectedObjectsUI();
 					
 				});
 				
@@ -592,7 +644,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Set position grid snap
-						player.controls.transform_controls.translationSnap = $("#editor-selected-objects-transform-position-snap").val();
+						Game.player.controls.transform_controls.translationSnap = $("#editor-selected-objects-transform-position-snap").val();
 						
 					}
 					
@@ -609,14 +661,14 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Set position grid snap
-						player.controls.transform_controls.translationSnap = $("#editor-selected-objects-transform-position-snap").val();
+						Game.player.controls.transform_controls.translationSnap = $("#editor-selected-objects-transform-position-snap").val();
 						
 					}
 					else
 					{
 						
 						// Disable position grid snap
-						player.controls.transform_controls.translationSnap = null;
+						Game.player.controls.transform_controls.translationSnap = null;
 						
 					}
 					
@@ -671,7 +723,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Set scale grid snap
-						player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-transform-scale-snap").val();
+						Game.player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-transform-scale-snap").val();
 						
 					}
 					
@@ -688,14 +740,14 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Set scale grid snap
-						player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-transform-scale-snap").val();
+						Game.player.controls.transform_controls.scaleSnap = $("#editor-selected-objects-transform-scale-snap").val();
 						
 					}
 					else
 					{
 						
 						// Disable scale grid snap
-						player.controls.transform_controls.scaleSnap = null;
+						Game.player.controls.transform_controls.scaleSnap = null;
 						
 					}
 					
@@ -750,7 +802,7 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Set rotation grid snap
-						player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-transform-rotation-snap").val();
+						Game.player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-transform-rotation-snap").val();
 						
 					}
 					
@@ -767,14 +819,14 @@ export default function initializeEditorUIEventHandlers(world, player)
 					{
 						
 						// Set rotation grid snap
-						player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-transform-rotation-snap").val();
+						Game.player.controls.transform_controls.rotationSnap = $("#editor-selected-objects-transform-rotation-snap").val();
 						
 					}
 					else
 					{
 						
 						// Disable rotation grid snap
-						player.controls.transform_controls.rotationSnap = null;
+						Game.player.controls.transform_controls.rotationSnap = null;
 						
 					}
 					
@@ -891,6 +943,92 @@ export default function initializeEditorUIEventHandlers(world, player)
 	
 	
 	//#region [Editor Spawn Tool]
+		
+		/**
+		 * Editor spawn tool type selected radio button change event.
+		 */
+		$('input[type="radio"][name="editor-spawn-types"]').change(function()
+		{
+			
+			// Get editor spawn tool type selected radio button value
+			let selected_value = $(this).val();
+			
+			// Disable all editor spawn types
+			Editor.spawn_objects = false;
+			Editor.spawn_npcs = false;
+			Editor.spawn_walls = false;
+			Editor.spawn_terrain = false;
+			
+			// Hide all editor tool panels
+			$("#editor-spawn-panel-objects").hide();
+			$("#editor-spawn-panel-npcs").hide();
+			$("#editor-spawn-panel-walls").hide();
+			$("#editor-spawn-panel-terrain").hide();
+			$("#editor-spawn-categories").hide();
+			
+			// Hide all primitive object spawn panels
+			$("#editor-spawn-panel-cube").hide();
+			$("#editor-spawn-panel-sphere").hide();
+			$("#editor-spawn-panel-cylinder").hide();
+			$("#editor-spawn-panel-cone").hide();
+			$("#editor-spawn-panel-torus").hide();
+			$("#editor-spawn-panel-plane").hide();
+			$("#editor-spawn-panel-circle").hide();
+			$("#editor-spawn-panel-ring").hide();
+			
+			// Stop object thumbnails from animating
+			Assets.objectThumbnailsStopAnimating();
+			
+			// Spawn Objects
+			if (selected_value === 'objects')
+			{
+				
+				// Enable objects spawn tool
+				Editor.spawn_objects = true;
+				
+				// Show the spawn objects panel
+				$("#editor-spawn-panel-objects").show();
+				$("#editor-spawn-categories").show();
+				
+				// Update spawn objects tool UI
+				Editor.updateSpawnToolUI();
+				
+				
+			} // Spawn NPCs
+			else if (selected_value === 'npcs')
+			{
+				
+				// Enable npcs spawn tool
+				Editor.spawn_npcs = true;
+				
+				// Show the spawn npcs panel
+				$("#editor-spawn-panel-npcs").show();
+				
+				
+			} // Spawn Walls
+			else if (selected_value === 'walls')
+			{
+				
+				// Enable walls spawn tool
+				Editor.spawn_walls = true;
+				
+				// Show the spawn walls panel
+				$("#editor-spawn-panel-walls").show();
+				
+				
+			} // Spawn Terrain
+			else if (selected_value === 'terrain')
+			{
+				
+				// Enable terrain spawn tool
+				Editor.spawn_terrain = true;
+				
+				// Show the spawn terrain panel
+				$("#editor-spawn-panel-terrain").show();
+				
+			}
+			
+		});
 		
 		/**
 		 * Editor spawn tool mouse wheel scroll event.

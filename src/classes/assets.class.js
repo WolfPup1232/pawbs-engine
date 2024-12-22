@@ -4,7 +4,7 @@ import { CustomObjectLoader } from '../libraries/threejs/modules/CustomObjectLoa
 import { CustomOutlineEffect } from '../libraries/threejs/modules/CustomOutlineEffect.js';
 
 // Static Class Imports
-import Editor from '../classes/editor.class.js';
+import Editor from './editor.class.js';
 
 /**
  * A collection of in-game assets.
@@ -21,13 +21,16 @@ class Assets
 	static paths_objects = {};
 	
 	
-	// Game assets
+	// Game Asset Lists
 	
 	// The list of textures loaded by the game
 	static textures = {};
 	
 	// The list of object prefabs loaded by the game
 	static objects = {};
+	
+	// The list of worlds loaded by the game
+	static worlds = {};
 	
 	
 	// Private Class Declarations
@@ -243,6 +246,49 @@ class Assets
 		
 		// Set the download file name
 		link.download = "objects.json";
+		
+		// Append the link element to the document body
+		document.body.appendChild(link);
+		
+		// Trigger the save file dialog
+		link.click();
+		
+		// Remove the link element from the document body
+		document.body.removeChild(link);
+		
+	}
+	
+	/**
+	* Initializes the game worlds list according to the list of worlds in the worlds.json file.
+	*
+	* @param {Object} world_paths The key/value pair list of world names and their associated paths loaded from the worlds.json file.
+	* @param {Function} callback The callback function which is invoked when all worlds have been loaded.
+	*/
+	static loadWorlds(world_paths, callback)
+	{
+		
+		// Get list of worlds
+		this.worlds = world_paths;
+		
+		// All worlds are loaded, now perform the next step using the callback function
+		callback();
+		
+	}
+	
+	/**
+	 * Saves the list of worlds to an updated worlds.json file.
+	 */
+	static saveWorldPaths()
+	{
+		
+		// Create a temporary link element to trigger a save file dialog
+		let link = document.createElement('a');
+		
+		// Serialize the texture path list contents to an object URL for download
+		link.href = URL.createObjectURL(new Blob([JSON.stringify(this.worlds, null, 4)], { type: "application/json" }));
+		
+		// Set the download file name
+		link.download = "worlds.json";
 		
 		// Append the link element to the document body
 		document.body.appendChild(link);

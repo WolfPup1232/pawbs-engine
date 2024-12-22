@@ -2,6 +2,8 @@
 //		 so a bunch of undocumented differences exist between this and the original three.js version because
 //		 I don't feel like documenting like 1600 lines of mostly somebody else's code.
 
+import Game from '../../../classes/game.class.js';
+
 import {
 	BoxGeometry,
 	BufferGeometry,
@@ -200,16 +202,16 @@ class CustomTransformControls extends Object3D {
 
 	}
 
-	mouseHover( player ) {
+	mouseHover() {
 
 		if ( this.object === undefined || this.dragging === true ) return;
 
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
 
-		const intersect = intersectObjectWithRay( this._gizmo.picker[ this.mode ], player.raycaster );
+		const intersect = intersectObjectWithRay( this._gizmo.picker[ this.mode ], Game.player.raycaster );
 
 		if ( intersect ) {
 
@@ -223,18 +225,18 @@ class CustomTransformControls extends Object3D {
 
 	}
 
-	mouseDown( player ) {
+	mouseDown() {
 
-		if ( this.object === undefined || this.dragging === true || player.controls.is_mouse_left_down == false ) return;
+		if ( this.object === undefined || this.dragging === true || Game.player.controls.is_mouse_left_down == false ) return;
 
 		if ( this.axis !== null ) {
 
-			player.raycaster.ray.origin.copy(player.position);
-			player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-			player.raycaster.near = 0;
-			player.raycaster.far = Infinity;
+			Game.player.raycaster.ray.origin.copy(Game.player.position);
+			Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+			Game.player.raycaster.near = 0;
+			Game.player.raycaster.far = Infinity;
 
-			const planeIntersect = intersectObjectWithRay( this._plane, player.raycaster, true );
+			const planeIntersect = intersectObjectWithRay( this._plane, Game.player.raycaster, true );
 
 			if ( planeIntersect ) {
 
@@ -281,7 +283,7 @@ class CustomTransformControls extends Object3D {
 
 	}
 
-	mouseMove( player ) {
+	mouseMove() {
 		const axis = this.axis;
 		const mode = this.mode;
 		const object = this.object;
@@ -297,14 +299,14 @@ class CustomTransformControls extends Object3D {
 
 		}
 		
-		if ( object === undefined || axis === null || this.dragging === false || player.controls.is_mouse_left_down == false ) return;
+		if ( object === undefined || axis === null || this.dragging === false || Game.player.controls.is_mouse_left_down == false ) return;
 		
-		player.raycaster.ray.origin.copy(player.position);
-		player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(player.quaternion);
-		player.raycaster.near = 0;
-		player.raycaster.far = Infinity;
+		Game.player.raycaster.ray.origin.copy(Game.player.position);
+		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
+		Game.player.raycaster.near = 0;
+		Game.player.raycaster.far = Infinity;
 		
-		const planeIntersect = player.raycaster.intersectObject(this._plane, true)[0];
+		const planeIntersect = Game.player.raycaster.intersectObject(this._plane, true)[0];
 
 		this.pointEnd.copy( planeIntersect.point ).sub( this.worldPositionStart );
 
@@ -530,9 +532,9 @@ class CustomTransformControls extends Object3D {
 
 	}
 
-	mouseUp( player ) {
+	mouseUp() {
 
-		if ( player.controls.is_mouse_left_down == true ) return;
+		if ( Game.player.controls.is_mouse_left_down == true ) return;
 
 		if ( this.dragging && ( this.axis !== null ) ) {
 

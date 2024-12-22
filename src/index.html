@@ -93,25 +93,34 @@
 							</div>
 							
 							<!-- Object Selection Types -->
-							<div class="col p-0 text-nowrap" style="max-width: 9em;">
+							<div class="col p-0 text-nowrap" style="max-width: 13.2em;">
 								<div class="card-title input-group-text mx-1 my-1">
-									<input id="editor-world-select-objects" name="editor-world-select-types" value="objects" class="btn-check" type="radio" checked>
-									<label for="editor-world-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+									<input id="editor-select-objects" name="editor-select-types" value="objects" class="btn-check" type="radio" checked>
+									<label for="editor-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
 									data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-box-seam"></i>
 									</label>
 									
-									<input id="editor-world-select-faces" name="editor-world-select-types" value="faces" class="btn-check" type="radio">
-									<label for="editor-world-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+									<input id="editor-select-faces" name="editor-select-types" value="faces" class="btn-check" type="radio">
+									<label for="editor-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
 									data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-box2"></i>
 									</label>
 									
-									<input id="editor-world-select-vertices" name="editor-world-select-types" value="vertices" class="btn-check" type="radio">
-									<label for="editor-world-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-0 my-0"
+									<input id="editor-select-vertices" name="editor-select-types" value="vertices" class="btn-check" type="radio">
+									<label for="editor-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
 									data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-bounding-box-circles"></i>
 									</label>
+									
+									<div class="vr"></div>
+									
+									<input id="editor-select-terrain" value="terrain" class="btn-check" type="checkbox">
+									<label for="editor-select-terrain" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
+									data-bs-title="Terrain selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										<i class="bi bi-image-alt"></i>
+									</label>
+									
 								</div>
 							</div>
 							
@@ -496,7 +505,7 @@
 				<div id="editor-spawn-tool-container" class="card px-2 pt-2 pb-0 shadow-sm overflow-hidden">
 					<div id="editor-spawn-tool-scroll" class="row h-138px overflow-scroll">
 						
-						<div class="col-6 col-sm-5 col-md-4 col-xl-3  pe-1">
+						<div class="col-6 col-sm-5 col-md-4 pe-1">
 							<div class="row w-100 m-0 overflow-hidden">
 								
 								<!-- Spawn Types -->
@@ -521,11 +530,17 @@
 										data-bs-title="Wall tool." data-bs-toggle="tooltip" data-bs-placement="top">
 											<i class="bi bi-bricks"></i>
 										</label>
+										
+										<input id="editor-spawn-terrain" name="editor-spawn-types" value="terrain" class="btn-check" type="radio">
+										<label for="editor-spawn-terrain" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+										data-bs-title="Terrain tool." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-image-alt"></i>
+										</label>
 									</div>
 								</div>
 								
 							</div>
-							<div class="row w-100 m-0 overflow-hidden">
+							<div id="editor-spawn-categories" class="row w-100 m-0 overflow-hidden">
 								
 								<!-- Spawn Categories  -->
 								<div class="col p-0 text-nowrap">
@@ -538,11 +553,16 @@
 							</div>
 						</div>
 						
-						<!-- Spawn Grid -->
-						<div class="col-6 col-sm-7 col-md-8 col-xl-9 ps-1">
-							<div id="editor-spawn-grid" class="my-1"></div>
+						<!-- Spawn Tool Panels -->
+						<div class="col-6 col-sm-7 col-md-8 ps-1">
 							
-							<!-- Spawn Cube Primitive -->
+							<!-- Objects Tool -->
+							<div id="editor-spawn-panel-objects" class="my-1"></div>
+							
+							
+							<!-- Primitive Object Tools -->
+							
+							<!-- Cube Primitive -->
 							<div id="editor-spawn-panel-cube" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -589,7 +609,7 @@
 								</div>
 							</div>
 							
-							<!-- Spawn Sphere Primitive -->
+							<!-- Sphere Primitive -->
 							<div id="editor-spawn-panel-sphere" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -621,7 +641,7 @@
 								</div>
 							</div>
 							
-							<!-- Spawn Cylinder Primitive -->
+							<!-- Cylinder Primitive -->
 							<div id="editor-spawn-panel-cylinder" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -663,7 +683,7 @@
 								</div>
 							</div>
 							
-							<!-- Spawn Cone Primitive -->
+							<!-- Cone Primitive -->
 							<div id="editor-spawn-panel-cone" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -700,7 +720,7 @@
 								</div>
 							</div>
 							
-							<!-- Spawn Torus Primitive -->
+							<!-- Torus Primitive -->
 							<div id="editor-spawn-panel-torus" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -737,7 +757,7 @@
 								</div>
 							</div>
 							
-							<!-- Spawn Plane Primitive -->
+							<!-- Plane Primitive -->
 							<div id="editor-spawn-panel-plane" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -774,7 +794,7 @@
 								</div>
 							</div>
 							
-							<!-- Spawn Circle Primitive -->
+							<!-- Circle Primitive -->
 							<div id="editor-spawn-panel-circle" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -807,7 +827,7 @@
 								</div>
 							</div>
 							
-							<!-- Spawn Ring Primitive -->
+							<!-- Ring Primitive -->
 							<div id="editor-spawn-panel-ring" class="my-1 small" style="display: none;">
 								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
@@ -843,6 +863,19 @@
 									</span>
 								</div>
 							</div>
+							
+							
+							<!-- NPCs Tool -->
+							<div id="editor-spawn-panel-objects" class="my-1" style="display: none;"></div>
+							
+							<!-- Walls Tool -->
+							<div id="editor-spawn-panel-objects" class="my-1" style="display: none;"></div>
+							
+							<!-- Terrain Tool -->
+							<div id="editor-spawn-panel-objects" class="my-1" style="display: none;">
+								
+							</div>
+							
 						</div>
 						
 					</div>
@@ -902,25 +935,10 @@
 		import Billboard from './classes/billboard.class.js';
 		
 		// Static Class Imports
+		import Game from './classes/game.class.js';
 		import Assets from './classes/assets.class.js';
 		import Editor from './classes/editor.class.js';
 		import Debug from './classes/debug.class.js';
-		
-		// Event Handler Imports
-		import initializeEditorUIEventHandlers from './handlers/editor.events.js';
-		import initializeUtilityUIEventHandlers from './handlers/utility.events.js';
-		
-		
-		// Game Declarations
-		
-		// three.js Game Renderer
-		let renderer, render_once, stop_animating, effect;
-		
-		// Game Player
-		let player;
-		
-		// Game World
-		let worlds, world;
 		
 		
 		// Game Functions
@@ -931,19 +949,6 @@
 		function init()
 		{
 			
-			// Initialize three.js renderer
-			renderer = new THREE.WebGLRenderer();
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			render_once = false;
-			stop_animating = false;
-			$('#renderer').append(renderer.domElement);
-			
-			// Initialize cel shader effect
-			effect = new CustomOutlineEffect(renderer, { defaultThickness: 0.0032 });
-			
-			// Initialize worlds
-			worlds = {};
-			
 			// Load textures
 			fetch('./textures/textures.json').then(response => response.json()).then(texture_paths => { Assets.loadTextures(texture_paths, function() {
 				
@@ -951,23 +956,12 @@
 				fetch('./objects/objects.json').then(response => response.json()).then(object_paths => { Assets.loadObjects(object_paths, function() {
 					
 					// Load worlds
-					fetch('./worlds/worlds.json').then(response => response.json()).then(worlds => {
-											
-						// Initialize world
-						world = new World();
-						world.load(worlds.TestWorld)
+					fetch('./worlds/worlds.json').then(response => response.json()).then(world_paths => { Assets.loadWorlds(world_paths, function() {
 						
-						// Initialize player
-						player = new Player(window, document, renderer, world);
+						// Initialize game
+						Game.initialize(window, document, animate);
 						
-						// Initialize UI event handlers
-						initializeUtilityUIEventHandlers();
-						initializeEditorUIEventHandlers(world, player);
-						
-						// Start game loop
-						animate();
-						
-					}).catch(error => {
+					}); }).catch(error => {
 						
 						// Error loading worlds
 						console.error("Error loading ./world/worlds.json: ", error);
@@ -1000,21 +994,18 @@
 			const request_id = requestAnimationFrame(animate);
 			
 			// Make sure at least one frame is rendered (This is workaround for collision bounding boxes before handling ANY collision detection...)
-			//
-			// 	NOTE: One frame must be initially rendered because the THREE.Box3().setFromObject() function expects objects to have a 
-			//	      matrixWorld property that is up-to-date first, so rendering a single frame before collision detection prevents a crash.
-			if (render_once)
+			if (Game.render_once)
 			{
 				
-				// Update the player (movement, collision detection, etc.)
-				player.update(world);
+				// Update the game
+				Game.update();
 				
 				// Check if editor is enabled...
 				if (Editor.enabled)
 				{
 					
 					// Update in-game editor
-					Editor.update(world, player);
+					Editor.update();
 					
 				}
 				
@@ -1023,32 +1014,36 @@
 				{
 					
 					// Update in-game debugger
-					Debug.update(world, player);
+					Debug.update();
 					
 				}
 				
 			}
 			else
 			{
-				render_once = true;
+				
+				// First frame has been rendered
+				Game.render_once = true;
+				
 			}
 			
-			// Render the frame (or break game loop if flag is set)
-			if (!stop_animating)
+			// Attempt to render the frame...
+			if (!Game.stop_animating)
 			{
 				
-				// (Uncomment this to render normally)
-				//renderer.render(world.scene, player.camera);
+				// Render frame
+				Game.renderer.render();
 				
-				// Render with cel shader effect
-				effect.render(world, player);
 				
-			}
+			} // Stop flag is enabled...
 			else
 			{
+				
+				// Stop rendering
 				cancelAnimationFrame(request_id);
 				
-				// TODO: Game loop broken. Do something? Show main menu?
+				// TODO: Game loop is now broken. Do something? Show main menu?
+				
 			}
 			
 		}
@@ -1074,10 +1069,10 @@
 			init();
 			setTimeout(function() {
 				
-				Editor.toggle(world, player);
+				Editor.toggle();
 				
-				// $("#editor-tool-spawn").prop("checked", true);
-				// $("#editor-tool-spawn").trigger("change");
+				$("#editor-tool-spawn").prop("checked", true);
+				$("#editor-tool-spawn").trigger("change");
 				
 			}, 500)
 			
@@ -1091,11 +1086,11 @@
 		window.addEventListener('resize', () => {
 			
 			// Update player camera
-			player.camera.aspect = window.innerWidth / window.innerHeight;
-			player.camera.updateProjectionMatrix();
+			Game.player.camera.aspect = window.innerWidth / window.innerHeight;
+			Game.player.camera.updateProjectionMatrix();
 			
 			// Update game renderer
-			renderer.setSize(window.innerWidth, window.innerHeight);
+			Game.renderer.setSize(window.innerWidth, window.innerHeight);
 			
 			// Check if editor is enabled...
 			if (Editor.enabled)
