@@ -1155,7 +1155,7 @@ export default function initializeEditorUIEventHandlers()
 					let height_segments = $("#editor-spawn-plane-height-segments").val();
 					
 					// Initialize object
-					primitive_object = new THREE.Mesh(new THREE.PlaneGeometry(width, height, width_segments, height_segments), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
+					primitive_object = new THREE.Mesh(new THREE.PlaneGeometry(width, height, width_segments, height_segments), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
 					
 					
 				} // Circle
@@ -1169,7 +1169,7 @@ export default function initializeEditorUIEventHandlers()
 					let segments = $("#editor-spawn-circle-segments").val();
 					
 					// Initialize object
-					primitive_object = new THREE.Mesh(new THREE.CircleGeometry(radius, segments), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
+					primitive_object = new THREE.Mesh(new THREE.CircleGeometry(radius, segments), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
 					
 					
 				} // Ring
@@ -1187,7 +1187,7 @@ export default function initializeEditorUIEventHandlers()
 					let height_segments = $("#editor-spawn-ring-height-segments").val();
 					
 					// Initialize object
-					primitive_object = new THREE.Mesh(new THREE.RingGeometry(inner_radius, outer_radius, radial_segments, height_segments), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
+					primitive_object = new THREE.Mesh(new THREE.RingGeometry(inner_radius, outer_radius, radial_segments, height_segments), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
 					
 				}
 				

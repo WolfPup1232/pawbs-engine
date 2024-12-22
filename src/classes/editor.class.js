@@ -469,6 +469,9 @@ class Editor
 		
 	}
 	
+	
+	// World Methods
+	
 	/**
 	 * Resets the current world using some hard-coded defaults.
 	 */
@@ -609,6 +612,9 @@ class Editor
 		
 	}
 	
+	
+	// Object Methods
+	
 	/**
 	 * Spawns a new object into the world at the location the player is facing.
 	 *
@@ -624,7 +630,7 @@ class Editor
 		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
+		const intersects = Game.player.raycaster.intersectObjects(Game.world.all_objects, true);
 		if (intersects.length > 0)
 		{
 			
@@ -739,6 +745,9 @@ class Editor
 		
 	}
 	
+	
+	// Highlight / Select Objects
+	
 	/**
 	 * Highlights whichever objects the player is looking at.
 	 */
@@ -778,7 +787,7 @@ class Editor
 						if (child.isMesh)
 						{
 							child.userData.original_material = child.material.clone();
-							child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5 });
+							child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5, side: new_highlighted_objects.material.side });
 						}
 					});
 					
@@ -789,7 +798,7 @@ class Editor
 					
 					// Make the new highlighted object's material transparent
 					new_highlighted_objects.userData.original_material = new_highlighted_objects.material.clone();
-					new_highlighted_objects.material = new THREE.MeshBasicMaterial({ color: new_highlighted_objects.material.color.getHex(), transparent: true, opacity: 0.5 });
+					new_highlighted_objects.material = new THREE.MeshBasicMaterial({ color: new_highlighted_objects.material.color.getHex(), transparent: true, opacity: 0.5, side: new_highlighted_objects.material.side });
 					
 				}
 				
@@ -1344,6 +1353,9 @@ class Editor
 		
 	}
 	
+	
+	// Highlight / Select Faces
+	
 	/**
 	 * Highlights whichever object face the player is looking at.
 	 */
@@ -1509,7 +1521,7 @@ class Editor
 			const select_face_group = !(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id));
 
 			// If the player is not holding down the shift key to select multiple faces...
-			if (!Game.player.controls.modifier_shift_left_pressed)
+			if (!Game.player.controls.modifier_shift_left_pressed && !Game.player.controls.modifier_control_left_pressed)
 			{
 				
 				// Deselect all world object's faces...
@@ -1859,6 +1871,9 @@ class Editor
 		
 	}
 	
+	
+	// Highlight / Select Vertices
+	
 	/**
 	 * Highlights the vertices of whichever object the player is looking at.
 	 */
@@ -2117,7 +2132,7 @@ class Editor
 						{
 							
 							// Clear any previous selected vertices if the shift key isn't being pressed...
-							if (!Game.player.controls.modifier_shift_left_pressed)
+							if (!Game.player.controls.modifier_shift_left_pressed && !Game.player.controls.modifier_control_left_pressed)
 							{
 								this.selected_vertices_object.userData.selected_vertex_indices.clear();
 							}
@@ -2376,6 +2391,9 @@ class Editor
 		}
 		
 	}
+	
+	
+	// Editor UI
 	
 	/**
 	 * Updates the main editor UI elements.

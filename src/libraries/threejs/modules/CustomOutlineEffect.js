@@ -5,7 +5,11 @@ import Game from '../../../classes/game.class.js';
 
 import {
 	BackSide,
+	CircleGeometry,
 	Color,
+	DoubleSide,
+	PlaneGeometry,
+	RingGeometry,
 	ShaderMaterial,
 	UniformsLib,
 	UniformsUtils
@@ -248,7 +252,7 @@ class CustomOutlineEffect {
 
 			}
 
-			return ( object.isMesh === true && object.material !== undefined && hasNormals === true );
+			return ( object.isMesh === true && object.material !== undefined && hasNormals === true && object.geometry && !(object.geometry instanceof PlaneGeometry) && !(object.geometry instanceof CircleGeometry) && !(object.geometry instanceof RingGeometry));
 
 		}
 
@@ -437,12 +441,12 @@ class CustomOutlineEffect {
 
 		this.render = function ( scene = null, camera = null ) {
 			
-			if (Game.world != null)
+			if (scene == null)
 			{
 				scene = Game.world.scene;
 			}
 			
-			if (Game.player != null)
+			if (camera == null)
 			{
 				camera = Game.player.camera;
 			}
@@ -474,12 +478,12 @@ class CustomOutlineEffect {
 
 		this.renderOutline = function ( scene = null, camera = null ) {
 			
-			if (Game.world != null)
+			if (scene == null)
 			{
 				scene = Game.world.scene;
 			}
 			
-			if (Game.player != null)
+			if (camera == null)
 			{
 				camera = Game.player.camera;
 			}
@@ -488,47 +492,24 @@ class CustomOutlineEffect {
 			const currentSceneAutoUpdate = scene.autoUpdate;
 			const currentSceneBackground = scene.background;
 			const currentShadowMapEnabled = renderer.shadowMap.enabled;
-
+			
 			scene.autoUpdate = false;
 			scene.background = null;
+			
 			renderer.autoClear = false;
 			renderer.shadowMap.enabled = false;
 			
-			if (Game.world != null)
-			{
-				let objects = Game.world.all_objects;
-				for (let i = 0; i < objects.length; i++)
-				{
-					objects[i].traverse( setOutlineMaterial );
-				}
-			}
-			else
-			{
-				scene.traverse( setOutlineMaterial );
-			}
-
+			scene.traverse( setOutlineMaterial );
 			renderer.render( scene, camera );
+			scene.traverse( restoreOriginalMaterial );
 			
-			if (Game.world != null)
-			{
-				let objects = Game.world.all_objects;
-				for (let i = 0; i < objects.length; i++)
-				{
-					objects[i].traverse( restoreOriginalMaterial );
-				}
-			}
-			else
-			{
-				scene.traverse( restoreOriginalMaterial );
-			}
-
 			cleanupCache();
-
+			
 			scene.autoUpdate = currentSceneAutoUpdate;
 			scene.background = currentSceneBackground;
 			renderer.autoClear = currentAutoClear;
 			renderer.shadowMap.enabled = currentShadowMapEnabled;
-
+			
 		};
 
 		/*

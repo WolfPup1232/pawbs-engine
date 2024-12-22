@@ -22,33 +22,34 @@ class Game
 	
 	// Class Declarations
 	
-	// 
+	// The user-controlled player in the selected game world.
 	static player;
 	
-	// 
+	// The selected game world.
 	static world;
 	
 	
 	// HTML Elements
 	
-	// 
+	// A reference to the web browser window, which contains the DOM document.
 	static window_interface;
 	
-	// 
+	// A reference to the DOM document within the web browser window.
 	static dom_document;
 	
 	
 	// Renderer
 	
-	// 
+	// The three.js WebGL renderer which renders the selected game world.
 	static renderer;
+	
 	
 	// Renderer Flags
 	
-	// 
+	// Flag indicating whether to render a single frame before updating collision.
 	static render_once = false;
 	
-	// 
+	// Flag indicating whether to stop rendering.
 	static stop_animating = false;
 	
 	

@@ -190,15 +190,15 @@ class Assets
 		object_torus.path = "./objects/primitives/torus.json";
 		this.objects["torus"] = object_torus;
 		
-		let object_plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 1, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
+		let object_plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 1, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
 		object_plane.path = "./objects/primitives/plane.json";
 		this.objects["plane"] = object_plane;
 		
-		let object_circle = new THREE.Mesh(new THREE.CircleGeometry(0.5, 10), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
+		let object_circle = new THREE.Mesh(new THREE.CircleGeometry(0.5, 10), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
 		object_circle.path = "./objects/primitives/circle.json";
 		this.objects["circle"] = object_circle;
 		
-		let object_ring = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.5, 10, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
+		let object_ring = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.5, 10, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
 		object_ring.path = "./objects/primitives/ring.json";
 		this.objects["ring"] = object_ring;
 		
@@ -388,7 +388,7 @@ class Assets
 		object.rotation.y += 0.01;
 		
 		// Render thumbnail
-		renderer.render(null, null, scene, camera);
+		renderer.render(scene, camera);
 		
 		// Check if animation stop flag is enabled...
 		if (this.#object_thumbnails_stop_animating || this.#object_thumbnail_stop_animating_id == animation_id || render_once)
