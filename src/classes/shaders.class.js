@@ -125,5 +125,92 @@ class Shaders
 		});
 	}
 	
+	/**
+	 * Returns an outlined colour shader material for a THREE.Points object.
+	 *
+	 * @param {hexidecimal} point_colour The colour of each point.
+	 * @param {float} point_size The radius of each point.
+	 * @param {hexidecimal} outline_colour The colour of each point's outline.
+	 * @param {float} outline_size The thickness of each point's outline.
+	 * @param {float} radius_size The size of the highlighted radius.
+	 * @param {hexidecimal} radius_colour The colour of the highlighted radius.
+	 * @return {THREE.ShaderMaterial} The custom shader material for a THREE.Points object.
+	 */
+	static pointOutlineInRadius(point_colour, point_size, outline_colour, outline_size, radius_size, radius_colour)
+	{
+		return new THREE.ShaderMaterial({
+			uniforms: {
+				point_colour: { value: new THREE.Color(point_colour) },
+				outline_colour: { value: new THREE.Color(outline_colour) },
+				radius_colour: { value: new THREE.Color(radius_colour) },
+				point_size: { value: point_size },
+				outline_size: { value: outline_size },
+				radius_size: { value: radius_size },
+				intersection_point: { value: new THREE.Vector3() }
+			},
+			vertexShader: `
+				uniform float radius_size;
+				uniform float point_size;
+				
+				varying float within_square;
+				
+				uniform vec3 intersection_point;
+				
+				void main()
+				{
+					vec4 world_position = modelMatrix * vec4(position, 1.0);
+					vec3 offset = world_position.xyz - intersection_point;
+					
+					// Check if the point is within the square radius in the XZ plane...
+					if (abs(offset.x) <= radius_size && abs(offset.z) <= radius_size)
+					{
+						// Inside the square
+						within_square = 1.0;
+					}
+					else
+					{
+						// Outside the square
+						within_square = 0.0;
+					}
+					
+					vec4 view_position = modelViewMatrix * vec4(position, 1.0);
+					gl_PointSize = point_size * (300.0 / -view_position.z);
+					gl_Position = projectionMatrix * view_position;
+				}
+			`,
+			fragmentShader: `
+				uniform vec3 point_colour;
+				uniform vec3 radius_colour;
+				uniform vec3 outline_colour;
+				uniform float outline_size;
+				varying float within_square;
+				
+				void main()
+				{
+					vec2 origin = gl_PointCoord - vec2(0.5);
+					float distance = length(origin);
+					
+					if (distance > 0.5)
+					{
+						discard;
+					}
+					
+					// Determine color based on whether the point is within the square
+					vec3 color = mix(point_colour, radius_colour, within_square);
+					
+					if (distance > (0.5 - outline_size))
+					{
+						gl_FragColor = vec4(outline_colour, 1.0);
+					}
+					else
+					{
+						gl_FragColor = vec4(color, 1.0);
+					}
+				}
+			`,
+			transparent: true
+		});
+	}
+	
 }
 export default Shaders;

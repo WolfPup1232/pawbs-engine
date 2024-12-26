@@ -83,8 +83,8 @@ class World
 		let all_objects = [];
 		
 		// Get all world objects
-		all_objects = all_objects.concat(this.objects);
 		all_objects = all_objects.concat(this.terrain);
+		all_objects = all_objects.concat(this.objects);
 		
 		// Return all world objects
 		return all_objects;
@@ -106,28 +106,42 @@ class World
 			player_position: this.player_position,
 			player_rotation: this.player_rotation,
 			terrain: this.terrain.map(mesh => {
-				const meshJSON = mesh.toJSON();
-				meshJSON.position = mesh.position.toArray();
-				meshJSON.rotation = {
+				const mesh_json = mesh.toJSON();
+				
+				mesh_json.position = mesh.position.toArray();
+				mesh_json.rotation = {
 					x: mesh.rotation.x,
 					y: mesh.rotation.y,
 					z: mesh.rotation.z,
 					order: mesh.rotation.order,
 				};
-				meshJSON.scale = mesh.scale.toArray();
-				return meshJSON;
+				mesh_json.scale = mesh.scale.toArray();
+				
+				if (mesh_json.userData)
+				{
+					mesh_json.userData.ignore_raycast = mesh.userData.ignore_raycast;
+				}
+				
+				return mesh_json;
 			}),
 			objects: this.objects.map(mesh => {
-				const meshJSON = mesh.toJSON();
-				meshJSON.position = mesh.position.toArray();
-				meshJSON.rotation = {
+				const mesh_json = mesh.toJSON();
+				
+				mesh_json.position = mesh.position.toArray();
+				mesh_json.rotation = {
 					x: mesh.rotation.x,
 					y: mesh.rotation.y,
 					z: mesh.rotation.z,
 					order: mesh.rotation.order,
 				};
-				meshJSON.scale = mesh.scale.toArray();
-				return meshJSON;
+				mesh_json.scale = mesh.scale.toArray();
+				
+				if (mesh_json.userData)
+				{
+					mesh_json.userData.ignore_raycast = mesh.userData.ignore_raycast;
+				}
+				
+				return mesh_json;
 			}),
 		};
 	}
@@ -219,6 +233,8 @@ class World
 		{
 			world.terrain = json.terrain.map(mesh_json => {
 				let mesh = loader.parse(mesh_json);
+				
+				// Get terrain transformations
 				if (mesh_json.position)
 				{
 					mesh.position.fromArray(mesh_json.position);
@@ -231,6 +247,17 @@ class World
 				{
 					mesh.scale.fromArray(mesh_json.scale);
 				}
+				
+				// Get terrain flags
+				if (mesh_json.userData && mesh_json.userData.ignore_raycast)
+				{
+					mesh.userData.ignore_raycast = mesh_json.userData.ignore_raycast;
+				}
+				else
+				{
+					mesh.userData.ignore_raycast = false;
+				}
+		
 				mesh.updateMatrix();
 				return mesh;
 			});
@@ -241,6 +268,8 @@ class World
 		{
 			world.objects = json.objects.map(mesh_json => {
 				let mesh = loader.parse(mesh_json);
+				
+				// Get object transformations
 				if (mesh_json.position)
 				{
 					mesh.position.fromArray(mesh_json.position);
@@ -253,6 +282,17 @@ class World
 				{
 					mesh.scale.fromArray(mesh_json.scale);
 				}
+				
+				// Get object flags
+				if (mesh_json.userData && mesh_json.userData.ignore_raycast)
+				{
+					mesh.userData.ignore_raycast = mesh_json.userData.ignore_raycast;
+				}
+				else
+				{
+					mesh.userData.ignore_raycast = false;
+				}
+				
 				mesh.updateMatrix();
 				return mesh;
 			});
@@ -476,7 +516,7 @@ class World
 		//		  their feet or something. The only way to make this more efficient would be to somehow narrow down the size of this.objects to
 		//		  whatever's in some kinda range of the player? But just the act of doing that would take more processing time? Idk.
 		//		  UPDATE TO THIS NOTE: Maybe eventually using a Set() will make more sense. TBD.
-		let all_objects = this.all_objects;
+		let all_objects = this.objects;
 		for (let i = 0; i < all_objects.length; i++)
 		{
 			all_objects[i].traverse((child) => {
@@ -553,7 +593,7 @@ class World
 		let object_surface_height = Game.player.position.y - Game.player.height;
 		
 		// Check intersections with all world objects
-		const intersects = Game.player.raycaster.intersectObjects(this.all_objects, true);
+		const intersects = Game.player.raycaster.intersectRaycastableObjects(this.all_objects, true);
 		if (intersects.length > 0)
 		{
 			

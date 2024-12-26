@@ -255,6 +255,12 @@ class Player
 			else
 			{
 				
+				// Correct the player's y-axis position if it cuts into the ground...
+				if (this.position.y < (Game.world.detectObjectSurfaceBelowPlayer() + this.height))
+				{
+					this.position.y = Game.world.detectObjectSurfaceBelowPlayer() + this.height;
+				}
+				
 				// Reset player jump
 				this.jump_velocity = 0;
 				this.is_jumping = false;
@@ -283,7 +289,7 @@ class Player
 		const intended_position = this.position.clone().add(this.velocity.clone());
 		
 		// Detect collision between the player's intended position and any collidable objects in the world
-		if (!Game.world.detectPlayerCollision(this, intended_position) || this.noclip)
+		if (!Game.world.detectPlayerCollision(intended_position) || this.noclip)
 		{
 			
 			// No collision was detected, move the player to the intended position
@@ -326,7 +332,7 @@ class Player
 		this.raycaster.far = this.stair_check_distance;
 		
 		// Check intersections with all world objects
-		const intersects = this.raycaster.intersectObjects(Game.world.all_objects, true);
+		const intersects = this.raycaster.intersectRaycastableObjects(Game.world.all_objects, true);
 		if (intersects.length > 0)
 		{
 			
@@ -355,6 +361,7 @@ class Player
 				const closest_object_position = new THREE.Vector3();
 				closest_object.getWorldPosition(closest_object_position);
 				
+				// Get the closest object's height
 				let closest_object_height = 0;
 				if (closest_object.geometry.parameters && closest_object.geometry.parameters.height)
 				{
@@ -373,10 +380,16 @@ class Player
 				// Calculate the difference in height between where the player's feet are and the closest object's height
 				const height_difference = (closest_object_position.y + (closest_object_height / 2)) - (this.position.y - this.height);
 				
-				// If the height difference implies the object is a step, step the player up onto the object
+				// If the height difference implies the object is a step, step the player up onto the object...
 				if (height_difference > 0 && height_difference <= Game.world.stair_height)
 				{
 					this.position.y += height_difference;
+					
+				} // Otherwise, if the height difference implies an obstruction, stop the player from moving...
+				else if (height_difference > 0 && height_difference > Game.world.stair_height)
+				{
+					this.velocity.x = 0;
+					this.velocity.z = 0;
 				}
 				
 			}

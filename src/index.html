@@ -110,7 +110,7 @@
 									<input id="editor-select-vertices" name="editor-select-types" value="vertices" class="btn-check" type="radio">
 									<label for="editor-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
 									data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-bounding-box-circles"></i>
+										<i class="bi bi-bounding-box"></i>
 									</label>
 									
 									<div class="vr"></div>
@@ -557,7 +557,7 @@
 						<div class="col-6 col-sm-7 col-md-8 ps-1">
 							
 							<!-- Objects Tool -->
-							<div id="editor-spawn-panel-objects" class="my-1"></div>
+							<div id="editor-spawn-panel-objects" class="my-1 small"></div>
 							
 							
 							<!-- Primitive Object Tools -->
@@ -866,14 +866,47 @@
 							
 							
 							<!-- NPCs Tool -->
-							<div id="editor-spawn-panel-objects" class="my-1" style="display: none;"></div>
+							<div id="editor-spawn-panel-npcs" class="my-1 small" style="display: none;"></div>
 							
 							<!-- Walls Tool -->
-							<div id="editor-spawn-panel-objects" class="my-1" style="display: none;"></div>
+							<div id="editor-spawn-panel-walls" class="my-1 small" style="display: none;"></div>
 							
 							<!-- Terrain Tool -->
-							<div id="editor-spawn-panel-objects" class="my-1" style="display: none;">
-								
+							<div id="editor-spawn-panel-terrain" class="small" style="display: none;">
+								<div class="row w-100 m-0 overflow-hidden">
+									
+									<!-- Terrain Tool Types -->
+									<div class="col p-0 text-nowrap">
+										<div class="card-title input-group-text mx-1 my-1">
+											<input id="editor-spawn-objects" name="editor-spawn-types" value="objects" class="btn-check" type="radio" checked>
+											<label for="editor-spawn-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+											data-bs-title="Spawn objects." data-bs-toggle="tooltip" data-bs-placement="top">
+												<i class="bi bi-box"></i>
+											</label>
+											
+											<input id="editor-spawn-npcs" name="editor-spawn-types" value="npcs" class="btn-check" type="radio" disabled>
+											<label for="editor-spawn-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+											data-bs-title="Spawn NPCs" data-bs-toggle="tooltip" data-bs-placement="top">
+												<i class="bi bi-person-arms-up"></i>
+											</label>
+											
+											<div class="vr mx-2"></div>
+											
+											<input id="editor-spawn-walls" name="editor-spawn-types" value="walls" class="btn-check" type="radio" disabled>
+											<label for="editor-spawn-walls" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+											data-bs-title="Wall tool." data-bs-toggle="tooltip" data-bs-placement="top">
+												<i class="bi bi-bricks"></i>
+											</label>
+											
+											<input id="editor-spawn-terrain" name="editor-spawn-types" value="terrain" class="btn-check" type="radio">
+											<label for="editor-spawn-terrain" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+											data-bs-title="Terrain tool." data-bs-toggle="tooltip" data-bs-placement="top">
+												<i class="bi bi-image-alt"></i>
+											</label>
+										</div>
+									</div>
+									
+								</div>
 							</div>
 							
 						</div>

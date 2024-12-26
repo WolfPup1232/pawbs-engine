@@ -109,7 +109,7 @@ class Editor
 	static highlighted_vertices_object = null;
 	
 	// The colour of highlighted object vertices
-	static highlighted_vertex_colour = 0xffffff;
+	static highlighted_vertex_colour = 0x000000;
 	
 	// The colour of highlighted object vertices
 	static highlighted_vertex_outline_colour = 0x000000;
@@ -126,8 +126,14 @@ class Editor
 	// The selected object whose vertices should be highlighted or selected
 	static selected_vertices_object = null;
 	
+	// The radius of the selected object's vertex selection area
+	static selected_vertices_object_highlight_vertex_radius = 0.25;
+	
+	// The colour of the selected object's vertex selection area
+	static selected_vertices_object_highlight_vertex_colour = 0xff0000;
+	
 	// The colour of un-selected object vertices
-	static unselected_vertex_colour = 0xffff00;
+	static unselected_vertex_colour = 0xffffff;
 	
 	// The colour of selected object vertices
 	static selected_vertex_colour = 0xff0000;
@@ -241,6 +247,49 @@ class Editor
 			}
 			
 			return object;
+		};
+		
+		// Add a function to the Object3D type which raycasts only objects which are not flagged to be skipped by the raycaster
+		THREE.Raycaster.prototype.intersectRaycastableObjects = function(objects, recursive = false, intersects = [])
+		{
+			
+			// Iterate through the specified list of objects...
+			for (let i = 0; i < objects.length; i++)
+			{
+				let object = objects[i];
+				
+				// Make sure the object is on the same layers as the raycaster...
+				if (object.layers.test(Game.player.raycaster.layers))
+				{
+					
+					// Skip raycasting flagged objects
+					let skip_raycast = false;
+					if (object.userData && object.userData.ignore_raycast)
+					{
+						skip_raycast = true;
+					}
+					
+					// Raycast unflagged objects
+					if (!skip_raycast)
+					{
+						object.raycast(Game.player.raycaster, intersects);
+					}
+					
+				}
+				
+				// If flagged as recursive, call this function for object's children
+				if (recursive)
+				{
+					Game.player.raycaster.intersectRaycastableObjects(object.children, true, intersects);
+				}
+			}
+			
+			// Sort list of intersected objects by distance
+			intersects.sort(function(a, b) { return a.distance - b.distance; });
+			
+			// Return list of intersected objects
+			return intersects;
+			
 		};
 		
 	}
@@ -630,7 +679,7 @@ class Editor
 		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = Game.player.raycaster.intersectObjects(Game.world.all_objects, true);
+		const intersects = Game.player.raycaster.intersectRaycastableObjects(Game.world.all_objects, true);
 		if (intersects.length > 0)
 		{
 			
@@ -764,7 +813,7 @@ class Editor
 		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
+		const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -886,7 +935,7 @@ class Editor
 		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
+		const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -1369,7 +1418,7 @@ class Editor
 		Game.player.raycaster.far = Infinity;
 		
 		// Check intersections with world objects
-		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
+		const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
@@ -1886,13 +1935,18 @@ class Editor
 		Game.player.raycaster.near = 0;
 		Game.player.raycaster.far = Infinity;
 		
+		// Get first intersected object
+		let intersect_object = null;
+		let intersect_point = null;
+		
 		// Check intersections with world objects
-		const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
+		const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 		if (intersects.length > 0)
 		{
 			
 			// Get first intersected object
-			let intersect_object = intersects[0].object;
+			intersect_object = intersects[0].object;
+			intersect_point = intersects[0].point;
 			
 			// Check if the intersected object is a mesh and doesn't already have highlighted vertices, or if it's a set of points...
 			if ((intersect_object instanceof THREE.Mesh && !intersect_object.userData.vertices) || intersect_object instanceof THREE.Points)
@@ -1941,11 +1995,12 @@ class Editor
 					this.highlighted_vertices_object = intersect_object;
 					
 					// Draw the object's vertices and store them in the userData
-					this.highlighted_vertices_object.userData.vertices = new THREE.Points(this.highlighted_vertices_object.geometry, Shaders.pointOutline(this.highlighted_vertex_colour, this.highlighted_vertex_size, this.highlighted_vertex_outline_colour, this.highlighted_vertex_outline_size));
+					this.highlighted_vertices_object.userData.vertices = new THREE.Points(this.highlighted_vertices_object.geometry, Shaders.pointOutlineInRadius(this.highlighted_vertex_colour, this.highlighted_vertex_size, this.highlighted_vertex_outline_colour, this.highlighted_vertex_outline_size, this.selected_vertices_object_highlight_vertex_radius, this.selected_vertices_object_highlight_vertex_colour));
+					this.highlighted_vertices_object.userData.vertices.userData.ignore_raycast = true;
 					this.highlighted_vertices_object.add(this.highlighted_vertices_object.userData.vertices);
 					
 					// Reset the object's collection of indices at vertex positions
-					this.highlighted_vertices_object.userData.object_indices_at_positions = {};
+					this.highlighted_vertices_object.userData.object_indices_at_positions = new Map();
 					
 					// Get the object's vertices and vertex count
 					const highlighted_vertices_object_position = this.highlighted_vertices_object.geometry.getAttribute('position');
@@ -1957,12 +2012,16 @@ class Editor
 						const position = new THREE.Vector3().fromBufferAttribute(highlighted_vertices_object_position, i);
 						const key = position.x.toFixed(5) + ',' + position.y.toFixed(5) + ',' + position.z.toFixed(5);
 						
-						if (!this.highlighted_vertices_object.userData.object_indices_at_positions[key])
+						if (!this.highlighted_vertices_object.userData.object_indices_at_positions.has(key))
 						{
-							this.highlighted_vertices_object.userData.object_indices_at_positions[key] = [];
+							this.highlighted_vertices_object.userData.object_indices_at_positions.set(key, []);
 						}
 						
-						this.highlighted_vertices_object.userData.object_indices_at_positions[key].push(i);
+						let object_indices_at_positions = this.highlighted_vertices_object.userData.object_indices_at_positions.get(key);
+						object_indices_at_positions.push(i);
+						
+						this.highlighted_vertices_object.userData.object_indices_at_positions.set(key, object_indices_at_positions);
+						
 					}
 					
 					
@@ -1976,18 +2035,45 @@ class Editor
 				}
 				
 				
-			} // Otherwise, if the intersected object is a mesh and already has highlighted vertices (meaning it's probably just been selected), and it's not a set of points either...
+			} // Otherwise, if the intersected object is the highlighted or selected vertices object...
+			else if (intersect_object == this.highlighted_vertices_object || intersect_object == this.selected_vertices_object)
+			{
+				let points_object = null;
+				
+				// Get highlighted object's points object
+				if (intersect_object == this.highlighted_vertices_object)
+				{
+					this.highlighted_vertices_object.children.forEach(child => {
+						if (child instanceof THREE.Points)
+						{
+							points_object = child;
+						}
+					});
+					
+				} // Get selected object's points object
+				else if (intersect_object == this.selected_vertices_object)
+				{
+					this.selected_vertices_object.children.forEach(child => {
+						if (child instanceof THREE.Points)
+						{
+							points_object = child;
+						}
+					});
+				}
+					
+				// Update the object's shader material
+				if (points_object.material.uniforms && points_object.material.uniforms.intersection_point)
+				{
+					points_object.material.uniforms.intersection_point.value.copy(intersect_point);
+				}
+				
+				
+			} // Otherwise, if the intersected object is any other object...
 			else
 			{
 				
-				// Double-check that it's not actually just the highlighted vertices object...
-				if (intersect_object != this.highlighted_vertices_object)
-				{
-				
-					// Reset the highlighted vertices
-					this.resetHighlightedVertices();
-					
-				}
+				// Reset the highlighted vertices
+				this.resetHighlightedVertices();
 				
 			}
 			
@@ -2094,7 +2180,8 @@ class Editor
 					this.selected_vertices_object = intersect_object;
 					
 					// Draw the object's vertices and store them in the userData
-					this.selected_vertices_object.userData.vertices = new THREE.Points(this.selected_vertices_object.geometry, Shaders.pointOutline(this.unselected_vertex_colour, this.selected_vertex_size, this.selected_vertex_outline_colour, this.selected_vertex_outline_size));
+					this.selected_vertices_object.userData.vertices = new THREE.Points(this.selected_vertices_object.geometry, Shaders.pointOutlineInRadius(this.unselected_vertex_colour, this.selected_vertex_size, this.selected_vertex_outline_colour, this.selected_vertex_outline_size, this.selected_vertices_object_highlight_vertex_radius, this.selected_vertices_object_highlight_vertex_colour));
+					this.selected_vertices_object.userData.vertices.userData.ignore_raycast = true;
 					this.selected_vertices_object.add(this.selected_vertices_object.userData.vertices);
 					
 					// Reset the selected vertex indices and selected vertices initial matrix in preparation for storing those values
@@ -2125,7 +2212,7 @@ class Editor
 						const key = position.x.toFixed(5) + ',' + position.y.toFixed(5) + ',' + position.z.toFixed(5);
 						
 						// Get all intersected vertex indices corresponding to that position
-						const indices = this.selected_vertices_object.userData.object_indices_at_positions[key];
+						const indices = this.selected_vertices_object.userData.object_indices_at_positions.get(key);
 						
 						// If intersected vertex indices were found, and they're not already selected...
 						if (indices && !this.selected_vertices_object.userData.selected_vertex_indices.has(indices[0]))
@@ -2158,6 +2245,7 @@ class Editor
 							
 							// Re-initialize the group which will contain selected vertex helper spheres
 							this.selected_vertices_object.userData.selected_vertices = new THREE.Group();
+							this.selected_vertices_object.userData.selected_vertices.userData.ignore_raycast = true;
 							
 							// Get the helper sphere group's initial position, scale, and rotation in preparation for repositioning it over the selected vertices object
 							let selected_vertices_object_position = this.selected_vertices_object.userData.selected_vertices.position.clone();
@@ -2191,6 +2279,7 @@ class Editor
 								const sphere_geometry = new THREE.SphereGeometry(0.05, 8, 8);
 								const sphere_material = new THREE.MeshBasicMaterial({ color: this.selected_vertex_colour });
 								const sphere = new THREE.Mesh(sphere_geometry, sphere_material);
+								sphere.userData.ignore_raycast = true;
 								
 								// Position and scale the helper sphere
 								sphere.position.copy(position);
@@ -2207,7 +2296,15 @@ class Editor
 							// Add the selected vertex helper spheres group to the world
 							this.addObject(this.selected_vertices_object.userData.selected_vertices);
 							
+							// Get center point of selected vertices
+							const selected_vertices_bounds = new THREE.Box3().setFromObject(this.selected_vertices_object.userData.selected_vertices);
+							const selected_vertices_point = new THREE.Vector3();
+							selected_vertices_bounds.getCenter(selected_vertices_point);
+							
 							// Attach the transform controls to the selected vertices group
+							Game.player.controls.transform_controls.position.x = selected_vertices_point.x;
+							Game.player.controls.transform_controls.position.y = selected_vertices_point.y;
+							Game.player.controls.transform_controls.position.z = selected_vertices_point.z;
 							Game.player.controls.transform_controls.attach(this.selected_vertices_object.userData.selected_vertices);
 							
 							
