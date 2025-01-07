@@ -45,9 +45,9 @@
 						<div class="row w-100 m-0 overflow-hidden">
 							
 							<!-- World Options -->
-							<div class="col p-0" style="max-width: 35.8em;">
-								<div class="card-title fw-bold input-group-text mx-1 my-1">
-									🐾 Edit World
+							<div class="col p-0" style="max-width: 36em;">
+								<div class="editor-panel card-title fw-bold input-group-text mx-1 my-1">
+									<span class="editor-title">🐾 Edit World</span>
 									
 									<div class="vr ms-3"></div>
 									
@@ -83,7 +83,7 @@
 							
 							<!-- Camera Modes -->
 							<div class="col p-0 text-nowrap" style="max-width: 4.1em;">
-								<div class="card-title input-group-text mx-1 my-1">
+								<div class="editor-panel card-title input-group-text mx-1 my-1">
 									<input id="editor-camera-walk" name="editor-camera-types" value="walk" class="btn-check" type="checkbox" checked>
 									<label for="editor-camera-walk" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
 									data-bs-title="Player walking mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
@@ -94,20 +94,20 @@
 							
 							<!-- Object Selection Types -->
 							<div class="col p-0 text-nowrap" style="max-width: 13.2em;">
-								<div class="card-title input-group-text mx-1 my-1">
-									<input id="editor-select-objects" name="editor-select-types" value="objects" class="btn-check" type="radio" checked>
+								<div class="editor-panel card-title input-group-text mx-1 my-1">
+									<input id="editor-select-objects" name="editor-select-types" value="1" class="btn-check" type="radio" checked>
 									<label for="editor-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
 									data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-box-seam"></i>
 									</label>
 									
-									<input id="editor-select-faces" name="editor-select-types" value="faces" class="btn-check" type="radio">
+									<input id="editor-select-faces" name="editor-select-types" value="2" class="btn-check" type="radio">
 									<label for="editor-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
 									data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-box2"></i>
 									</label>
 									
-									<input id="editor-select-vertices" name="editor-select-types" value="vertices" class="btn-check" type="radio">
+									<input id="editor-select-vertices" name="editor-select-types" value="3" class="btn-check" type="radio">
 									<label for="editor-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
 									data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-bounding-box"></i>
@@ -118,7 +118,8 @@
 									<input id="editor-select-terrain" value="terrain" class="btn-check" type="checkbox">
 									<label for="editor-select-terrain" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
 									data-bs-title="Terrain selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-image-alt"></i>
+										<i class="bi bi-bounding-box-circles" style="float: right;"></i>
+										<i class="bi bi-image-alt" style="font-size: 0.5em; position: relative; top: -3px; left: 4px;"></i>
 									</label>
 									
 								</div>
@@ -126,20 +127,20 @@
 							
 							<!-- Tools -->
 							<div class="col p-0 text-nowrap" style="max-width: 9em;">
-								<div class="card-title input-group-text mx-1 my-1">
-									<input id="editor-tool-spawn" name="editor-tool-types" value="spawn" class="btn-check" type="checkbox">
+								<div class="editor-panel card-title input-group-text mx-1 my-1">
+									<input id="editor-tool-spawn" name="editor-tool-types" value="1" class="btn-check" type="checkbox">
 									<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
 									data-bs-title="Spawn/build tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-lamp"></i>
+										<i class="bi bi-hammer"></i>
 									</label>
 									
-									<input id="editor-tool-npcs" name="editor-tool-types" value="npcs" class="btn-check" type="checkbox" disabled>
+									<input id="editor-tool-npcs" name="editor-tool-types" value="2" class="btn-check" type="checkbox" disabled>
 									<label for="editor-tool-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
 									data-bs-title="NPC editor tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-person-arms-up"></i>
 									</label>
 									
-									<input id="editor-tool-cinematics" name="editor-tool-types" value="cinematics" class="btn-check" type="checkbox" disabled>
+									<input id="editor-tool-cinematics" name="editor-tool-types" value="3" class="btn-check" type="checkbox" disabled>
 									<label for="editor-tool-cinematics" class="btn btn-sm btn-outline-secondary mx-1 my-0"
 									data-bs-title="Cinematics tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										<i class="bi bi-camera-reels"></i>
@@ -160,7 +161,7 @@
 					<div class="accordion">
 						
 						<!-- Selected Objects General -->
-						<div class="card-title fw-bold input-group-text d-block w-100 mb-2">
+						<div class="editor-panel card-title fw-bold input-group-text d-block w-100 mb-2">
 							<div class="d-flex">
 								
 								<!-- Save Objects -->
@@ -505,52 +506,84 @@
 				<div id="editor-spawn-tool-container" class="card px-2 pt-2 pb-0 shadow-sm overflow-hidden">
 					<div id="editor-spawn-tool-scroll" class="row h-138px overflow-scroll">
 						
+						<!-- Spawn Tool Panels -->
 						<div class="col-6 col-sm-5 col-md-4 pe-1">
-							<div class="row w-100 m-0 overflow-hidden">
-								
-								<!-- Spawn Types -->
+							
+							<!-- Spawn Types -->
+							<div id="editor-spawn-types" class="row w-100 m-0 overflow-hidden">
 								<div class="col p-0 text-nowrap">
-									<div class="card-title input-group-text mx-1 my-1">
-										<input id="editor-spawn-objects" name="editor-spawn-types" value="objects" class="btn-check" type="radio" checked>
+									<div class="editor-panel card-title input-group-text mx-1 my-1">
+										<input id="editor-spawn-objects" name="editor-spawn-types" value="1" class="btn-check" type="radio" checked>
 										<label for="editor-spawn-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
 										data-bs-title="Spawn objects." data-bs-toggle="tooltip" data-bs-placement="top">
-											<i class="bi bi-box"></i>
+											<i class="bi bi-lamp"></i>
 										</label>
 										
-										<input id="editor-spawn-npcs" name="editor-spawn-types" value="npcs" class="btn-check" type="radio" disabled>
-										<label for="editor-spawn-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-										data-bs-title="Spawn NPCs" data-bs-toggle="tooltip" data-bs-placement="top">
-											<i class="bi bi-person-arms-up"></i>
+										<input id="editor-spawn-walls" name="editor-spawn-types" value="3" class="btn-check" type="radio" disabled>
+										<label for="editor-spawn-walls" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+										data-bs-title="Build walls." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-bricks"></i>
+										</label>
+										
+										<input id="editor-spawn-terrain" name="editor-spawn-types" value="4" class="btn-check" type="radio">
+										<label for="editor-spawn-terrain" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+										data-bs-title="Terrain tools." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-image-alt"></i>
 										</label>
 										
 										<div class="vr mx-2"></div>
 										
-										<input id="editor-spawn-walls" name="editor-spawn-types" value="walls" class="btn-check" type="radio" disabled>
-										<label for="editor-spawn-walls" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-										data-bs-title="Wall tool." data-bs-toggle="tooltip" data-bs-placement="top">
-											<i class="bi bi-bricks"></i>
-										</label>
-										
-										<input id="editor-spawn-terrain" name="editor-spawn-types" value="terrain" class="btn-check" type="radio">
-										<label for="editor-spawn-terrain" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-										data-bs-title="Terrain tool." data-bs-toggle="tooltip" data-bs-placement="top">
-											<i class="bi bi-image-alt"></i>
+										<input id="editor-spawn-npcs" name="editor-spawn-types" value="2" class="btn-check" type="radio" disabled>
+										<label for="editor-spawn-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+										data-bs-title="Spawn NPCs." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-person-arms-up"></i>
 										</label>
 									</div>
 								</div>
-								
 							</div>
-							<div id="editor-spawn-categories" class="row w-100 m-0 overflow-hidden">
-								
-								<!-- Spawn Categories  -->
+							
+							<!-- Spawn Categories  -->
+							<div id="editor-spawn-object-categories" class="row w-100 m-0 overflow-hidden">
 								<div class="col p-0 text-nowrap">
-									<div class="card-title input-group-text mx-1 my-1">
+								
+									<div class="editor-panel card-title input-group-text mx-1 my-1">
 										<select id="editor-spawn-category-select" class="form-select form-select-sm"
 										data-bs-title="Select an object category." data-bs-toggle="tooltip" data-bs-placement="top"></select>
 									</div>
+									
 								</div>
-								
 							</div>
+							
+							<!-- Terrain Tool -->
+							<div id="editor-spawn-terrain-tools" class="small" style="display: none;">
+								<div class="row w-100 m-0 overflow-hidden">
+									
+									<!-- Terrain Tool Types -->
+									<div class="col p-0 text-nowrap">
+										<div class="editor-panel card-title input-group-text mx-1 my-1">
+											<input id="editor-terrain-select" name="editor-terrain-tools" value="select" class="btn-check" type="radio" checked>
+											<label for="editor-terrain-select" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+											data-bs-title="Select terrain vertices." data-bs-toggle="tooltip" data-bs-placement="top">
+												<i class="bi bi-bounding-box"></i>
+											</label>
+											
+											<input id="editor-terrain-raise" name="editor-terrain-tools" value="raise" class="btn-check" type="radio">
+											<label for="editor-terrain-raise" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+											data-bs-title="Raise terrain." data-bs-toggle="tooltip" data-bs-placement="top">
+												<i class="bi bi-arrow-bar-up"></i>
+											</label>
+											
+											<input id="editor-terrain-lower" name="editor-terrain-tools" value="lower" class="btn-check" type="radio">
+											<label for="editor-terrain-lower" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+											data-bs-title="Lower terrain." data-bs-toggle="tooltip" data-bs-placement="top">
+												<i class="bi bi-arrow-bar-down"></i>
+											</label>
+										</div>
+									</div>
+									
+								</div>
+							</div>
+							
 						</div>
 						
 						<!-- Spawn Tool Panels -->
@@ -564,7 +597,7 @@
 							
 							<!-- Cube Primitive -->
 							<div id="editor-spawn-panel-cube" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -611,7 +644,7 @@
 							
 							<!-- Sphere Primitive -->
 							<div id="editor-spawn-panel-sphere" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -643,7 +676,7 @@
 							
 							<!-- Cylinder Primitive -->
 							<div id="editor-spawn-panel-cylinder" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -685,7 +718,7 @@
 							
 							<!-- Cone Primitive -->
 							<div id="editor-spawn-panel-cone" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -722,7 +755,7 @@
 							
 							<!-- Torus Primitive -->
 							<div id="editor-spawn-panel-torus" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -759,7 +792,7 @@
 							
 							<!-- Plane Primitive -->
 							<div id="editor-spawn-panel-plane" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -796,7 +829,7 @@
 							
 							<!-- Circle Primitive -->
 							<div id="editor-spawn-panel-circle" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -829,7 +862,7 @@
 							
 							<!-- Ring Primitive -->
 							<div id="editor-spawn-panel-ring" class="my-1 small" style="display: none;">
-								<div class="row col-10 col-xl-8 bg-light border rounded p-0 mx-1 mb-3">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
 									<div class="col-8 pe-0">
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
@@ -846,12 +879,12 @@
 										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
 											<div class="flex-fill mx-1">
 												<label class="mt-1 small">R. Segments: </label>
-												<input id="editor-spawn-plane-radial-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
+												<input id="editor-spawn-ring-radial-segments" value="10" default="10" class="number-input form-control form-control-sm" type="text"
 												data-bs-title="Radial segment count." data-bs-toggle="tooltip" data-bs-placement="top">
 											</div>
 											<div class="flex-fill mx-1">
 												<label class="mt-1 small">H. Segments: </label>
-												<input id="editor-spawn-plane-height-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												<input id="editor-spawn-ring-height-segments" value="1" default="1" class="number-input form-control form-control-sm" type="text"
 												data-bs-title="X-axis segment count." data-bs-toggle="tooltip" data-bs-placement="top">
 											</div>
 										</div>
@@ -872,40 +905,33 @@
 							<div id="editor-spawn-panel-walls" class="my-1 small" style="display: none;"></div>
 							
 							<!-- Terrain Tool -->
-							<div id="editor-spawn-panel-terrain" class="small" style="display: none;">
-								<div class="row w-100 m-0 overflow-hidden">
-									
-									<!-- Terrain Tool Types -->
-									<div class="col p-0 text-nowrap">
-										<div class="card-title input-group-text mx-1 my-1">
-											<input id="editor-spawn-objects" name="editor-spawn-types" value="objects" class="btn-check" type="radio" checked>
-											<label for="editor-spawn-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-											data-bs-title="Spawn objects." data-bs-toggle="tooltip" data-bs-placement="top">
-												<i class="bi bi-box"></i>
-											</label>
-											
-											<input id="editor-spawn-npcs" name="editor-spawn-types" value="npcs" class="btn-check" type="radio" disabled>
-											<label for="editor-spawn-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-											data-bs-title="Spawn NPCs" data-bs-toggle="tooltip" data-bs-placement="top">
-												<i class="bi bi-person-arms-up"></i>
-											</label>
-											
-											<div class="vr mx-2"></div>
-											
-											<input id="editor-spawn-walls" name="editor-spawn-types" value="walls" class="btn-check" type="radio" disabled>
-											<label for="editor-spawn-walls" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-											data-bs-title="Wall tool." data-bs-toggle="tooltip" data-bs-placement="top">
-												<i class="bi bi-bricks"></i>
-											</label>
-											
-											<input id="editor-spawn-terrain" name="editor-spawn-types" value="terrain" class="btn-check" type="radio">
-											<label for="editor-spawn-terrain" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-											data-bs-title="Terrain tool." data-bs-toggle="tooltip" data-bs-placement="top">
-												<i class="bi bi-image-alt"></i>
-											</label>
+							<div id="editor-spawn-panel-terrain" class="my-1 small" style="display: none;">
+								<div class="editor-panel row col-10 col-xl-8 p-0 mx-1 mb-3">
+									<div class="col-2 p-0 m-3 text-nowrap text-center">
+										<input id="editor-terrain-shape-square" name="editor-terrain-shape" value="1" class="btn-check" type="radio" checked>
+										<label for="editor-terrain-shape-square" class="btn btn-sm btn-outline-secondary m-0"
+										data-bs-title="Square terrain tool." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-square"></i>
+										</label>
+										
+										<input id="editor-terrain-shape-circle" name="editor-terrain-shape" value="2" class="btn-check" type="radio">
+										<label for="editor-terrain-shape-circle" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+										data-bs-title="Circle terrain tool." data-bs-toggle="tooltip" data-bs-placement="top">
+											<i class="bi bi-circle"></i>
+										</label>
+									</div>
+									<div class="col-7 p-0">
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											<div class="flex-fill mx-1">
+												<label class="mt-1 small">Radius: </label>
+												<input id="editor-terrain-radius" value="1" default="1" class="number-input form-control form-control-sm" type="text"
+												data-bs-title="Terrain tool radius." data-bs-toggle="tooltip" data-bs-placement="top">
+											</div>
+										</div>
+										<div class="d-flex flex-wrap flex-sm-nowrap justify-content-center mb-2">
+											&nbsp;
 										</div>
 									</div>
-									
 								</div>
 							</div>
 							
@@ -1087,7 +1113,7 @@
 		/**
 		* Window load event.
 		*/
-		window.onload = function(e)
+		window.onload = function(event)
 		{ 
 			
 			// Initialize bootstrap tooltips
@@ -1106,6 +1132,9 @@
 				
 				$("#editor-tool-spawn").prop("checked", true);
 				$("#editor-tool-spawn").trigger("change");
+				
+				$("#editor-spawn-terrain").prop("checked", true);
+				$("#editor-spawn-terrain").trigger("change");
 				
 			}, 500)
 			

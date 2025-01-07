@@ -20,7 +20,7 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor world name text change event.
 			 */
-			$("#editor-world-name").change(function()
+			$("#editor-world-name").on("change", function()
 			{
 					
 				// Set world name
@@ -31,7 +31,7 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor world new button click event.
 			 */
-			$("#editor-world-new").click(function()
+			$("#editor-world-new").on("click", function()
 			{
 					
 				// Create a new empty world
@@ -42,7 +42,7 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor world load button click event.
 			 */
-			$("#editor-world-load").click(function()
+			$("#editor-world-load").on("click", function()
 			{
 					
 				// Load a world from a JSON file
@@ -53,7 +53,7 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor world save button click event.
 			 */
-			$("#editor-world-save").click(function()
+			$("#editor-world-save").on("click", function()
 			{
 					
 				// Save the selected world as a JSON file
@@ -64,10 +64,10 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor world save button click event.
 			 */
-			$("#editor-world-triggers").click(function()
+			$("#editor-world-triggers").on("click", function()
 			{
 					
-				// TODO: Show world events trigger editor.
+				// TODO: Show global events trigger editor.
 					
 			});
 			
@@ -79,7 +79,7 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor walk mode button click event.
 			 */
-			$("#editor-camera-walk").click(function()
+			$("#editor-camera-walk").on("click", function()
 			{
 				
 				// Get editor camera mode selected checkbox value
@@ -117,42 +117,27 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor object selection type selected radio button change event.
 			 */
-			$('input[type="radio"][name="editor-select-types"]').change(function()
+			$('input[type="radio"][name="editor-select-types"]').on("change", function()
 			{
 				
 				// Get editor object selection type selected radio button value
-				let selected_value = $(this).val();
-				
-				// Disable all selection type modes
-				Editor.select_objects = false;
-				Editor.select_faces = false;
-				Editor.select_vertices = false;
+				Editor.selection_mode = parseInt($(this).val());
 				
 				// Reset all highlighted or selected objects, faces, and vertices
 				Editor.resetHighlightedAndSelectedObjectsFacesVertices();
 				
 				// Change object selection type mode based on selected radio button value
-				if (selected_value === 'objects')
+				if (Editor.selection_mode === Editor.SelectionModes.Objects)
 				{
-					
-					// Object selection mode
-					Editor.select_objects = true;
-					
+					// Do nothing.
 				}
-				else if (selected_value === 'faces')
+				else if (Editor.selection_mode === Editor.SelectionModes.Faces)
 				{
-					
-					// Face selection mode
-					Editor.select_faces = true;
-					
+					// Do nothing.
 				}
-				else if (selected_value === 'vertices')
+				else if (Editor.selection_mode === Editor.SelectionModes.Vertices)
 				{
-					
-					// Vertex selection mode
-					Editor.select_vertices = true;
 					Game.player.controls.transform_controls.setMode('translate');
-					
 				}
 				
 				// Update the editor selected objects UI
@@ -163,7 +148,7 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor terrain selection button click event.
 			 */
-			$("#editor-select-terrain").click(function()
+			$("#editor-select-terrain").on("click", function(event)
 			{
 				
 				// Enable/disable terrain selection
@@ -184,6 +169,9 @@ export default function initializeEditorUIEventHandlers()
 					
 				}
 				
+				// Prevent this event from triggering parent element click events
+				event.stopPropagation();
+				
 			});
 			
 		//#endregion
@@ -194,16 +182,18 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor tool type selected checkbox change event.
 			 */
-			$('input[type="checkbox"][name="editor-tool-types"]').change(function()
+			$('input[type="checkbox"][name="editor-tool-types"]').on("change", function()
 			{
 					
 				// Get editor tool type selected checkbox value
-				let selected_value = $(this).val();
-				
-				// Disable all editor tools
-				Editor.tool_spawn = false;
-				Editor.tool_npcs = false;
-				Editor.tool_cinematics = false;
+				if ($(this).prop("checked"))
+				{
+					Editor.tool_mode = parseInt($(this).val());
+				}
+				else
+				{
+					Editor.tool_mode = Editor.ToolMode.None;
+				}
 				
 				// Hide all editor tools
 				$("#editor-spawn-tool").hide();
@@ -214,68 +204,64 @@ export default function initializeEditorUIEventHandlers()
 				Assets.objectThumbnailsStopAnimating();
 				
 				// Spawn Tool
-				if (selected_value === 'spawn')
+				if (Editor.tool_mode == Editor.ToolMode.Spawn)
 				{
 					
 					// Uncheck other tools
 					$("#editor-tool-npcs").prop("checked", false);
 					$("#editor-tool-cinematics").prop("checked", false);
-					
+						
 					// Show spawn tool
-					if ($(this).is(':checked'))
+					$("#editor-spawn-tool").show();
+					
+					if (Editor.spawn_tool == Editor.SpawnTools.Objects)
 					{
 						
-						// Enable spawn tool
-						Editor.tool_spawn = true;
+						// Enable spawn objects tool
+						$("#editor-spawn-objects").prop("checked", true);
+						$("#editor-spawn-objects").trigger("change");
 						
-						// Show spawn tool
-						$("#editor-spawn-tool").show();
+					}
+					if (Editor.spawn_tool == Editor.SpawnTools.NPCs)
+					{
+						// Do nothing.
+					}
+					if (Editor.spawn_tool == Editor.SpawnTools.Walls)
+					{
+						// Do nothing.
+					}
+					else if (Editor.spawn_tool == Editor.SpawnTools.Terrain)
+					{
 						
-						// Update object spawn tool UI
-						Editor.updateSpawnToolUI();
+						// Enable spawn terrain tool
+						$("#editor-spawn-terrain").prop("checked", true);
+						$("#editor-spawn-terrain").trigger("change");
 						
 					}
 					
 					
 				} // NPCs Tool
-				else if (selected_value === 'npcs')
+				else if (Editor.tool_mode == Editor.ToolMode.NPC)
 				{
 					
 					// Uncheck other tools
 					$("#editor-tool-spawn").prop("checked", false);
 					$("#editor-tool-cinematics").prop("checked", false);
 					
-					// Show cinematics tool
-					if ($(this).is(':checked'))
-					{
-						
-						// Enable NPCs tool
-						Editor.tool_npcs = true;
-						
-						// Show NPCs tool
-						//$("#editor-spawn-npcs").show();
-						
-					}
+					// Show NPCs tool
+					//$("#editor-spawn-npcs").show();
+					
 					
 				} // Cinematics Tool
-				else if (selected_value === 'cinematics')
+				else if (Editor.tool_mode == Editor.ToolMode.Cinematics)
 				{
 					
 					// Uncheck other tools
 					$("#editor-tool-spawn").prop("checked", false);
 					$("#editor-tool-npcs").prop("checked", false);
-					
+											
 					// Show cinematics tool
-					if ($(this).is(':checked'))
-					{
-						
-						// Enable cinematics tool
-						Editor.tool_cinematics = true;
-						
-						// Show cinematics tool
-						//$("#editor-cinematics-tool").show();
-						
-					}
+					//$("#editor-cinematics-tool").show();
 					
 				}
 				
@@ -333,7 +319,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects save dialog save prefab button click event.
 				 */
-				$("#editor-selected-objects-save-modal-prefab-save").click(function()
+				$("#editor-selected-objects-save-modal-prefab-save").on("click", function()
 				{
 					
 					// Save prefab to a JSON file
@@ -361,7 +347,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects save dialog objects.json path change event.
 				 */
-				$("#editor-selected-objects-save-modal-objects-path").on('input', function(e)
+				$("#editor-selected-objects-save-modal-objects-path").on('input', function(event)
 				{
 					
 					// Validate objects.json path length to enable/disable save button
@@ -389,9 +375,9 @@ export default function initializeEditorUIEventHandlers()
 					{
 						
 						// Get the newly typed character
-						if (e)
+						if (event)
 						{
-							editable_value = e.originalEvent.data || '';
+							editable_value = event.originalEvent.data || '';
 						}
 						
 					}
@@ -430,7 +416,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects save dialog save objects.json button click event.
 				 */
-				$("#editor-selected-objects-save-modal-objects-save").click(function()
+				$("#editor-selected-objects-save-modal-objects-save").on("click", function()
 				{
 					
 					// Add the saved prefab's file path to the object paths array
@@ -493,7 +479,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects cut button click event.
 				 */
-				$("#editor-selected-objects-cut").click(function()
+				$("#editor-selected-objects-cut").on("click", function()
 				{
 					
 					// Cut selected objects
@@ -504,7 +490,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects copy button click event.
 				 */
-				$("#editor-selected-objects-copy").click(function()
+				$("#editor-selected-objects-copy").on("click", function()
 				{
 					
 					// Copy selected objects
@@ -515,7 +501,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor clipboard objects paste button click event.
 				 */
-				$("#editor-selected-objects-paste").click(function()
+				$("#editor-selected-objects-paste").on("click", function()
 				{
 					
 					// Paste clipboard objects
@@ -531,7 +517,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects delete button click event.
 				 */
-				$("#editor-selected-objects-delete").click(function()
+				$("#editor-selected-objects-delete").on("click", function()
 				{
 					
 					// Delete selected objects
@@ -547,7 +533,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects group button click event.
 				 */
-				$("#editor-selected-objects-group").click(function()
+				$("#editor-selected-objects-group").on("click", function()
 				{
 					
 					// Group selected objects
@@ -558,7 +544,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects ungroup button click event.
 				 */
-				$("#editor-selected-objects-ungroup").click(function()
+				$("#editor-selected-objects-ungroup").on("click", function()
 				{
 					
 					// Ungroup selected objects
@@ -575,12 +561,12 @@ export default function initializeEditorUIEventHandlers()
 		//#region [Selected Objects Transforms]
 			
 			
-			//#region [Editor Selected Objects Transform Types]
+			//#region [Selected Objects Transform Types]
 			
 				/**
 				 * Editor selected objects transform type selected radio button change event.
 				 */
-				$('input[type="radio"][name="editor-selected-objects-transforms"]').change(function()
+				$('input[type="radio"][name="editor-selected-objects-transforms"]').on("change", function()
 				{
 					
 					// Get editor selected objects transform type selected radio button value
@@ -631,12 +617,12 @@ export default function initializeEditorUIEventHandlers()
 			//#endregion
 			
 			
-			//#region [Editor Selected Objects Position]
+			//#region [Selected Objects Position]
 				
 				/**
 				 * Editor selected objects position grid snap change event.
 				 */
-				$("#editor-selected-objects-transform-position-snap").change(function()
+				$("#editor-selected-objects-transform-position-snap").on("change", function()
 				{
 					
 					// Check if position grid snap is enabled
@@ -653,7 +639,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects position grid snap checkbox change event.
 				 */
-				$("#editor-selected-objects-transform-position-snap-checkbox").change(function()
+				$("#editor-selected-objects-transform-position-snap-checkbox").on("change", function()
 				{
 					
 					// Check if position grid snap is enabled
@@ -677,7 +663,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects position X-axis change event.
 				 */
-				$("#editor-selected-objects-transform-position-x").change(function()
+				$("#editor-selected-objects-transform-position-x").on("change", function()
 				{
 						
 					// Set selected objects X-axis position
@@ -688,7 +674,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects position Y-axis change event.
 				 */
-				$("#editor-selected-objects-transform-position-y").change(function()
+				$("#editor-selected-objects-transform-position-y").on("change", function()
 				{
 					
 					// Set selected objects Y-axis position
@@ -699,7 +685,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects position Z-axis change event.
 				 */
-				$("#editor-selected-objects-transform-position-z").change(function()
+				$("#editor-selected-objects-transform-position-z").on("change", function()
 				{
 					
 					// Set selected objects Z-axis position
@@ -710,12 +696,12 @@ export default function initializeEditorUIEventHandlers()
 			//#endregion
 			
 			
-			//#region [Editor Selected Objects Scale]
+			//#region [Selected Objects Scale]
 				
 				/**
 				 * Editor selected objects scale grid snap change event.
 				 */
-				$("#editor-selected-objects-transform-scale-snap").change(function()
+				$("#editor-selected-objects-transform-scale-snap").on("change", function()
 				{
 					
 					// Check if scale grid snap is enabled
@@ -732,7 +718,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects scale grid snap checkbox change event.
 				 */
-				$("#editor-selected-objects-transform-scale-snap-checkbox").change(function()
+				$("#editor-selected-objects-transform-scale-snap-checkbox").on("change", function()
 				{
 					
 					// Check if scale grid snap is enabled
@@ -756,7 +742,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects scale X-axis change event.
 				 */
-				$("#editor-selected-objects-transform-scale-x").change(function()
+				$("#editor-selected-objects-transform-scale-x").on("change", function()
 				{
 					
 					// Set selected objects X-axis scale 
@@ -767,7 +753,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects scale Y-axis change event.
 				 */
-				$("#editor-selected-objects-transform-scale-y").change(function()
+				$("#editor-selected-objects-transform-scale-y").on("change", function()
 				{
 					
 					// Set selected objects Y-axis scale 
@@ -778,7 +764,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects scale Z-axis change event.
 				 */
-				$("#editor-selected-objects-transform-scale-z").change(function()
+				$("#editor-selected-objects-transform-scale-z").on("change", function()
 				{
 					
 					// Set selected objects Z-axis scale 
@@ -789,12 +775,12 @@ export default function initializeEditorUIEventHandlers()
 			//#endregion
 			
 			
-			//#region [Editor Selected Objects Rotation]
+			//#region [Selected Objects Rotation]
 				
 				/**
 				 * Editor selected objects rotation grid snap change event.
 				 */
-				$("#editor-selected-objects-transform-rotation-snap").change(function()
+				$("#editor-selected-objects-transform-rotation-snap").on("change", function()
 				{
 					
 					// Check if rotation grid snap is enabled
@@ -811,7 +797,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects rotation grid snap checkbox change event.
 				 */
-				$("#editor-selected-objects-transform-rotation-snap-checkbox").change(function()
+				$("#editor-selected-objects-transform-rotation-snap-checkbox").on("change", function()
 				{
 					
 					// Check if rotation grid snap is enabled
@@ -835,7 +821,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects rotation X-axis change event.
 				 */
-				$("#editor-selected-objects-transform-rotation-x").change(function()
+				$("#editor-selected-objects-transform-rotation-x").on("change", function()
 				{
 					
 					// Set selected objects X-axis rotation by converting the input degrees to radians
@@ -846,7 +832,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects rotation Y-axis change event.
 				 */
-				$("#editor-selected-objects-transform-rotation-y").change(function()
+				$("#editor-selected-objects-transform-rotation-y").on("change", function()
 				{
 					
 					// Set selected objects Y-axis rotation by converting the input degrees to radians
@@ -857,7 +843,7 @@ export default function initializeEditorUIEventHandlers()
 				/**
 				 * Editor selected objects rotation Z-axis change event.
 				 */
-				$("#editor-selected-objects-transform-rotation-z").change(function()
+				$("#editor-selected-objects-transform-rotation-z").on("change", function()
 				{
 					
 					// Set selected objects Z-axis rotation by converting the input degrees to radians
@@ -905,7 +891,7 @@ export default function initializeEditorUIEventHandlers()
 					/**
 					 * Editor selected objects texture reset button click event.
 					 */
-					$("#editor-selected-objects-materials-texture-reset-button").click(function()
+					$("#editor-selected-objects-materials-texture-reset-button").on('click', function()
 					{
 						
 						// Get hex string of the editor's default spawned object colour
@@ -942,89 +928,80 @@ export default function initializeEditorUIEventHandlers()
 	//#endregion
 	
 	
-	//#region [Editor Spawn Tool]
+	//#region [Spawn Tool]
 		
 		/**
 		 * Editor spawn tool type selected radio button change event.
 		 */
-		$('input[type="radio"][name="editor-spawn-types"]').change(function()
+		$('input[type="radio"][name="editor-spawn-types"]').on("change", function()
 		{
 			
 			// Get editor spawn tool type selected radio button value
-			let selected_value = $(this).val();
-			
-			// Disable all editor spawn types
-			Editor.spawn_objects = false;
-			Editor.spawn_npcs = false;
-			Editor.spawn_walls = false;
-			Editor.spawn_terrain = false;
+			Editor.spawn_tool = parseInt($(this).val());
 			
 			// Hide all editor tool panels
-			$("#editor-spawn-panel-objects").hide();
-			$("#editor-spawn-panel-npcs").hide();
-			$("#editor-spawn-panel-walls").hide();
-			$("#editor-spawn-panel-terrain").hide();
-			$("#editor-spawn-categories").hide();
-			
-			// Hide all primitive object spawn panels
-			$("#editor-spawn-panel-cube").hide();
-			$("#editor-spawn-panel-sphere").hide();
-			$("#editor-spawn-panel-cylinder").hide();
-			$("#editor-spawn-panel-cone").hide();
-			$("#editor-spawn-panel-torus").hide();
-			$("#editor-spawn-panel-plane").hide();
-			$("#editor-spawn-panel-circle").hide();
-			$("#editor-spawn-panel-ring").hide();
+			$("[id^='editor-spawn-panel-']").hide();
+			$("#editor-spawn-object-categories").hide();
+			$("#editor-spawn-terrain-tools").hide();
 			
 			// Stop object thumbnails from animating
 			Assets.objectThumbnailsStopAnimating();
 			
 			// Spawn Objects
-			if (selected_value === 'objects')
+			if (Editor.spawn_tool === Editor.SpawnTools.Objects)
 			{
-				
-				// Enable objects spawn tool
-				Editor.spawn_objects = true;
 				
 				// Show the spawn objects panel
 				$("#editor-spawn-panel-objects").show();
-				$("#editor-spawn-categories").show();
+				$("#editor-spawn-object-categories").show();
+				
+				// Enable object selection mode
+				$("#editor-select-objects").prop("checked", true);
+				$("#editor-select-objects").trigger("change");
+				
+				// Disable terrain selection mode
+				if (Editor.select_terrain)
+				{
+					$("#editor-select-terrain").trigger("click");
+				}
 				
 				// Update spawn objects tool UI
 				Editor.updateSpawnToolUI();
 				
 				
 			} // Spawn NPCs
-			else if (selected_value === 'npcs')
+			else if (Editor.spawn_tool === Editor.SpawnTools.NPCs)
 			{
-				
-				// Enable npcs spawn tool
-				Editor.spawn_npcs = true;
 				
 				// Show the spawn npcs panel
 				$("#editor-spawn-panel-npcs").show();
 				
 				
 			} // Spawn Walls
-			else if (selected_value === 'walls')
+			else if (Editor.spawn_tool === Editor.SpawnTools.Walls)
 			{
-				
-				// Enable walls spawn tool
-				Editor.spawn_walls = true;
 				
 				// Show the spawn walls panel
 				$("#editor-spawn-panel-walls").show();
 				
 				
 			} // Spawn Terrain
-			else if (selected_value === 'terrain')
+			else if (Editor.spawn_tool === Editor.SpawnTools.Terrain)
 			{
 				
-				// Enable terrain spawn tool
-				Editor.spawn_terrain = true;
-				
 				// Show the spawn terrain panel
+				$("#editor-spawn-terrain-tools").show();
 				$("#editor-spawn-panel-terrain").show();
+				
+				// Enable vertex selection mode
+				$("#editor-select-vertices").prop("checked", true);
+				$("#editor-select-vertices").trigger("change");
+				
+				// Enable terrain selection mode
+				if (!Editor.select_terrain)
+				{
+					$("#editor-select-terrain").trigger("click");
+				}
 				
 			}
 			
@@ -1033,14 +1010,14 @@ export default function initializeEditorUIEventHandlers()
 		/**
 		 * Editor spawn tool mouse wheel scroll event.
 		 */
-		$("#editor-spawn-tool-container").on("wheel", function(e)
+		$("#editor-spawn-tool-container").on("wheel", function(event)
 		{
 			
 			// Scroll the spawn tool horizontally based on the mouse wheel scroll amount
-			if (Math.abs(e.originalEvent.deltaY) > 0)
+			if (Math.abs(event.originalEvent.deltaY) > 0)
 			{
-				e.preventDefault();
-				$("#editor-spawn-tool-scroll").scrollLeft($("#editor-spawn-tool-scroll").scrollLeft() + e.originalEvent.deltaY);
+				event.preventDefault();
+				$("#editor-spawn-tool-scroll").scrollLeft($("#editor-spawn-tool-scroll").scrollLeft() + event.originalEvent.deltaY);
 			}
 			
 		});
@@ -1051,7 +1028,7 @@ export default function initializeEditorUIEventHandlers()
 			/**
 			 * Editor spawn tool primitive object attribute text change event.
 			 */
-			$("[id^='editor-spawn-']").change(function()
+			$("[id^='editor-spawn-']").on("change", function()
 			{
 				
 				// Get name of primitive object to be spawned
@@ -1198,6 +1175,33 @@ export default function initializeEditorUIEventHandlers()
 					Assets.objects["primitive_" + primitive_name] = primitive_object;
 				}
 				
+			});
+			
+		//#endregion
+		
+		
+		//#region [Terrain Tool]
+			
+			/**
+			 * Editor selected objects transform type selected radio button change event.
+			 */
+			$('input[type="radio"][name="editor-terrain-shape"]').on("change", function()
+			{
+				
+				// Get terrain tool shape selected radio button value
+				Editor.terrain_tool = parseInt($(this).val());
+				
+			});
+				
+			/**
+			 * Editor selected objects position X-axis change event.
+			 */
+			$("#editor-terrain-radius").on("change", function()
+			{
+					
+				// Set selected objects X-axis position
+				Editor.terrain_tool_select_vertex_radius = $("#editor-terrain-radius").val();
+					
 			});
 			
 		//#endregion

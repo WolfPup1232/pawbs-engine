@@ -66,6 +66,19 @@ button {
 
 /* Editor UI Elements */
 
+/* Window Panels */
+.editor-panel {
+	border: 1px solid #dee2e6;
+	border-radius: .375rem;
+	background-color: #f8f9fa;
+}
+
+.editor-panel:hover {
+	background-color: #e8edee;
+	border-color: #c2c6be;
+	transition: background-color 0.3s ease;
+}
+
 /* Selected Objects Window */
 #editor-selected-objects-inner {
 	overflow-y: scroll;
@@ -170,6 +183,13 @@ button {
 
 
 /* Third-Party Library Overrides */
+
+/* Bootstrap Button */
+.btn-check:hover + .btn {
+	color: #fff;
+	background-color: #6c757d;
+	border-color: #6c757d;
+}
 
 /* Bootstrap Tooltip */
 .tooltip-inner {

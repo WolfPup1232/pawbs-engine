@@ -1,6 +1,9 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
 
+// Static Class Imports
+import Editor from './editor.class.js';
+
 /**
  * A collection of useful custom shaders.
  */
@@ -132,11 +135,12 @@ class Shaders
 	 * @param {float} point_size The radius of each point.
 	 * @param {hexidecimal} outline_colour The colour of each point's outline.
 	 * @param {float} outline_size The thickness of each point's outline.
+	 * @param {Editor.TerrainTools} radius_shape The the highlighted radius's shape.
 	 * @param {float} radius_size The size of the highlighted radius.
 	 * @param {hexidecimal} radius_colour The colour of the highlighted radius.
 	 * @return {THREE.ShaderMaterial} The custom shader material for a THREE.Points object.
 	 */
-	static pointOutlineInRadius(point_colour, point_size, outline_colour, outline_size, radius_size, radius_colour)
+	static pointOutlineInRadius(point_colour, point_size, outline_colour, outline_size, radius_shape, radius_size, radius_colour)
 	{
 		return new THREE.ShaderMaterial({
 			uniforms: {
@@ -146,31 +150,40 @@ class Shaders
 				point_size: { value: point_size },
 				outline_size: { value: outline_size },
 				radius_size: { value: radius_size },
+				radius_shape: { value: radius_shape },
+				highlight_vertices: { value: true },
 				intersection_point: { value: new THREE.Vector3() }
 			},
 			vertexShader: `
+				uniform vec3 intersection_point;
+				
+				uniform int radius_shape;
+				
 				uniform float radius_size;
 				uniform float point_size;
 				
 				varying float within_square;
-				
-				uniform vec3 intersection_point;
 				
 				void main()
 				{
 					vec4 world_position = modelMatrix * vec4(position, 1.0);
 					vec3 offset = world_position.xyz - intersection_point;
 					
-					// Check if the point is within the square radius in the XZ plane...
-					if (abs(offset.x) <= radius_size && abs(offset.z) <= radius_size)
+					within_square = 0.0;
+					
+					if (radius_shape == 1)
 					{
-						// Inside the square
-						within_square = 1.0;
+						if (abs(offset.x) <= radius_size && abs(offset.z) <= radius_size)
+						{
+							within_square = 1.0;
+						}
 					}
-					else
+					else if (radius_shape == 2)
 					{
-						// Outside the square
-						within_square = 0.0;
+						if ((dot(offset, offset)) <= (radius_size * radius_size))
+						{
+							within_square = 1.0;
+						}
 					}
 					
 					vec4 view_position = modelViewMatrix * vec4(position, 1.0);
@@ -179,10 +192,14 @@ class Shaders
 				}
 			`,
 			fragmentShader: `
+				uniform bool highlight_vertices;
+				
 				uniform vec3 point_colour;
 				uniform vec3 radius_colour;
 				uniform vec3 outline_colour;
+				
 				uniform float outline_size;
+				
 				varying float within_square;
 				
 				void main()
@@ -195,8 +212,12 @@ class Shaders
 						discard;
 					}
 					
-					// Determine color based on whether the point is within the square
-					vec3 color = mix(point_colour, radius_colour, within_square);
+					vec3 colour = point_colour;
+					
+					if (highlight_vertices)
+					{
+						colour = mix(point_colour, radius_colour, within_square);
+					}
 					
 					if (distance > (0.5 - outline_size))
 					{
@@ -204,7 +225,7 @@ class Shaders
 					}
 					else
 					{
-						gl_FragColor = vec4(color, 1.0);
+						gl_FragColor = vec4(colour, 1.0);
 					}
 				}
 			`,

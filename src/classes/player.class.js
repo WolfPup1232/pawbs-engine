@@ -61,9 +61,6 @@ class Player
 		this.jump_velocity = 0;
 		
 		// The amount of gravity pulling down on the player
-		//
-		// 	NOTE: This should probably be changed to be different per-world, or even per-area in a world.
-		//		  Like different gravity in different rooms maybe? ¯\_(ツ)_/¯
 		this.jump_gravity = 0.0125;
 		
 		
