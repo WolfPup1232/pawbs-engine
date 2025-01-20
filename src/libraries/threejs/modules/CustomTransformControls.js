@@ -227,7 +227,7 @@ class CustomTransformControls extends Object3D {
 
 	mouseDown() {
 
-		if ( this.object === undefined || this.dragging === true || Game.player.controls.is_mouse_left_down == false ) return;
+		if ( this.object === undefined || this.dragging === true || Game.player.controls.mouse_left_down == false ) return;
 
 		if ( this.axis !== null ) {
 
@@ -299,7 +299,7 @@ class CustomTransformControls extends Object3D {
 
 		}
 		
-		if ( object === undefined || axis === null || this.dragging === false || Game.player.controls.is_mouse_left_down == false ) return;
+		if ( object === undefined || axis === null || this.dragging === false || Game.player.controls.mouse_left_down == false ) return;
 		
 		Game.player.raycaster.ray.origin.copy(Game.player.position);
 		Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
@@ -534,7 +534,7 @@ class CustomTransformControls extends Object3D {
 
 	mouseUp() {
 
-		if ( Game.player.controls.is_mouse_left_down == true ) return;
+		if ( Game.player.controls.mouse_left_down == true ) return;
 
 		if ( this.dragging && ( this.axis !== null ) ) {
 

@@ -8,5 +8,9 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1"
+  },
+  "dependencies": {
+    "uuid": "^11.0.4",
+    "ws": "^8.18.0"
   }
 }
