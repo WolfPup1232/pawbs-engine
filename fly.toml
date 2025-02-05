@@ -1,23 +1,83 @@
-# fly.toml app configuration file generated for pawbs-engine on 2025-01-27T18:00:08Z
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+# ---------------------
+# Pawbs Engine fly.toml
+# ---------------------
 
+# App Configuration
+
+# Name
 app = 'pawbs-engine'
+
+# Machine region
 primary_region = 'yyz'
 
+
+# Build Configuration
 [build]
-
-[http_service]
-  internal_port = 3000
-  force_https = true
-  auto_stop_machines = 'stop'
-  auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
-
+	
+	# Use included Dockerfile
+	dockerfile = "Dockerfile"
+	
+	
+# Dedicated Server Configuration
+[[services]]
+	
+	# Internal WebSocket port
+	internal_port = 3000
+	protocol = "tcp"
+	
+	# Public http:// WebSocket port (http:// traffic is automatically redirected to https:// by fly.io)
+	[[services.ports]]
+		handlers = ["http"]
+		port = 3000  
+		
+	# Public https:// WebSocket port
+	[[services.ports]]
+		handlers = ["tls"]
+		port = 3443
+		
+		
+# HTTP Server Configuration
+[[services]]
+	
+	# Internal Express server port
+	internal_port = 4000
+	protocol = "tcp"
+	
+	# Public http:// Express server port (http:// traffic is automatically redirected to https:// by fly.io)
+	[[services.ports]]
+		handlers = ["http"]
+		port = 80
+		
+	# Public https:// Express server port
+	[[services.ports]]
+		handlers = ["tls"]
+		port = 443
+		
+		
+# Signaling Server Configuration
+[[services]]
+	
+	# Internal WebSocket port
+	internal_port = 5000
+	protocol = "tcp"
+	
+	# Public http:// WebSocket port (http:// traffic is automatically redirected to https:// by fly.io)
+	[[services.ports]]
+		handlers = ["http"]
+		port = 5000  
+		
+	# Public https:// WebSocket port
+	[[services.ports]]
+		handlers = ["tls"]
+		port = 5443
+		
+		
+# Fly.io Machine Configuration
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 512
+	memory = '1gb'
+	cpu_kind = 'shared'
+	cpus = 1
+	memory_mb = 512
+	
+[[restart]]
+	policy = "never"

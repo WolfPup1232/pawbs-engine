@@ -1,3 +1,10 @@
+// NOTE: This module has been slightly yassified to work with the game's dedicated server,
+//		 so a bunch of undocumented differences exist between this and the original three.js version.
+
+// Static Class Imports
+import Game from '../../../classes/game.class.js';
+import Multiplayer from '../../../classes/multiplayer.class.js';
+
 import {
 	Euler,
 	EventDispatcher,
@@ -13,7 +20,7 @@ const _unlockEvent = { type: 'unlock' };
 
 const _PI_2 = Math.PI / 2;
 
-class PointerLockControls extends EventDispatcher {
+class CustomPointerLockControls extends EventDispatcher {
 
 	constructor( camera, domElement ) {
 
@@ -21,7 +28,7 @@ class PointerLockControls extends EventDispatcher {
 
 		if ( domElement === undefined ) {
 
-			console.warn( 'THREE.PointerLockControls: The second parameter "domElement" is now mandatory.' );
+			console.warn( 'THREE.CustomPointerLockControls: The second parameter "domElement" is now mandatory.' );
 			domElement = document.body;
 
 		}
@@ -76,7 +83,7 @@ class PointerLockControls extends EventDispatcher {
 
 		function onPointerlockError() {
 
-			console.error( 'THREE.PointerLockControls: Unable to use Pointer Lock API' );
+			console.error( 'THREE.CustomPointerLockControls: Unable to use Pointer Lock API' );
 
 		}
 
@@ -142,14 +149,20 @@ class PointerLockControls extends EventDispatcher {
 		};
 
 		this.lock = function () {
-
-			this.domElement.requestPointerLock();
+			
+			if (Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer)
+			{
+				this.domElement.requestPointerLock();
+			}
 
 		};
 
 		this.unlock = function () {
-
-			scope.domElement.ownerDocument.exitPointerLock();
+			
+			if (Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer)
+			{
+				scope.domElement.ownerDocument.exitPointerLock();
+			}
 
 		};
 
@@ -159,4 +172,4 @@ class PointerLockControls extends EventDispatcher {
 
 }
 
-export { PointerLockControls };
+export { CustomPointerLockControls };

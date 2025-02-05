@@ -1,5 +1,6 @@
 // Static Class Imports
 import Game from '../classes/game.class.js';
+import Multiplayer from '../classes/multiplayer.class.js';
 
 /**
  * Initializes the in-game UI functions and event handlers.
@@ -37,6 +38,7 @@ export default function initializeGameUIEventHandlers()
 				// Mouse event listeners
 				$(Game.dom_document).on('mousedown', (event) =>	Game.player.controls.onMouseDown(event));
 				$(Game.dom_document).on('mouseup', (event) => Game.player.controls.onMouseUp(event));
+				$(Game.dom_document).on('mousemove', (event) =>	Game.player.controls.onMouseMove(event));
 				$(Game.dom_document).on('wheel', (event) => Game.player.controls.onMouseWheel(event));
 				
 				// Keyboard event listeners
@@ -67,6 +69,7 @@ export default function initializeGameUIEventHandlers()
 				// Remove mouse event listeners
 				$(Game.dom_document).off('mousedown');
 				$(Game.dom_document).off('mouseup');
+				$(Game.dom_document).off('mousemove');
 				$(Game.dom_document).off('wheel');
 				
 				// Remove keyboard event listeners
@@ -95,9 +98,19 @@ export default function initializeGameUIEventHandlers()
 		//#region [Chat]
 			
 			/**
-			 * Returns boolean value indicatiing whether or not chat window input is focused.
+			 * Timer which hides the chat window after a certain period of time has elapsed.
+			 */
+			Game.ui.chat.chat_hide_timer = null;
+			
+			/**
+			 * The amount of time which has elapsed since the chat window was last activated.
+			 */
+			Game.ui.chat.chat_hide_timer_elapsed = 0;
+			
+			/**
+			 * Returns boolean value indicating whether or not chat window input is focused.
 			 *
-			 * @return {array} Boolean value indicatiing whether chat window input is focused.
+			 * @return {array} Boolean value indicating whether chat window input is focused.
 			 */
 			Game.ui.chat.isChatFocused = function isChatFocused()
 			{
@@ -111,8 +124,12 @@ export default function initializeGameUIEventHandlers()
 			{
 				
 				// Show chat
+				$('#chat-container').fadeIn(256);
 				$('#chat-input').fadeIn(256);
 				$('#chat-message').focus();
+				
+				// Attempt to stop chat hide timer
+				Game.ui.chat.stopHideTimer();
 				
 			}
 			
@@ -123,8 +140,83 @@ export default function initializeGameUIEventHandlers()
 			{
 				
 				// Hide chat
+				$('#chat-message').val("");
 				$('#chat-message').blur();
 				$('#chat-input').fadeOut(256);
+				
+				// Start chat hide timer
+				Game.ui.chat.startHideTimer();
+				
+			}
+			
+			/**
+			 * Starts the chat window hide timer.
+			 */
+			Game.ui.chat.startHideTimer = function startHideTimer()
+			{
+				
+				// Clear previous chat hide timer
+				if (Game.ui.chat.chat_hide_timer)
+				{
+					return;
+				}
+				
+				// Initialize chat hide timer tick event
+				const tick = () => {
+					
+					// Increment the amount of time which has elapsed since the chat window was last activated
+					Game.ui.chat.chat_hide_timer_elapsed += 1000;
+					
+					// If the amount of time required hide the chat window has passed...
+					if (Game.ui.chat.chat_hide_timer_elapsed >= Game.settings.multiplayer_chat_hide_duration)
+					{
+						
+						// Clear the timer
+						clearTimeout(Game.ui.chat.chat_hide_timer);
+						
+						// Reset the timer and time elapsed
+						Game.ui.chat.chat_hide_timer = null;
+						Game.ui.chat.chat_hide_timer_elapsed = 0;
+						
+						// Hide the chat window
+						$('#chat-container').fadeOut(1000);
+						
+						return;
+						
+					} // Otherwise, if the required amount of time hasn't passed...
+					else
+					{
+						
+						// Chat hide timer is still running, call tick event again
+						Game.ui.chat.chat_hide_timer = setTimeout(tick, 1000);
+						
+					}
+					
+				};
+				
+				// Start chat hide timer
+				Game.ui.chat.chat_hide_timer = setTimeout(tick, 1000);
+				
+			}
+			
+			/**
+			 * Stops the chat window hide timer.
+			 */
+			Game.ui.chat.stopHideTimer = function stopHideTimer()
+			{
+				
+				// If the chat window hide timer is active...
+				if (Game.ui.chat.chat_hide_timer)
+				{
+					
+					// Clear the timer
+					clearTimeout(Game.ui.chat.chat_hide_timer);
+					
+					// Reset the timer and time elapsed
+					Game.ui.chat.chat_hide_timer = null;
+					Game.ui.chat.chat_hide_timer_elapsed = 0;
+					
+				}
 				
 			}
 			
@@ -144,20 +236,113 @@ export default function initializeGameUIEventHandlers()
 				
 			}
 			
-		//#endregion
-		
-		
-	//#endregion
-	
-	
-	//#region [Event Handlers]
-		
-		
-		//#region [Chat]
+			/**
+			 * Adds the chat message specified in the data object to the chat log.
+			 *
+			 * @param {object} data The chat message to be added to the chat log.
+			 */
+			Game.ui.chat.addChatMessage = function addChatMessage(data)
+			{
+				
+				// Get message data
+				const type = data.type;
+				const player_id = data.player_id;
+				const player = Game.players[player_id];
+				
+				// Get message
+				let message = data.message;
+				
+				// Initialize nameplate text
+				let nameplate = "[" + player.name + "]";
+				
+				// Initialize chat message HTML DOM element
+				const message_element = document.createElement('div');
+				
+				// Attempt to stop the chat hide timer
+				Game.ui.chat.stopHideTimer();
+				
+				// Handle chat message content by chat message type...
+				switch (data.type)
+				{
+					// JOINED_GAME
+					case Multiplayer.MessageTypes.JOINED_GAME:
+						
+						message = "joined the game.";
+						
+						break;
+					// PLAYER_JOINED
+					case Multiplayer.MessageTypes.PLAYER_JOINED:
+						
+						message = "joined the game.";
+						
+						break;
+					// PLAYER_LEFT
+					case Multiplayer.MessageTypes.PLAYER_LEFT:
+						
+						message = "left the game.";
+						
+						break;
+					// CHAT
+					case Multiplayer.MessageTypes.CHAT:
+						
+						nameplate = nameplate + ":";
+						message = data.message;
+						
+						break;
+				}
+				
+				// Assemble entire chat message content
+				message_element.textContent = nameplate + " " + message;
+				
+				// Add chat message to chat log
+				$('#chat-container').fadeIn(256);
+				$('#chat-log').append(message_element);
+				$('#chat-log').scrollTop($('#chat-log')[0].scrollHeight - $('#chat-log')[0].clientHeight);
+				
+				// Keep chat log messages within maximum message limit...
+				if ($('#chat-log').children().length > Game.settings.multiplayer_chat_messages_max)
+				{
+					$('#chat-log').children().first().remove();
+				}
+				
+				// Start chat hide timer
+				Game.ui.chat.startHideTimer();
+				
+			}
 			
 			/**
-			 * Something.
+			 * Sends the chat message.
 			 */
+			Game.ui.chat.sendChatMessage = function sendChatMessage()
+			{
+				
+				// Get chat message
+				let message = $('#chat-message').val();
+				
+				// If multiplayer is enabled...
+				if (Multiplayer.enabled)
+				{
+					
+					// Send chat message
+					Multiplayer.sendChatMessage(message);
+					
+				}
+				
+				// Clear chat message
+				$('#chat-message').val("");
+				
+			}
+			
+			/**
+			 * Clears the chat message.
+			 */
+			Game.ui.chat.clearChatMessage = function clearChatMessage()
+			{
+				
+				// Clear chat message
+				$('#chat-message').val("");
+				
+			}
 			
 		//#endregion
 		

@@ -1,6 +1,7 @@
 // NOTE: This module has been slightly yassified to work with the game's world class,
 //		 so a bunch of undocumented differences exist between this and the original three.js version.
 
+// Static Class Imports
 import Game from '../../../classes/game.class.js';
 
 import {

@@ -47,7 +47,7 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// Show editor
-				$("#editor").show();
+				$('#editor').show();
 				
 			}
 			
@@ -58,7 +58,7 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// Hide editor
-				$("#editor").hide();
+				$('#editor').hide();
 				
 			}
 			
@@ -89,7 +89,7 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// Set selected objects window maximum height
-				$("#editor-selected-objects-inner").css({"max-height": "calc(" + ($('#renderer').height() - $('#editor-menu').height()) + "px - 2rem)"});
+				$('#editor-selected-objects-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-menu').height()) + 'px - 2rem)'});
 				
 			}
 			
@@ -105,10 +105,10 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// Update world name
-				$("#editor-world-name").val(Game.world.name);
+				$('#editor-world-name').val(Game.world.name);
 				
 				// Update player noclip button
-				$("#editor-camera-walk").prop("checked", !Game.player.noclip);
+				$('#editor-camera-walk').prop('checked', !Game.player.noclip);
 				
 			}
 			
@@ -128,39 +128,39 @@ export default function initializeEditorUIEventHandlers()
 				{
 					
 					// Show selected object UI
-					$("#editor-selected-objects").show();
+					$('#editor-selected-objects').show();
 					
 					// Update grid snaps
-					if ($("#editor-selected-objects-transform-position-snap-checkbox").is(':checked'))
+					if ($('#editor-selected-objects-transform-position-snap-checkbox').is(':checked'))
 					{
-						$("#editor-selected-objects-transform-position-snap").val(Game.player.controls.transform_controls.translationSnap);
+						$('#editor-selected-objects-transform-position-snap').val(Game.player.controls.transform_controls.translationSnap);
 					}
-					if ($("#editor-selected-objects-transform-scale-snap-checkbox").is(':checked'))
+					if ($('#editor-selected-objects-transform-scale-snap-checkbox').is(':checked'))
 					{
-						$("#editor-selected-objects-transform-scale-snap").val(Game.player.controls.transform_controls.scaleSnap);
+						$('#editor-selected-objects-transform-scale-snap').val(Game.player.controls.transform_controls.scaleSnap);
 					}
-					if ($("#editor-selected-objects-transform-rotation-snap-checkbox").is(':checked'))
+					if ($('#editor-selected-objects-transform-rotation-snap-checkbox').is(':checked'))
 					{
-						$("#editor-selected-objects-transform-rotation-snap").val(Game.player.controls.transform_controls.rotationSnap);
+						$('#editor-selected-objects-transform-rotation-snap').val(Game.player.controls.transform_controls.rotationSnap);
 					}
 					
 					// Update position
-					$("#editor-selected-objects-transform-position-x").val(Editor.selected_objects.position.x);
-					$("#editor-selected-objects-transform-position-y").val(Editor.selected_objects.position.y);
-					$("#editor-selected-objects-transform-position-z").val(Editor.selected_objects.position.z);
+					$('#editor-selected-objects-transform-position-x').val(Editor.selected_objects.position.x);
+					$('#editor-selected-objects-transform-position-y').val(Editor.selected_objects.position.y);
+					$('#editor-selected-objects-transform-position-z').val(Editor.selected_objects.position.z);
 					
 					// Update scale
-					$("#editor-selected-objects-transform-scale-x").val(((Editor.selected_objects.scale.x / 1) * 100) + "%");
-					$("#editor-selected-objects-transform-scale-y").val(((Editor.selected_objects.scale.y / 1) * 100) + "%");
-					$("#editor-selected-objects-transform-scale-z").val(((Editor.selected_objects.scale.z / 1) * 100) + "%");
+					$('#editor-selected-objects-transform-scale-x').val(((Editor.selected_objects.scale.x / 1) * 100) + "%");
+					$('#editor-selected-objects-transform-scale-y').val(((Editor.selected_objects.scale.y / 1) * 100) + "%");
+					$('#editor-selected-objects-transform-scale-z').val(((Editor.selected_objects.scale.z / 1) * 100) + "%");
 					
 					// If more than one object is selected...
 					if (Editor.selected_objects.children.length > 1)
 					{
 						
 						// Show object group button
-						$("#editor-selected-objects-group-label").show();
-						$("#editor-selected-objects-ungroup-label").hide();
+						$('#editor-selected-objects-group-label').show();
+						$('#editor-selected-objects-ungroup-label').hide();
 						
 						
 					} // Otherwise, if an object group is selected...
@@ -168,16 +168,16 @@ export default function initializeEditorUIEventHandlers()
 					{
 						
 						// Show object ungroup button
-						$("#editor-selected-objects-group-label").hide();
-						$("#editor-selected-objects-ungroup-label").show();
+						$('#editor-selected-objects-group-label').hide();
+						$('#editor-selected-objects-ungroup-label').show();
 						
 					}
 					else
 					{
 						
 						// Hide object grouping buttons
-						$("#editor-selected-objects-group-label").hide();
-						$("#editor-selected-objects-ungroup-label").hide();
+						$('#editor-selected-objects-group-label').hide();
+						$('#editor-selected-objects-ungroup-label').hide();
 						
 					}
 					
@@ -190,18 +190,18 @@ export default function initializeEditorUIEventHandlers()
 						{
 							
 							// Hide rotation for billboards
-							$("#editor-selected-objects-transform-rotation").hide();
+							$('#editor-selected-objects-transform-rotation').hide();
 							
 						}
 						else
 						{
 							
 							// Update rotation
-							$("#editor-selected-objects-transform-rotation").show();
+							$('#editor-selected-objects-transform-rotation').show();
 							
-							$("#editor-selected-objects-transform-rotation-x").val((Editor.selected_objects.rotation.x * (180 / Math.PI)) + "°");
-							$("#editor-selected-objects-transform-rotation-y").val((Editor.selected_objects.rotation.y * (180 / Math.PI)) + "°");
-							$("#editor-selected-objects-transform-rotation-z").val((Editor.selected_objects.rotation.z * (180 / Math.PI)) + "°");
+							$('#editor-selected-objects-transform-rotation-x').val((Editor.selected_objects.rotation.x * (180 / Math.PI)) + "°");
+							$('#editor-selected-objects-transform-rotation-y').val((Editor.selected_objects.rotation.y * (180 / Math.PI)) + "°");
+							$('#editor-selected-objects-transform-rotation-z').val((Editor.selected_objects.rotation.z * (180 / Math.PI)) + "°");
 							
 						}
 						
@@ -212,7 +212,7 @@ export default function initializeEditorUIEventHandlers()
 				{
 					
 					// Hide selected object UI
-					$("#editor-selected-objects").hide();
+					$('#editor-selected-objects').hide();
 					
 				}
 				
@@ -253,7 +253,7 @@ export default function initializeEditorUIEventHandlers()
 				});
 				
 				// Colour cell click event
-				$("." + cell_class).on('click', function()
+				$('.' + cell_class).on('click', function()
 				{
 					
 					// Get the background colour of the selected colour cell
@@ -434,9 +434,9 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// Hide anything that could be obscuring the spawn grid
-				$(".tooltip").hide();
-				$("div[id^='editor-spawn-panel-']").hide();
-				$("div[id^='editor-spawn-primitive-']").remove();
+				$('.tooltip').hide();
+				$('div[id^="editor-spawn-panel-"]').hide();
+				$('div[id^="editor-spawn-primitive-"]').remove();
 				
 				// Remove any existing event handlers
 				Game.ui.utilities.removeAllEventHandlers(grid_element);
@@ -510,7 +510,7 @@ export default function initializeEditorUIEventHandlers()
 							
 							// Initialize a new prefab object thumbnail for the spawn tool UI
 							$(grid_element).append($('<div id="editor-spawn-cell-' + key + '" class="editor-spawn-cell" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>'));
-							Assets.createObjectThumbnail(Assets.objects[key].deepClone(), $("#editor-spawn-cell-" + key));
+							Assets.createObjectThumbnail(Assets.objects[key].deepClone(), $('#editor-spawn-cell-' + key));
 							
 							// Thumbnail element click event
 							$('#editor-spawn-cell-' + key).on('click', () => {
@@ -524,7 +524,7 @@ export default function initializeEditorUIEventHandlers()
 									
 									// Initialize a new primitive object thumbnail for the selected primitive's spawn panel UI
 									$('#editor-spawn-panel-' + key + '-thumbnail').append($('<div id="editor-spawn-primitive-' + key + '" class="editor-spawn-cell" data-bs-title="Spawn ' + key + '." data-bs-toggle="tooltip" data-bs-placement="top"></div>'));
-									Assets.createObjectThumbnail(asset.deepClone(), $("#editor-spawn-primitive-" + key));
+									Assets.createObjectThumbnail(asset.deepClone(), $('#editor-spawn-primitive-' + key));
 									
 									// Show the selected primitive's spawn panel UI
 									$('#editor-spawn-panel-' + key).show();
@@ -545,10 +545,10 @@ export default function initializeEditorUIEventHandlers()
 										$('#editor-spawn-panel-' + key).hide();
 										
 										// Stop animating the selected primitive's spawn panel UI thumbnail
-										Assets.objectThumbnailStopAnimating($("#editor-spawn-primitive-" + key).attr("animation_id")).then(() => {
+										Assets.objectThumbnailStopAnimating($('#editor-spawn-primitive-' + key).attr("animation_id")).then(() => {
 											
 											// Remove the primitive object thumbnail
-											$("#editor-spawn-primitive-" + key).remove();
+											$('#editor-spawn-primitive-' + key).remove();
 											
 										});
 										

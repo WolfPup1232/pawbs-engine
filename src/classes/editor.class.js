@@ -664,8 +664,8 @@ class Editor
 		//#region [World Methods]
 			
 			/**
-			* Resets the current world using some hard-coded defaults.
-			*/
+			 * Resets the current world using some hard-coded defaults.
+			 */
 			static newWorld()
 			{
 				
@@ -705,8 +705,8 @@ class Editor
 			}
 			
 			/**
-			* Loads a world from a saved JSON file using an open file dialog.
-			*/
+			 * Loads a world from a saved JSON file using an open file dialog.
+			 */
 			static loadWorld()
 			{
 				
@@ -764,8 +764,8 @@ class Editor
 			}
 			
 			/**
-			* Saves the world to a JSON file using a save file dialog.
-			*/
+			 * Saves the world to a JSON file using a save file dialog.
+			 */
 			static saveWorld()
 			{
 				
@@ -798,10 +798,10 @@ class Editor
 		//#region [Object Methods]
 			
 			/**
-			* Spawns a new object into the world at the location the player is facing.
-			*
-			* @param {THREE.Object3D} object The object to be spawned.
-			*/
+			 * Spawns a new object into the world at the location the player is facing.
+			 *
+			 * @param {THREE.Object3D} object The object to be spawned.
+			 */
 			static spawn(object)
 			{
 				
@@ -849,10 +849,10 @@ class Editor
 			}
 			
 			/**
-			* Gets all world objects according to the object selection type enabled in the editor.
-			*
-			* @return {array} Returns all world objects by selected type.
-			*/
+			 * Gets all world objects according to the object selection type enabled in the editor.
+			 *
+			 * @return {array} Returns all world objects by selected type.
+			 */
 			static getObjects()
 			{
 				
@@ -869,10 +869,10 @@ class Editor
 			}
 			
 			/**
-			* Adds the specified object to the world according to the object selection type enabled in the editor.
-			*
-			* @param {THREE.Object3D} object The object to be added to the world.
-			*/
+			 * Adds the specified object to the world according to the object selection type enabled in the editor.
+			 *
+			 * @param {THREE.Object3D} object The object to be added to the world.
+			 */
 			static addObject(object)
 			{
 				
@@ -889,10 +889,10 @@ class Editor
 			}
 			
 			/**
-			* Removes the specified object from the world according to the object selection type enabled in the editor.
-			*
-			* @param {THREE.Object3D} object The object to be removed from the world.
-			*/
+			 * Removes the specified object from the world according to the object selection type enabled in the editor.
+			 *
+			 * @param {THREE.Object3D} object The object to be removed from the world.
+			 */
 			static removeObject(object)
 			{
 				
@@ -909,8 +909,8 @@ class Editor
 			}
 			
 			/**
-			* Resets all highlighted and selected objects, faces, and vertices.
-			*/
+			 * Resets all highlighted and selected objects, faces, and vertices.
+			 */
 			static resetHighlightedAndSelectedObjectsFacesVertices()
 			{
 				
@@ -933,8 +933,8 @@ class Editor
 		//#region [Highlight / Select Objects]
 			
 			/**
-			* Highlights whichever objects the player is looking at.
-			*/
+			 * Highlights whichever objects the player is looking at.
+			 */
 			static highlightObjects()
 			{
 				
@@ -1012,8 +1012,8 @@ class Editor
 			}
 			
 			/**
-			* Resets the highlighted objects.
-			*/
+			 * Resets the highlighted objects.
+			 */
 			static resetHighlightedObjects()
 			{
 				
@@ -1056,8 +1056,8 @@ class Editor
 			}
 			
 			/**
-			* Selects whichever objects the player is looking at.
-			*/
+			 * Selects whichever objects the player is looking at.
+			 */
 			static selectObjects()
 			{
 				
@@ -1189,8 +1189,8 @@ class Editor
 			}
 			
 			/**
-			* Resets the selected objects.
-			*/
+			 * Resets the selected objects.
+			 */
 			static resetSelectedObjects()
 			{
 				
@@ -1272,10 +1272,10 @@ class Editor
 			}
 			
 			/**
-			* Saves the selected objects to a JSON file using a save file dialog.
-			*
-			* @param {string} prefab_name The name of the prefab to be saved.
-			*/
+			 * Saves the selected objects to a JSON file using a save file dialog.
+			 *
+			 * @param {string} prefab_name The name of the prefab to be saved.
+			 */
 			static saveSelectedObjects(prefab_name)
 			{
 				
@@ -1353,8 +1353,8 @@ class Editor
 			}
 			
 			/**
-			* Cuts the selected objects.
-			*/
+			 * Cuts the selected objects.
+			 */
 			static cutSelectedObjects()
 			{
 				
@@ -1376,8 +1376,8 @@ class Editor
 			}
 			
 			/**
-			* Copies the selected objects.
-			*/
+			 * Copies the selected objects.
+			 */
 			static copySelectedObjects()
 			{
 				
@@ -1387,8 +1387,8 @@ class Editor
 			}
 			
 			/**
-			* Pastes the clipboard objects.
-			*/
+			 * Pastes the clipboard objects.
+			 */
 			static pasteClipboardObjects()
 			{
 				
@@ -1411,8 +1411,8 @@ class Editor
 			}
 			
 			/**
-			* Deletes the selected objects.
-			*/
+			 * Deletes the selected objects.
+			 */
 			static deleteSelectedObjects()
 			{
 				
@@ -1437,8 +1437,8 @@ class Editor
 			}
 			
 			/**
-			* Groups the selected objects.
-			*/
+			 * Groups the selected objects.
+			 */
 			static groupSelectedObjects()
 			{
 				
@@ -1484,8 +1484,8 @@ class Editor
 			}
 			
 			/**
-			* Un-groups the selected objects.
-			*/
+			 * Un-groups the selected objects.
+			 */
 			static ungroupSelectedObjects()
 			{
 				
@@ -1539,8 +1539,8 @@ class Editor
 			}
 			
 			/**
-			* Sets the material colour of the selected objects.
-			*/
+			 * Sets the material colour of the selected objects.
+			 */
 			static setSelectedObjectsColour(selected_colour)
 			{
 				
@@ -1566,8 +1566,8 @@ class Editor
 		//#region [Highlight / Select Faces]
 			
 			/**
-			* Highlights whichever object face the player is looking at.
-			*/
+			 * Highlights whichever object face the player is looking at.
+			 */
 			static highlightFace()
 			{
 				
@@ -1713,8 +1713,8 @@ class Editor
 			}
 			
 			/**
-			* Selects whichever object face is currently highlighted.
-			*/
+			 * Selects whichever object face is currently highlighted.
+			 */
 			static selectFace()
 			{
 				
@@ -1808,8 +1808,8 @@ class Editor
 			}
 			
 			/**
-			* Resets any highlighted or selected object faces.
-			*/
+			 * Resets any highlighted or selected object faces.
+			 */
 			static resetHighlightedAndSelectedFaces()
 			{
 				
@@ -1869,8 +1869,8 @@ class Editor
 			}
 			
 			/**
-			* Deletes the selected object faces.
-			*/
+			 * Deletes the selected object faces.
+			 */
 			static deleteSelectedFaces()
 			{
 				
@@ -1976,10 +1976,10 @@ class Editor
 			}
 			
 			/**
-			* Create groups of faces for an object's geometry, which consist of one-to-many faces (aka triangles), and store them in the object's userData. Boxes will generate groups of two faces/triangles which make up the surfaces of each side. Other geometries keep it to one face/triangle per group.
-			*
-			* @param {THREE.Mesh} mesh The object whose full surface of triangles will be grouped up according to geometry type.
-			*/
+			 * Create groups of faces for an object's geometry, which consist of one-to-many faces (aka triangles), and store them in the object's userData. Boxes will generate groups of two faces/triangles which make up the surfaces of each side. Other geometries keep it to one face/triangle per group.
+			 *
+			 * @param {THREE.Mesh} mesh The object whose full surface of triangles will be grouped up according to geometry type.
+			 */
 			static createFaceGroups(mesh)
 			{
 				
@@ -2032,7 +2032,7 @@ class Editor
 				mesh.userData.face_group_ids = new THREE.BufferAttribute(face_group_ids, 1);
 				
 				// Initialize a collection of face groups to add to the object
-				mesh.userData.face_groups = {};
+				mesh.userData.face_groups = { };
 				
 				// Add each of the object's faces to the appropriate face group according to the group IDs that were just created...
 				for (let i = 0; i < geometry_face_count; i++)
@@ -2048,12 +2048,12 @@ class Editor
 			}
 			
 			/**
-			* Sets the specified object's face group to the desired colour.
-			*
-			* @param {THREE.Mesh} mesh The object whose face group colour is to be set.
-			* @param {array} face_group The face group whose colour is to be set.
-			* @param {THREE.Color} colour The colour to set the specified face group's faces to.
-			*/
+			 * Sets the specified object's face group to the desired colour.
+			 *
+			 * @param {THREE.Mesh} mesh The object whose face group colour is to be set.
+			 * @param {array} face_group The face group whose colour is to be set.
+			 * @param {THREE.Color} colour The colour to set the specified face group's faces to.
+			 */
 			static setFaceGroupColour(mesh, face_group, colour)
 			{
 				
@@ -2086,8 +2086,8 @@ class Editor
 		//#region [Highlight / Select Vertices]
 			
 			/**
-			* Highlights the vertices of whichever object the player is looking at.
-			*/
+			 * Highlights the vertices of whichever object the player is looking at.
+			 */
 			static highlightVertices()
 			{
 				
@@ -2310,10 +2310,10 @@ class Editor
 			}
 			
 			/**
-			* Resets the highlighted vertices object.
-			*
-			* @param {boolean} preserve_indices Boolean flag indicating whether or not to preserve the object indices at positions in preparation for making the highlighted vertices object into the selected vertices object.
-			*/
+			 * Resets the highlighted vertices object.
+			 *
+			 * @param {boolean} preserve_indices Boolean flag indicating whether or not to preserve the object indices at positions in preparation for making the highlighted vertices object into the selected vertices object.
+			 */
 			static resetHighlightedVertices(preserve_indices = false)
 			{
 				
@@ -2352,8 +2352,8 @@ class Editor
 			}
 			
 			/**
-			* Selects the highlighted vertices object which the player is looking at. If the object is already selected, then selects whichever individual vertex the player is looking at.
-			*/
+			 * Selects the highlighted vertices object which the player is looking at. If the object is already selected, then selects whichever individual vertex the player is looking at.
+			 */
 			static selectVertex()
 			{
 				
@@ -2632,8 +2632,8 @@ class Editor
 			}
 			
 			/**
-			* Resets the selected vertices object.
-			*/
+			 * Resets the selected vertices object.
+			 */
 			static resetSelectedVertices()
 			{
 				
@@ -2675,8 +2675,8 @@ class Editor
 			}
 			
 			/**
-			* Updates the initial positions of the selected object vertices for calculating transforms.
-			*/
+			 * Updates the initial positions of the selected object vertices for calculating transforms.
+			 */
 			static updateSelectedVertexInitialPositions()
 			{
 				
@@ -2694,7 +2694,7 @@ class Editor
 							{
 								
 								// Initialize the collection which will store the initial positions of the selected object vertices
-								child.userData.initial_vertex_positions = {};
+								child.userData.initial_vertex_positions = { };
 								
 								// If the object has a group of helper spheres...
 								if (child.userData.selected_vertices)
@@ -2733,8 +2733,8 @@ class Editor
 			}
 			
 			/**
-			* Updates the positions of the selected object vertices during vertex transformation.
-			*/
+			 * Updates the positions of the selected object vertices during vertex transformation.
+			 */
 			static updateSelectedVertexPositions()
 			{
 				
@@ -2866,6 +2866,7 @@ class Editor
 			}
 			
 		//#endregion
+		
 		
 	//#endregion
 	

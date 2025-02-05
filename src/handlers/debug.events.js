@@ -25,7 +25,7 @@ export default function initializeDebugUIEventHandlers()
 			{
 				
 				// Show debugger
-				$("#debug").fadeIn(256);
+				$('#debug').fadeIn(256);
 				
 			}
 			
@@ -36,7 +36,7 @@ export default function initializeDebugUIEventHandlers()
 			{
 				
 				// Hide debugger
-				$("#debug").fadeOut(256);
+				$('#debug').fadeOut(256);
 				
 			}
 			
@@ -47,7 +47,7 @@ export default function initializeDebugUIEventHandlers()
 			{
 				
 				// Output debug text
-				$("#debug-text").html(text);
+				$('#debug-text').html(text);
 				
 			}
 			

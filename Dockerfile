@@ -1,19 +1,24 @@
+# -----------------------
+# Pawbs Engine Dockerfile
+# -----------------------
+
 # syntax = docker/dockerfile:1
 
-# Adjust NODE_VERSION as desired
+# Node.js version
 ARG NODE_VERSION=20.18.0
 FROM node:${NODE_VERSION}-slim AS base
-
 LABEL fly_launch_runtime="Node.js"
 
-# Node.js app lives here
+# Base working directory
 WORKDIR /app
 
-# Set production environment
+# Environment variable
 ENV NODE_ENV="production"
 
 
-# Throw-away build stage to reduce size of final image
+# Build Stage
+
+# Initialize build stage
 FROM base AS build
 
 # Install packages needed to build node modules
@@ -28,12 +33,19 @@ RUN npm ci
 COPY . .
 
 
-# Final stage for app image
+# Final Stage
+
+# Initialize final stage
 FROM base
 
 # Copy built application
 COPY --from=build /app /app
 
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD [ "node", "index.js" ]
+# Set working directory to servers directory
+WORKDIR /app/src/servers
+
+# Expose both dedicated server and HTTP server ports
+EXPOSE 3000 4000 5000
+
+# Start both dedicated server and HTTP server concurrently with 'container' flag
+CMD ["npm", "run", "container"]

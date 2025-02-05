@@ -1,6 +1,25 @@
+# -----------------------
+# Pawbs Engine .gitignore
+# -----------------------
+
 # Pawbs Engine
-src/test.html
-src/test2.html
+src/tests
+
+# Shortcuts
+_Run Game.url
+_Run Game.lnk
+_Run Game Locally.url
+_Publish Game.lnk
+_Start Dedicated Server.lnk
+_Start Signaling Server.lnk
+_Start HTTP Server.lnk
+
+# Build
+src-tauri/target
+node_modules
+dist
+dist-ssr
+*.local
 
 # Logs
 logs
@@ -11,12 +30,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# VSCode
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -26,4 +40,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-Run Game.lnk

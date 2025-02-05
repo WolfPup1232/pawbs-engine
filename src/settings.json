@@ -1,0 +1,29 @@
+{
+	"multiplayer_development_dedicated_server":	"ws://localhost:3000",
+	"multiplayer_production_dedicated_server":	"wss://pawbs-engine.fly.dev:3443",
+	
+	"multiplayer_development_http_server":		"ws://localhost:4000",
+	"multiplayer_production_http_server":		"https://pawbs-engine.fly.dev",
+	
+	"multiplayer_development_signaling_server":	"ws://localhost:5000",
+	"multiplayer_production_signaling_server":	"wss://pawbs-engine.fly.dev:5443",
+	
+	"multiplayer_nickname":             	"WolfPup",
+	"multiplayer_chat_messages_max":    	100,
+	"multiplayer_chat_hide_duration":		30000,
+	
+	"multiplayer_default_connection_type":	1,
+	
+	"development_path_root":		".",
+	"production_path_root":			"./src",
+	
+	"server_development_path_root":	"..",
+	"server_production_path_root":	"./src",
+	
+	"default_path_settings":	"/settings.json",
+	"default_path_worlds":		"/worlds/worlds.json",
+	"default_path_objects":     "/objects/objects.json",
+	"default_path_textures":    "/textures/textures.json",
+	
+	"default_file_encoding": "utf8"
+}

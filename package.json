@@ -1,16 +1,20 @@
 {
-  "name": "pawbs-engine",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "tauri": "tauri"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^1"
-  },
-  "dependencies": {
-    "uuid": "^11.0.4",
-    "ws": "^8.18.0"
-  }
+	"name": "pawbs-engine",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"tauri": "tauri",
+		"start": "concurrently \"node ./src/servers/dedicated-server.js\" \"node ./src/servers/http-server.js\" \"node ./src/servers/signaling-server.js\"",
+		"container": "NODE_ENV=container concurrently \"node ./src/servers/dedicated-server.js\" \"node ./src/servers/http-server.js\" \"node ./src/servers/signaling-server.js\""
+	},
+	"devDependencies": {
+		"@tauri-apps/cli": "^1"
+	},
+	"dependencies": {
+		"concurrently": "^9.1.2",
+		"express": "^4.21.2",
+		"jsdom": "^26.0.0",
+		"ws": "^8.18.0"
+	}
 }

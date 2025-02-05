@@ -3,6 +3,7 @@ import * as THREE from '../libraries/threejs/three.js';
 import { CustomOutlineEffect } from '../libraries/threejs/modules/CustomOutlineEffect.js';
 
 // Class Imports
+import Settings from './settings.class.js';
 import World from './world.class.js';
 import Player from './player.class.js';
 import Controls from './controls.class.js';
@@ -17,12 +18,14 @@ import initializeDebugUIEventHandlers from '../handlers/debug.events.js';
 
 import initializeMainMenuUIEventHandlers from '../handlers/menu-main.events.js';
 import initializeMultiplayerMenuUIEventHandlers from '../handlers/menu-multiplayer.events.js';
+import initializeOptionsMenuUIEventHandlers from '../handlers/menu-options.events.js';
 import initializePauseMenuUIEventHandlers from '../handlers/menu-pause.events.js';
 
 // Static Class Imports
 import Assets from './assets.class.js';
 import Editor from './editor.class.js';
 import Debug from './debug.class.js';
+import Multiplayer from './multiplayer.class.js';
 
 /**
  * The game.
@@ -32,6 +35,16 @@ class Game
 	
 	//#region [Class Declarations]
 		
+		/**
+		 * The game's unique ID.
+		 */
+		static id = THREE.MathUtils.generateUUID();
+		
+		/**
+		 * The game's birthday.
+		 */
+		static start_time = Date.now();
+		
 		
 		//#region [Flags]
 			
@@ -40,24 +53,10 @@ class Game
 			 */
 			static paused = false;
 			
-		//#endregion
-		
-		
-		//#region [Game Modes]
-			
 			/**
-			 * Gameplay modes.
+			 * Flag indicating whether or not the game is to be paused at the start of the next game loop update.
 			 */
-			static GameModes = {
-				None:			1,
-				Singleplayer:	2,
-				Multiplayer:	3,
-			};
-			
-			/**
-			 * The current game mode.
-			 */
-			static mode = this.GameModes.None;
+			static paused_async = false;
 			
 		//#endregion
 		
@@ -65,7 +64,12 @@ class Game
 		//#region [Game Objects]
 			
 			/**
-			 * The user-controlled player in the selected game world.
+			 * The list of players in the game.
+			 */
+			static players = [];
+			
+			/**
+			 * The current user-controlled player in the selected game world.
 			 */
 			static player = null;
 			
@@ -78,6 +82,11 @@ class Game
 			 * The game's user interface.
 			 */
 			static ui = null;
+			
+			/**
+			 * The game's settings.
+			 */
+			static settings = null;
 			
 		//#endregion
 		
@@ -94,6 +103,11 @@ class Game
 			 */
 			static dom_document = null;
 			
+			/**
+			 * An optional reference to a Node.js server's FileSystem package.
+			 */
+			static file_system;
+			
 		//#endregion
 		
 		
@@ -102,12 +116,12 @@ class Game
 			/**
 			 * The three.js WebGL renderer which renders the selected game world.
 			 */
-			static  renderer = null;
+			static renderer = null;
 			
 			/**
 			 * Flag indicating whether or not a single frame has been rendered before updating the game state can begin.
 			 */
-			static single_frame = false;
+			static render_single_frame = false;
 			
 		//#endregion
 		
@@ -127,77 +141,205 @@ class Game
 	
 	//#region [Methods]
 		
-		
-		//#region [Game Methods]
+		/**
+		 * Initializes the game.
+		 *
+		 * @param {Window} window_interface A reference to the web browser window, which contains the DOM document.
+		 * @param {Document} dom_document A reference to the DOM document within the web browser window.
+		 * @param {Multiplayer.ConnectionTypes} ConnectionTypes An optional multiplayer connection type to initialize the game with. Enables multiplayer mode.
+		 * @param {FileSystem} file_system An optional reference to a Node.js server's FileSystem package.
+		 * @param {Function} serverCallback A callback function passed from a Node.js server which is invoked when the game's settings have been loaded.
+		 */
+		static initialize(window_interface, dom_document, connection_type = null, file_system = null, serverCallback = null)
+		{
 			
-			/**
-			 * Initializes the game.
-			 *
-			 * @param {Window} window_interface A reference to the web browser window, which contains the DOM document.
-			 * @param {Document} dom_document A reference to the DOM document within the web browser window.
-			 */
-			static initialize(window_interface, dom_document)
+			// A multiplayer game is being initialized if a connection type has been specified...
+			if (connection_type)
 			{
 				
-				// Initialize web browser window and DOM document
-				this.window_interface = window_interface;
-				this.dom_document = dom_document;
+				// Enable multiplayer
+				Multiplayer.enabled = true;
 				
-				// Initialize game UI
-				this.ui = new UI();
+				// Set multiplayer connection type
+				Multiplayer.connection_type = connection_type;
 				
-				// Initialize utility/helper UI event handlers
-				initializeUtilityUIEventHandlers();
-				
-				// Initialize game UI event handlers
-				initializeGameUIEventHandlers();
-				initializeEditorUIEventHandlers();
-				initializeDebugUIEventHandlers();
-				
-				// Initialize menu UI event handlers
-				initializeMainMenuUIEventHandlers();
-				initializeMultiplayerMenuUIEventHandlers();
-				initializePauseMenuUIEventHandlers();
-				
-				// Show main menu
-				this.ui.menus.showMainMenu()
-				
-			}
-			
-			/**
-			 * Initializes and starts a new game according to the specified game mode.
-			 *
-			 * @param {Game.GameModes} game_mode The game mode to start playing.
-			 */
-			static start(game_mode)
-			{
-				
-				// Start a new game according to selected game mode...
-				if (game_mode == this.GameModes.Singleplayer)
+				// Attempt to get server FileSystem package (just in case its a Node.js server initializing the game)...
+				if (file_system)
 				{
-					
-					// Start new singleplayer game
-					this.startSingleplayerGame();
-					
+					this.file_system = file_system;
 				}
 				
 			}
 			
-			/**
-			 * Game Loop - Updates game processes that update every frame, then renders the frame.
-			 */
-			static gameLoop()
+			// If the game is either singleplayer, or if it's multiplayer but *not* a signaling server...
+			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.SignalingServer))
+			{
+				
+				// Initialize web browser window and DOM document (dedicated servers will execute this block too because they have simulated DOMs)
+				this.window_interface = window_interface;
+				this.dom_document = dom_document;
+				
+			}
+			
+			// Initialize game settings
+			this.settings = new Settings();
+			
+			// Load game settings from JSON, then continue initialization...
+			this.settings.load((settings) => {
+				
+				// Get loaded game settings
+				Object.assign(this.settings, settings);
+				
+				// If the game is hosted on an HTTP server or a signaling server...
+				if (Multiplayer.connection_type == Multiplayer.ConnectionTypes.HTTPServer || Multiplayer.connection_type == Multiplayer.ConnectionTypes.SignalingServer)
+				{
+					
+					// Don't initialize the game any more, invoke server callback
+					serverCallback();
+					
+					
+				} // Otherwise, if the game is hosted on a dedicated server...
+				else if (Multiplayer.connection_type == Multiplayer.ConnectionTypes.DedicatedServer)
+				{
+					
+					// Invoke server callback
+					serverCallback();
+					
+					// Skip UI initializing, just start a new game
+					this.start();
+					
+					
+				} // Otherwise, if the game is running in-browser...
+				else
+				{
+					
+					// Initialize game UI
+					this.ui = new UI();
+					
+					// Initialize utility/helper UI event handlers
+					initializeUtilityUIEventHandlers();
+					
+					// Initialize game UI event handlers
+					initializeGameUIEventHandlers();
+					initializeEditorUIEventHandlers();
+					initializeDebugUIEventHandlers();
+					
+					// Initialize menu UI event handlers
+					initializeMainMenuUIEventHandlers();
+					initializeMultiplayerMenuUIEventHandlers();
+					initializeOptionsMenuUIEventHandlers();
+					initializePauseMenuUIEventHandlers();
+					
+					// Initialize tooltips
+					this.ui.utilities.initializeTooltips();
+					
+					// Show main menu
+					this.ui.menus.showMainMenu()
+					
+				}
+				
+			});
+			
+		}
+		
+		/**
+		 * Starts a new game.
+		 *
+		 * @param {Function} multiplayerCallback A callback function which is invoked to perform specific multiplayer tasks after the game has loaded but before the game starts.
+		 */
+		static start(multiplayerCallback = null)
+		{
+			
+			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
+			{
+				
+				// Hide main menu
+				this.ui.menus.hideMainMenu();
+				
+				// Initialize renderer
+				this.renderer = new THREE.WebGLRenderer();
+				this.renderer = new CustomOutlineEffect(this.renderer, { defaultThickness: 0.0032 });
+				this.renderer.setSize(window.innerWidth, window.innerHeight);
+				this.ui.utilities.initializeRenderer();
+				
+			}
+			
+			// Load game assets, then initialize and start game...
+			Assets.load(() => {
+				
+				// Happy birthday!
+				this.start_time = Date.now();
+				
+				// Initialize game flags
+				this.paused = false;
+				this.render_single_frame = false;
+				
+				// Initialize world
+				this.world = new World();
+				this.world.load(Assets.worlds.TestWorld);
+				
+				// Initialize players
+				this.players = [];
+				
+				// Initialize player
+				this.player = new Player();
+				this.players[this.player.id] = this.player;
+				
+				// Initialize player's keyboard/mouse controls
+				this.player.controls = new Controls();
+				
+				// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+				if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
+				{
+					
+					// Initialize keyboard/mouse UI event handlers...
+					this.ui.controls.initializeControls();
+					
+				}
+				
+				// Invoke multiplayer callback if necessary...
+				if (Multiplayer.enabled && multiplayerCallback)
+				{
+					multiplayerCallback();
+				}
+				
+				// Start the game loop
+				this.gameLoop();
+				
+			});
+			
+		}
+		
+		/**
+		 * Updates the game state and handles other game processes before each frame renders, then renders the frame to the canvas.
+		 */
+		static gameLoop()
+		{
+			
+			// If pause-on-next-update has been flagged...
+			if (this.paused_async)
+			{
+				
+				// Pause game and reset flag
+				this.paused = true;
+				this.paused_async = false;
+				
+			}
+			
+			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
 			{
 				
 				// Request a frame to be rendered using this method as a callback
 				const request_id = this.window_interface.requestAnimationFrame(() => this.gameLoop());
 				
 				// Make sure a single frame has been rendered before updating the game...
-				if (!this.single_frame)
+				if (!this.render_single_frame)
 				{
 					
 					// This is workaround for initializing collision bounding boxes before handling *any* collision detection
-					this.single_frame = true;
+					this.render_single_frame = true;
 					
 					
 				} // Otherwise, if a single frame has already been rendered...
@@ -224,207 +366,159 @@ class Game
 				else
 				{
 					
-					// Stop rendering
+					// Stop the game loop
 					this.window_interface.cancelAnimationFrame(request_id);
 					
 				}
 				
-			}
-			
-			/**
-			 * Updates the game.
-			 */
-			static update()
+				
+			} // Otherwise, if the game is a multiplayer dedicated server...
+			else if (Multiplayer.enabled && Multiplayer.connection_type == Multiplayer.ConnectionTypes.DedicatedServer)
 			{
 				
-				// Update the player (movement, collision detection, etc)...
-				if (this.player)
+				// Only update the game state...
+				if (!this.paused)
 				{
-					this.player.update();
+					this.update();
 				}
 				
-				// Update in-game editor...
-				if (Editor.enabled)
-				{
-					Editor.update();
-				}
-				
-				// Update in-game debugger...
-				if (Debug.enabled)
-				{
-					Debug.update();
-				}
+				// Keep on truckin'
+				setTimeout(() => Game.gameLoop, Math.max(1, (1000 / 60) - Date.now() - this.start_time));
 				
 			}
 			
-			/**
-			 * Pauses the game.
-			 */
-			static pause()
+		}
+		
+		/**
+		 * Updates the game state.
+		 */
+		static update()
+		{
+			
+			// For each player in the game's player list...
+			const player_ids = Object.keys(this.players);
+			for (let i = 0; i < player_ids.length; i++)
 			{
 				
-				// Pause the game
+				// Get player
+				const player = this.players[player_ids[i]];
+				
+				// Update player (movement, collision detection, etc)...
+				if (player)
+				{
+					player.update();
+				}
+				
+			}
+			
+			// Update in-game editor...
+			if (Editor.enabled)
+			{
+				Editor.update();
+			}
+			
+			// Update in-game debugger...
+			if (Debug.enabled)
+			{
+				Debug.update();
+			}
+			
+		}
+		
+		/**
+		 * Pauses the game.
+		 */
+		static pause()
+		{
+			
+			// If game is singleplayer...
+			if (!Multiplayer.enabled)
+			{
+				
+				// Pause game
 				this.paused = true;
 				
-				// Show pause menu
-				this.ui.menus.showPauseMenu();
+			}
+			
+			// Show pause menu
+			this.ui.menus.showPauseMenu();
+			
+		}
+		
+		/**
+		 * Unpauses the game.
+		 */
+		static unpause()
+		{
+			
+			// If game is paused...
+			if (this.paused)
+			{
+				
+				// Unpause game
+				this.paused = false;
+				
+				// Restart game loop
+				this.gameLoop();
 				
 			}
 			
-			/**
-			 * Unpauses the game.
-			 */
-			static unpause()
+			// Lock pointer controls
+			this.player.controls.lockPointerLockControls();
+			
+			// Hide pause menu
+			this.ui.menus.hidePauseMenu();
+			
+		}
+		
+		/**
+		 * Quits the game.
+		 */
+		static quit()
+		{
+			
+			// Disable the editor...
+			if (Editor.enabled)
 			{
-				
-				// Unpause the game
-				this.paused = false;
-				
-				// Lock pointer controls
-				this.player.controls.lockPointerLockControls();
-				
-				// Restart the game loop
-				this.gameLoop();
+				Editor.toggle();
+			}
+			
+			// De-initialize player's keyboard/mouse UI event handlers
+			Game.ui.controls.deinitializeControls();
+			
+			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
+			{
 				
 				// Hide pause menu
 				this.ui.menus.hidePauseMenu();
-				
-			}
-			
-			/**
-			 * Quits the game.
-			 */
-			static quit()
-			{
-				
-				// Disable the editor
-				if (Editor.enabled)
-				{
-					Editor.toggle();
-				}
-				
-				// Quit the current game according to selected game mode...
-				if (this.mode == this.GameModes.Singleplayer)
-				{
-					this.quitSingleplayerGame();
-				}
-				
-				// Set game mode to none
-				this.mode = this.GameModes.None;
 				
 				// Show main menu
 				this.ui.menus.showMainMenu();
 				
 			}
 			
-			/**
-			 * Exits the game.
-			 */
-			static exit()
+			// If game is multiplayer...
+			if (Multiplayer.enabled)
 			{
 				
-				// Close browser window
-				this.window_interface.close();
+				// Disconnect from multiplayer
+				Multiplayer.disconnect();
 				
 			}
 			
-			/**
-			 * Resizes the game.
-			 */
-			static resize()
-			{
-				
-				// If player exists...
-				if (this.player)
-				{
-					
-					// Update game renderer
-					this.renderer.setSize(window.innerWidth, window.innerHeight);
-					
-					// Update player camera...
-					this.player.camera.aspect = window.innerWidth / window.innerHeight;
-					this.player.camera.updateProjectionMatrix();
-					
-				}
-				
-				// Resize editor UI elements...
-				if (Editor.enabled)
-				{
-					this.ui.editor.resize();
-				}
-				
-			}
-			
-		//#endregion
+		}
 		
-		
-		//#region [Game Modes]
+		/**
+		 * Exits the game.
+		 */
+		static exit()
+		{
 			
+			// Close browser window
+			this.window_interface.close();
 			
-			//#region [Singleplayer]
-				
-				/**
-				 * Initializes and starts a new singleplayer game.
-				 */
-				static startSingleplayerGame()
-				{
-					
-					// Set game mode
-					this.mode = this.GameModes.Singleplayer;
-					
-					// Hide main menu
-					this.ui.menus.hideMainMenu();
-					
-					// Initialize renderer
-					this.renderer = new THREE.WebGLRenderer();
-					this.renderer = new CustomOutlineEffect(this.renderer, { defaultThickness: 0.0032 });
-					this.renderer.setSize(window.innerWidth, window.innerHeight);
-					this.ui.utilities.initializeRenderer();
-					
-					// Load game assets, then initialize and start game...
-					Assets.load(() => {
-						
-						// Initialize game flags
-						this.paused = false;
-						this.single_frame = false;
-						
-						// Initialize world
-						this.world = new World();
-						this.world.load(Assets.worlds.TestWorld);
-						
-						// Initialize player
-						this.player = new Player();
-						
-						// Initialize player's keyboard/mouse controls
-						this.player.controls = new Controls();
-						this.ui.controls.initializeControls();
-						
-						// Start the game loop
-						this.gameLoop();
-						
-					});
-					
-				}
-				
-				/**
-				 * Quits the current singleplayer game.
-				 */
-				static quitSingleplayerGame()
-				{
-					
-					// De-initialize player's keyboard/mouse controls
-					Game.ui.controls.deinitializeControls();
-					
-					// Hide pause menu
-					this.ui.menus.hidePauseMenu();
-					
-				}
-				
-			//#endregion
-			
-			
-		//#endregion
-		
+		}
 		
 	//#endregion
 	

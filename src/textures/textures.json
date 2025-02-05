@@ -1,4 +1,4 @@
 {
-	"apple1": "./textures/apple1.png",
-	"apple2": "./textures/apple2.png"
+	"apple1": "/textures/apple1.png",
+	"apple2": "/textures/apple2.png"
 }

@@ -3,6 +3,7 @@ import * as THREE from '../libraries/threejs/three.js';
 
 // Static Class Imports
 import Game from './game.class.js';
+import Multiplayer from './multiplayer.class.js';
 
 /**
  * A player in the game world.
@@ -20,65 +21,113 @@ class Player
 			
 			// Class Declarations/Initialization
 			
+			/**
+			 * Flag indicating whether or not the player's post-initialization has completed in the update function.
+			 */
+			this.post_initialization = false;
+			
 			
 			// Player Attributes
 			
-			// The player's height.
+			/**
+			 * The player's unique ID.
+			 */
+			this.id = THREE.MathUtils.generateUUID();
+			
+			/**
+			 * The player's name.
+			 */
+			this.name = "Noob";
+			
+			/**
+			 * The player's height.
+			 */
 			this.height = 2;
+			
+			
+			// Multiplayer Attributes
+			
+			/**
+			 * The player's multiplayer server connection.
+			 */
+			this.connection = null;
 			
 			
 			// Player Movement
 			
-			// The player's movement velocity
+			/**
+			 * The player's movement velocity.
+			 */
 			this.velocity = new THREE.Vector3();
 			
-			// The player's movement direction
+			/**
+			 * The player's movement direction.
+			 */
 			this.direction = new THREE.Vector3();
 			
-			// The player's movement speed
+			/**
+			 * The player's movement speed.
+			 */
 			this.speed = 0.1;
 			
 			
 			// Player Steps/Stairs/Ramp Movement
 			
-			// The distance from the player to check for steps/stairs/ramps
+			/**
+			 * The distance from the player to check for steps/stairs/ramps.
+			 */
 			this.stair_check_distance = 0.1;
 			
 			
 			// Player Jumping
 			
-			// Whether or not the player has unrestricted free-flying camera movement
-			this.noclip = false;
-			
-			// The player's noclip movement speed
-			this.noclip_speed = 0.175;
-			
-			// Whether or not the player is currently jumping
+			/**
+			 * Flag indicating whether or not the player is currently jumping.
+			 */
 			this.jumping = false;
 			
-			// The player's maximum jump height
+			/**
+			 * The player's maximum jump height.
+			 */
 			this.jump_height = 0.25;
 			
-			// The player's jump velocity
+			/**
+			 * The player's jump velocity.
+			 */
 			this.jump_velocity = 0;
 			
-			// The amount of gravity pulling down on the player
+			/**
+			 * The amount of gravity pulling down on the player.
+			 */
 			this.jump_gravity = 0.0125;
+			
+			
+			/**
+			 * Flag indicating whether or not the player has unrestricted free-flying camera movement.
+			 */
+			this.noclip = false;
+			
+			/**
+			 * The player's noclip movement speed.
+			 */
+			this.noclip_speed = 0.175;
 			
 			
 			// three.js Camera
 			
-			// The player is actually just this camera
+			/**
+			 * The player's camera, which is the actual in-game player. The camera may have additional geometry attached to it, but the camera is the player.
+			 */
 			this.camera = new THREE.PerspectiveCamera(75, Game.window_interface.innerWidth / Game.window_interface.innerHeight, 0.1, 1000);
-			this.camera.name = "player";
-			
-			// Set the player's height
+			this.camera.name = this.name;
 			this.camera.position.y = this.height;
 			
 			
 			// three.js Raycaster
 			
-			// Initialize new raycaster to be re-used for all raycasting
+			/**
+			 * The player's raycaster, to be re-used for all raycasting.
+			 */
 			this.raycaster = new THREE.Raycaster();
 			
 		}
@@ -113,7 +162,7 @@ class Player
 		}
 		
 		/**
-		 * The player's quaternion. What the hell is a quaternion? Who cares. ¯\_(ツ)_/¯
+		 * The player's quaternion in the game world.
 		 */
 		get quaternion()
 		{
@@ -194,6 +243,44 @@ class Player
 		 */
 		update()
 		{
+			
+			// If the player's post-initialization routine hasn't executed yet, and the game is either singleplayer, or multiplayer but not a dedicated server...
+			if (!this.post_initialization && (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer)))
+			{
+				
+				// Flag the post-initialization routine as complete
+				this.post_initialization = true;
+				
+				// Wait a moment and the initialize a player cylinder...
+				setTimeout(() => {
+					
+					// Initialize player cylinder
+					let cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 10, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(Game.ui.utilities.getMSPaintColours()[THREE.MathUtils.randInt(0, 31)]) }));
+					cylinder.name = this.name;
+					cylinder.userData.ignore_collision = true;
+					cylinder.userData.ignore_raycast = true;
+					
+					// Make player's own cylinder invisible for themselves
+					if (this.id == Game.player.id)
+					{
+						cylinder.visible = false;
+					}
+					
+					// Add player cylinder to camera
+					this.camera.add(cylinder);
+					
+					// Add camera to game world
+					Game.world.addObject(this.camera);
+					
+				}, 1000);
+				
+			}
+			
+			// Block any game players that aren't the current player from continuing the update routine...
+			if (this.id != Game.player.id)
+			{
+				return;
+			}
 			
 			// Player Movement
 			
@@ -307,6 +394,15 @@ class Player
 			// Detect collision between the player's intended position and any collidable objects in the world
 			if (!Game.world.detectPlayerCollision(intended_position) || this.noclip)
 			{
+				
+				// If the game is multiplayer and the player has moved or is jumping...
+				if (Multiplayer.enabled && (!this.position.equals(intended_position) || this.jumping))
+				{
+					
+					// Send player update to server
+					Multiplayer.sendPlayerUpdate();
+					
+				}
 				
 				// No collision was detected, move the player to the intended position
 				this.position.copy(intended_position);

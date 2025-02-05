@@ -1,4 +1,4 @@
-// three.js Import
+// three.js Imports
 import * as THREE from '../three.js';
 
 // Class Imports

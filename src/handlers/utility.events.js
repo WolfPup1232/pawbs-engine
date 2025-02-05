@@ -1,5 +1,6 @@
 // Static Class Imports
 import Game from '../classes/game.class.js';
+import Editor from '../classes/editor.class.js';
 
 /**
  * Initializes the utility UI event handlers, which must be loaded first because they are general-use and critical.
@@ -126,14 +127,8 @@ export default function initializeUtilityUIEventHandlers()
 				
 				// Remove all tooltips...
 				Game.ui.tooltips.forEach((tooltip, element) => {
-					
-					// Remove event handlers from the tooltip
-					//$(element).off('click', Game.ui.utilities.hideTooltip);
-					
-					// Remove the tooltip
 					tooltip.dispose();
 					Game.ui.tooltips.delete(element);
-					
 				});
 				
 				// Clear tooltips
@@ -149,22 +144,18 @@ export default function initializeUtilityUIEventHandlers()
 					// Add tooltip to the Map, using the DOM element as the key
 					Game.ui.tooltips.set(this, tooltip);
 					
-					// Hide tooltip on click
-					//$(this).on('click', Game.ui.utilities.hideTooltip);
-					
 				});
 				
 			}
 			
 			/**
-			 * Hides the tooltip of the element it's been applied to.
+			 * Hides all tooltips.
 			 */
-			Game.ui.utilities.hideTooltip = function hideTooltip()
+			Game.ui.utilities.hideTooltips = function hideTooltips()
 			{
 				
-				// Hide the tooltip
-				let tooltip = Game.ui.tooltips.get(this);
-				tooltip.hide();
+				// Hide all tooltips
+				Game.ui.tooltips.forEach((tooltip, element) => { tooltip.hide(); });
 				
 			}
 			
@@ -174,9 +165,9 @@ export default function initializeUtilityUIEventHandlers()
 		//#region [Input Elements]
 			
 			/**
-			 * Returns boolean value indicatiing whether or not any input or textarea in the UI has focus.
+			 * Returns boolean value indicating whether or not any input or textarea in the UI has focus.
 			 *
-			 * @return {array} Boolean value indicatiing whether any input has focus.
+			 * @return {array} Boolean value indicating whether any input has focus.
 			 */
 			Game.ui.utilities.isInputFocused = function isInputFocused()
 			{
@@ -286,12 +277,44 @@ export default function initializeUtilityUIEventHandlers()
 		//#region [Window]
 			
 			/**
+			 * Window click event.
+			 */
+			$(window).on('click', () => {
+				
+				// Hide all tooltips
+				Game.ui.utilities.hideTooltips();
+				
+			});
+			
+			/**
 			 * Window resize event.
 			 */
-			window.addEventListener('resize', () => {
+			$(window).on('resize', () => {
 				
-				// Resize the game
-				Game.resize();
+				// If renderer exists...
+				if (Game.renderer)
+				{
+					
+					// Update game renderer
+					Game.renderer.setSize(window.innerWidth, window.innerHeight);
+					
+				}
+				
+				// If player exists...
+				if (Game.player)
+				{
+					
+					// Update player camera...
+					Game.player.camera.aspect = window.innerWidth / window.innerHeight;
+					Game.player.camera.updateProjectionMatrix();
+					
+				}
+				
+				// Resize editor UI elements...
+				if (Editor.enabled)
+				{
+					Game.ui.editor.resize();
+				}
 				
 			});
 			

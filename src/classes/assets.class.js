@@ -4,7 +4,9 @@ import { CustomObjectLoader } from '../libraries/threejs/modules/CustomObjectLoa
 import { CustomOutlineEffect } from '../libraries/threejs/modules/CustomOutlineEffect.js';
 
 // Static Class Imports
+import Game from './game.class.js';
 import Editor from './editor.class.js';
+import Multiplayer from './multiplayer.class.js';
 
 /**
  * A collection of in-game assets.
@@ -20,12 +22,12 @@ class Assets
 			/**
 			 * Texture file paths.
 			 */
-			static paths_textures = {};
+			static paths_textures = { };
 			
 			/**
 			 * Object file paths.
 			 */
-			static paths_objects = {};
+			static paths_objects = { };
 			
 		//#endregion
 		
@@ -35,17 +37,17 @@ class Assets
 			/**
 			 * The list of textures loaded by the game.
 			 */
-			static textures = {};
+			static textures = { };
 			
 			/**
 			 * The list of object prefabs loaded by the game.
 			 */
-			static objects = {};
+			static objects = { };
 			
 			/**
 			 * The list of worlds loaded by the game.
 			 */
-			static worlds = {};
+			static worlds = { };
 			
 		//#endregion
 		
@@ -93,38 +95,83 @@ class Assets
 		static load(callback)
 		{
 			
-			// Load textures
-			fetch('./textures/textures.json').then((response) => response.json()).then((texture_paths) => { this.loadTextures(texture_paths, () => {
+			// If assets are *not* being loaded by a dedicated server...
+			if (Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer)
+			{
 				
-				// Load objects
-				fetch('./objects/objects.json').then((response) => response.json()).then((object_paths) => { this.loadObjects(object_paths, () => {
+				// Load textures
+				fetch(Game.settings.path_textures).then((response) => response.json()).then((texture_paths) => { this.loadTextures(texture_paths, () => {
 					
-					// Load worlds
-					fetch('./worlds/worlds.json').then((response) => response.json()).then((world_paths) => { this.loadWorlds(world_paths, () => {
+					// Load objects
+					fetch(Game.settings.path_objects).then((response) => response.json()).then((object_paths) => { this.loadObjects(object_paths, () => {
 						
-						// Perform the next step using the callback function
-						callback();
+						// Load worlds
+						fetch(Game.settings.path_worlds).then((response) => response.json()).then((world_paths) => { this.loadWorlds(world_paths, () => {
+							
+							// Perform the next step using the callback function
+							callback();
+							
+						}); }).catch(error => {
+							
+							// Error loading worlds
+							console.error("Error loading '" + Game.settings.path_worlds + "': ", error);
+							
+						});
 						
 					}); }).catch(error => {
 						
-						// Error loading worlds
-						console.error("Error loading ./world/worlds.json: ", error);
+						// Error loading objects
+						console.error("Error loading '" + Game.settings.path_objects + "': ", error);
 						
 					});
 					
 				}); }).catch(error => {
 					
-					// Error loading objects
-					console.error("Error loading ./objects/objects.json: ", error);
+					// Error loading textures
+					console.error("Error loading '" + Game.settings.path_textures + "': ", error);
 					
 				});
 				
-			}); }).catch(error => {
 				
-				// Error loading textures
-				console.error("Error loading ./textures/textures.json: ", error);
+			} // Otherwise, if assets *are* being loaded by a dedicated server...
+			else
+			{
 				
-			});
+				// Load textures
+				Game.file_system.promises.readFile(Game.settings.path_textures, Game.settings.default_file_encoding).then((response) => JSON.parse(response)).then((texture_paths) => { this.loadTextures(texture_paths, () => {
+					
+					// Load objects
+					Game.file_system.promises.readFile(Game.settings.path_objects, Game.settings.default_file_encoding).then((response) => JSON.parse(response)).then((object_paths) => { this.loadObjects(object_paths, () => {
+						
+						// Load worlds
+						Game.file_system.promises.readFile(Game.settings.path_worlds, Game.settings.default_file_encoding).then((response) => JSON.parse(response)).then((world_paths) => { this.loadWorlds(world_paths, () => {
+							
+							// Perform the next step using the callback function
+							callback();
+							
+						}); }).catch(error => {
+							
+							// Error loading worlds
+							console.error("Error loading '" + Game.settings.path_worlds + "':", error);
+							
+						});
+						
+					}); }).catch(error => {
+						
+						// Error loading objects
+						console.error("Error loading '" + Game.settings.path_objects + "':", error);
+						
+					});
+					
+				}); }).catch(error => {
+					
+					// Error loading textures
+					console.error("Error loading '" + Game.settings.path_textures + "':", error);
+					
+				});
+				
+			}
+			
 		}
 		
 		
@@ -150,10 +197,10 @@ class Assets
 				
 				// Load each texture
 				texture_keys.forEach((key) => {
-					texture_loader.load(texture_paths[key], (texture) => {
+					texture_loader.load(Game.settings.path_root + texture_paths[key], (texture) => {
 						
 						// Add texture path to loaded texture
-						texture.path = texture_paths[key];
+						texture.path = Game.settings.path_root + texture_paths[key];
 						
 						// Store loaded texture by name
 						this.textures[key] = texture;
@@ -225,10 +272,10 @@ class Assets
 				
 				// Load each object
 				object_keys.forEach((key) => {
-					object_loader.load(object_paths[key], (object) => {
+					object_loader.load(Game.settings.path_root + object_paths[key], (object) => {
 						
 						// Add object path to loaded object
-						object.path = object_paths[key];
+						object.path = Game.settings.path_root + object_paths[key];
 						
 						// Store loaded object by name
 						this.objects[key] = object;
@@ -244,37 +291,40 @@ class Assets
 					
 				});
 				
+				// Gets the path root accessor
+				let primitive_root = Game.settings.path_root;
+				
 				// Initialize primitive objects
 				let object_cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1, 1, 1, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
-				object_cube.path = "./objects/primitives/cube.json";
+				object_cube.path = primitive_root + "/objects/primitives/cube.json";
 				this.objects["cube"] = object_cube;
 				
 				let object_sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 10), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
-				object_sphere.path = "./objects/primitives/sphere.json";
+				object_sphere.path = primitive_root + "/objects/primitives/sphere.json";
 				this.objects["sphere"] = object_sphere;
 				
 				let object_cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1, 10, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
-				object_cylinder.path = "./objects/primitives/cylinder.json";
+				object_cylinder.path = primitive_root + "/objects/primitives/cylinder.json";
 				this.objects["cylinder"] = object_cylinder;
 				
 				let object_cone = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 10, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
-				object_cone.path = "./objects/primitives/cone.json";
+				object_cone.path = primitive_root + "/objects/primitives/cone.json";
 				this.objects["cone"] = object_cone;
 				
 				let object_torus = new THREE.Mesh(new THREE.TorusGeometry(0.375, 0.1875, 10, 10), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour }));
-				object_torus.path = "./objects/primitives/torus.json";
+				object_torus.path = primitive_root + "/objects/primitives/torus.json";
 				this.objects["torus"] = object_torus;
 				
 				let object_plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 1, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
-				object_plane.path = "./objects/primitives/plane.json";
+				object_plane.path = primitive_root + "/objects/primitives/plane.json";
 				this.objects["plane"] = object_plane;
 				
 				let object_circle = new THREE.Mesh(new THREE.CircleGeometry(0.5, 10), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
-				object_circle.path = "./objects/primitives/circle.json";
+				object_circle.path = primitive_root + "/objects/primitives/circle.json";
 				this.objects["circle"] = object_circle;
 				
 				let object_ring = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.5, 10, 1), new THREE.MeshBasicMaterial({ color: Editor.spawned_object_colour, side: THREE.DoubleSide }));
-				object_ring.path = "./objects/primitives/ring.json";
+				object_ring.path = primitive_root + "/objects/primitives/ring.json";
 				this.objects["ring"] = object_ring;
 				
 				// Initialize primitive object clones for their corresponding thumbnails, blank paths so they don't load in the asset browser
@@ -461,9 +511,9 @@ class Assets
 			 * @param {THREE.Scene} scene The three.js scene containing the object and camera to use during object thumbnail rendering.
 			 * @param {THREE.PerspectiveCamera} camera The three.js camera used to render the object thumbnail.
 			 * @param {THREE.Object3D} object The three.js object to be rendered.
-			 * @param {boolean} single_frame Flag which determines whether or not to render only one single frame of animation for the thumbnail.
+			 * @param {boolean} render_single_frame Flag which determines whether or not to render only one single frame of animation for the thumbnail.
 			 */
-			static objectThumbnailAnimate(animation_id, renderer, scene, camera, object, single_frame = false)
+			static objectThumbnailAnimate(animation_id, renderer, scene, camera, object, render_single_frame = false)
 			{
 				
 				// Get animation request ID and set animation loop callback
@@ -476,7 +526,7 @@ class Assets
 				renderer.render(scene, camera);
 				
 				// Check if animation stop flag is enabled...
-				if (this.#object_thumbnails_stop_animating || this.#object_thumbnail_stop_animating_id == animation_id || single_frame)
+				if (this.#object_thumbnails_stop_animating || this.#object_thumbnail_stop_animating_id == animation_id || render_single_frame)
 				{
 					
 					// Remove animation ID from array of active thumbnail animations

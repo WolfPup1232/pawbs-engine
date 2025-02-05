@@ -22,6 +22,9 @@ export default function initializeMainMenuUIEventHandlers()
 				if (Game.paused)
 				{
 					
+					// Clear chat log
+					$('#chat-log').html("");
+					
 					// Show main menu UI
 					$('#menu-main').delay(256).fadeIn(256);
 					
@@ -69,7 +72,7 @@ export default function initializeMainMenuUIEventHandlers()
 			{
 				
 				// Start singleplayer game
-				Game.start(Game.GameModes.Singleplayer);
+				Game.start();
 				
 			});
 			
@@ -84,6 +87,23 @@ export default function initializeMainMenuUIEventHandlers()
 				
 				// Show multiplayer menu UI
 				$('#menu-multiplayer').delay(256).fadeIn(256);
+				
+			});
+			
+			/**
+			 * Options button click event.
+			 */
+			$('#options-menu').on('click', function()
+			{
+				
+				// Hide main menu UI
+				$('#menu-main').fadeOut(256);
+				
+				// Show options menu UI
+				$('#menu-options').delay(256).fadeIn(256);
+				
+				// Update options menu
+				Game.ui.menus.updateOptionsMenu();
 				
 			});
 			

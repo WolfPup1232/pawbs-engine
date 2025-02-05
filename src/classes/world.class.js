@@ -7,6 +7,7 @@ import Billboard from './billboard.class.js';
 
 // Static Class Imports
 import Game from './game.class.js';
+import Multiplayer from './multiplayer.class.js';
 
 /**
  * A game world containing a scene which can be rendered, in which objects can be placed and the player can navigate.
@@ -27,32 +28,48 @@ class World
 			
 			// three.js Scene
 			
-			// Initialize the scene, which is really just the world itself, which contains objects and stuff
+			/**
+			 * The game's scene, which is really just the world itself, and contains objects and stuff.
+			 */
 			this.scene = new THREE.Scene();
 			
 			
 			// World Attributes
 			
-			// Initialize the name of the world
+			/**
+			 * The name of the game world.
+			 */
 			this.name = "";
 			
-			// Initialize the player's position within the world
+			/**
+			 * The player's position within the game world.
+			 */
 			this.player_position = new THREE.Vector3(0, 0, 0);
+			
+			/**
+			 * The player's rotation within the game world.
+			 */
 			this.player_rotation = new THREE.Euler(0, 0, 0, 'XYZ');
 			
 			
 			// World Objects
 			
-			// Initialize an array to hold world objects
+			/**
+			 * The list of all objects in the game world.
+			 */
 			this.objects = [];
 			
-			// Initialize an array to hold terrain objects
+			/**
+			 * The list of all terrain objects in the game world.
+			 */
 			this.terrain = [];
 			
 			
 			// Steps/Stairs/Ramps
 			
-			// The maximum height an object which can be considered a traversible stair
+			/**
+			 * The maximum height an object which can be considered a traversible stair.
+			 */
 			this.stair_height = 0.75;
 			
 			
@@ -168,50 +185,93 @@ class World
 			// Get a reference to this world to pass into the file load callback
 			let self = this;
 			
-			// Fetch the JSON file from the specified file path
-			fetch(path).then(response => {
-			
-				// Error fetching world
-				if (!response.ok)
-				{
-					throw new Error('Error fetching world.');
-				}
+			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
+			{
 				
-				// World loaded successfully
-				return response.json();
+				// Fetch the JSON file from the specified file path
+				fetch(Game.settings.path_root + path).then(response => {
 				
-			})
-			.then(json => {
-				
-				try
-				{
+					// Error fetching world
+					if (!response.ok)
+					{
+						throw new Error('Error fetching world.');
+					}
 					
-					// Load world from JSON object
-					self.loadFromJSON(json);
+					// World loaded successfully
+					return response.json();
 					
-				}
-				catch (error)
-				{
+				})
+				.then(json => {
 					
-					// Error loading world
-					console.error("Error loading world: ", error);
+					try
+					{
+						
+						// Load world from JSON object
+						self.loadFromJSON(json);
+						
+					}
+					catch (error)
+					{
+						
+						// Error loading world
+						console.error("Error loading world: ", error);
+						
+					}
 					
-				}
+				})
+				.catch(error => {
+					
+					// Error fetching world
+					console.error("Error fetching world: ", error);
+					
+				});
 				
-			})
-			.catch(error => {
 				
-				// Error fetching world
-				console.error("Error fetching world: ", error);
+			} // Otherwise, if the game is multiplayer and a dedicated server...
+			else
+			{
 				
-			});
+				// Fetch the JSON file from the specified file path				
+				Game.file_system.promises.readFile(Game.settings.path_root + path, Game.settings.default_file_encoding).then((response) => JSON.parse(response)).then((world) => {
+					
+					// World loaded successfully
+					return world;
+					
+				})
+				.then(json => {
+					
+					try
+					{
+						
+						// Load world from JSON object
+						self.loadFromJSON(json);
+						
+					}
+					catch (error)
+					{
+						
+						// Error loading world
+						console.error("Error loading world: ", error);
+						
+					}
+					
+				})
+				.catch(error => {
+					
+					// Error fetching world
+					console.error("Error fetching world:", error);
+					
+				});
+				
+			}
 			
 		}
 		
 		/**
 		 * Loads a world from a JSON object.
 		 *
-		 * @param {THREE.Object3D} path The JSON object to load.
+		 * @param {THREE.Object3D} json The JSON object to load.
 		 */
 		loadFromJSON(json)
 		{
@@ -513,6 +573,7 @@ class World
 		detectPlayerCollision(intended_position)
 		{
 			
+			// Initialize collision detected flag
 			let collision_detected = false;
 			
 			// Create the player's bounding box
@@ -520,65 +581,73 @@ class World
 			player_box.setFromCenterAndSize(new THREE.Vector3(intended_position.x, intended_position.y - (Game.player.height / 2), intended_position.z), new THREE.Vector3(1, Game.player.height, 1));
 			
 			// Iterate through all objects in the world looking for collision
-			//
-			// 	NOTE: Iterating through each object in the entire is probably inefficient as hell. We cant use raycasting because it only checks
-			//		  one single point at a time, and we kinda need to check if the player's whole 3D volume collides with anything, not just like,
-			//		  their feet or something. The only way to make this more efficient would be to somehow narrow down the size of this.objects to
-			//		  whatever's in some kinda range of the player? But just the act of doing that would take more processing time? Idk.
-			//		  UPDATE TO THIS NOTE: Maybe eventually using a Set() will make more sense. TBD.
 			let all_objects = this.objects;
 			for (let i = 0; i < all_objects.length; i++)
 			{
 				all_objects[i].traverse((child) => {
 					if (child.isMesh)
 					{
-						// Create world object's bounding box
-						let object_box = new THREE.Box3().setFromObject(child);
 						
+						// Check for object flag determining whether or not to skip collision detection...
 						let skip = false;
+						if (child.userData && child.userData.ignore_collision)
+						{
+							skip = true;
+						}
 						
-						// Detect billboard collision
-						if (all_objects[i] instanceof Billboard)
+						// If collision detection is not being skipped...
+						if (!skip)
 						{
 							
-							// Add some extra height to billboard bounding boxes
-							//
-							//	NOTE: I gave up trying to keep billboards perfectly upright
-							//		  on their own, so screw it, this is my workaround.
-							object_box.max.y += 5;
+							// Create world object's bounding box
+							let object_box = new THREE.Box3().setFromObject(child);
+							
+							// Detect billboard collision
+							if (all_objects[i] instanceof Billboard)
+							{
+								
+								// Add some extra height to billboard bounding boxes
+								//
+								//	NOTE: I gave up trying to keep billboards perfectly upright
+								//		  on their own, so screw it, this is my workaround.
+								object_box.max.y += 5;
+								
+							}
+							
+							// Check for intersection between player and object
+							if (player_box.intersectsBox(object_box))
+							{
+								
+								// If object is below the player's vertical space...
+								if (object_box.max.y <= player_box.min.y)
+								{
+									// Player is walking above the object
+									skip = true;
+								}
+								
+								// If object is above the player's vertical space...
+								if (!skip && object_box.min.y > player_box.max.y)
+								{
+									// Player is walking under the object
+									skip = true;
+								}
+								
+								// If object is too tall to be a step/stair...
+								if (!skip && object_box.max.y > (player_box.min.y + this.stair_height))
+								{
+									// Player collides with object
+									collision_detected = true;
+								}
+								
+							}
 							
 						}
 						
-						// Check for intersection between player and object
-						if (player_box.intersectsBox(object_box))
-						{
-							
-							// If object is below the player's vertical space...
-							if (object_box.max.y <= player_box.min.y)
-							{
-								// Player is walking above the object
-								skip = true;
-							}
-							
-							// If object is above the player's vertical space...
-							if (skip == false && object_box.min.y > player_box.max.y)
-							{
-								// Player is walking under the object
-								skip = true;
-							}
-							
-							// If object is too tall to be a step/stair...
-							if (skip == false && object_box.max.y > (player_box.min.y + this.stair_height))
-							{
-								// Player collides with object
-								collision_detected = true;
-							}
-							
-						}
 					}
 				});
 			}
 			
+			// Return collision detected flag
 			return collision_detected;
 			
 		}

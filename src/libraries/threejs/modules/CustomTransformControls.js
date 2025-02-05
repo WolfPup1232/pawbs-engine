@@ -2,6 +2,7 @@
 //		 so a bunch of undocumented differences exist between this and the original three.js version because
 //		 I don't feel like documenting like 1600 lines of mostly somebody else's code.
 
+// Static Class Imports
 import Game from '../../../classes/game.class.js';
 
 import {
