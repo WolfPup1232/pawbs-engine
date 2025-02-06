@@ -2,7 +2,7 @@
 	"multiplayer_development_dedicated_server":	"ws://localhost:3000",
 	"multiplayer_production_dedicated_server":	"wss://pawbs-engine.fly.dev:3443",
 	
-	"multiplayer_development_http_server":		"ws://localhost:4000",
+	"multiplayer_development_http_server":		"http://localhost:4000",
 	"multiplayer_production_http_server":		"https://pawbs-engine.fly.dev",
 	
 	"multiplayer_development_signaling_server":	"ws://localhost:5000",
@@ -14,11 +14,17 @@
 	
 	"multiplayer_default_connection_type":	1,
 	
-	"development_path_root":		".",
-	"production_path_root":			"./src",
+	"development_path_root":			".",
+	"shortcut_path_root":				"..",
+	"shortcut_single_path_root":		"..",
+	"production_path_root":				"..",
+	"containerized_path_root":			"./src",
 	
-	"server_development_path_root":	"..",
-	"server_production_path_root":	"./src",
+	"server_development_path_root":		"..",
+	"server_shortcut_path_root":		"./src",
+	"server_shortcut_single_path_root": "..",
+	"server_production_path_root":		"./src",
+	"server_containerized_path_root":	"./src",
 	
 	"default_path_settings":	"/settings.json",
 	"default_path_worlds":		"/worlds/worlds.json",

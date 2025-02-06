@@ -151,6 +151,16 @@ class Multiplayer
 	//#endregion
 	
 	
+	//#region [Constructor]
+		
+		/**
+		 * Static class constructor.
+		 */
+		static { }
+		
+	//#endregion
+	
+	
 	//#region [Message Handlers]
 		
 		/**
@@ -558,21 +568,6 @@ class Multiplayer
 	//#endregion
 	
 	
-	//#region [Properties]
-		
-		/**
-		 * Flag indicating whether or not the multiplayer game's current connection type indicates that it's a game server instead of a client.
-		 */
-		static get is_server()
-		{
-			return (this.connection_type == this.ConnectionTypes.DedicatedServer ||
-					this.connection_type == this.ConnectionTypes.HTTPServer ||
-					this.connection_type == this.ConnectionTypes.SignalingServer);
-		}
-		
-	//#endregion
-	
-	
 	//#region [Methods]
 		
 		
@@ -722,7 +717,7 @@ class Multiplayer
 					Game.player.name = Game.settings.multiplayer_nickname;
 					
 					// If the player is connected to a P2P signaling server...
-					if (this.connection_type == this.ConnectionTypes.P2PClient)
+					if (Multiplayer.connection_type == Multiplayer.ConnectionTypes.P2PClient)
 					{
 						
 						// Send a P2P_HOST_GAME message to the P2P signaling server

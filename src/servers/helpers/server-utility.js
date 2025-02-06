@@ -63,7 +63,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	global.divider_dashed		= "----------------------------------------------------------------------------------------------------------";
 	
 	// Individual border piece
-	global.border				= c_reset + c_gray + "░▒▓█▓▒░" + c_reset;
+	global.border				= c_reset + c_gray + (is_containerized() ? "" : "░▒▓█▓▒░") + c_reset;
 	
 	// Solid border for line 1
 	global.divider_solid_top	= "░▒▓██████████████████████████████████████████████████████████████████████████████████████████████████████████████████▓▒░";
@@ -79,22 +79,33 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	global.showTitleTrans = function showTitle()
 	{
 		
+		const blocks = (is_production() || is_shortcut() ? "" : "██");
+		
 		// Output title
 		console.clear();
-		console.log(c_gray + divider_solid_top);
-		console.log(border + e_bright + c_cyan + 	"█████████████████████████████       ████      ███  ████  ██       ████      ██████████████████████████████" + border);
-		console.log(border + e_bright + c_magenta +	"█████████████████████████████  ████  ██  ████  ██  █  █  ██  ████  ██  ███████████████████████████████████" + border);
-		console.log(border + e_bright + c_white + 	"█████████████████████████████       ███  ████  ██        ██       ████      ██████████████████████████████" + border);
-		console.log(border + e_bright + c_magenta +	"█████████████████████████████  ████████        ██   ██   ██  ████  ████████  █████████████████████████████" + border);
-		console.log(border + e_bright + c_cyan + 	"█████████████████████████████  ████████  ████  ██  ████  ██       ████      ██████████████████████████████" + border);
-		console.log(c_gray + divider_solid_top);
-		console.log(border + c_red + 				"█████████████████████████        ██   ███  ███      ███        ██   ███  ██        ███████████████████████" + border);
-		console.log(border + c_yellow + 			"█████████████████████████  ████████    ██  ██  ███████████  █████    ██  ██  █████████████████████████████" + border);
-		console.log(border + e_bright + c_green + 	"█████████████████████████      ████  █  █  ██  ███   █████  █████  █  █  ██      █████████████████████████" + border);
-		console.log(border + c_blue + 				"█████████████████████████  ████████  ██    ██  ████  █████  █████  ██    ██  █████████████████████████████" + border);
-		console.log(border + e_bright + c_magenta +	"█████████████████████████        ██  ███   ███      ███        ██  ███   ██        ███████████████████████" + border);
-		console.log(c_gray + divider_solid_top);
-		console.log(border + e_dim + c_gray + divider_medium + border);
+		if (is_containerized())
+		{
+			console.log(c_gray + "█" + divider(divider_solid));
+			console.log(c_gray + "█" + e_dim + divider(divider_medium));
+			console.log(c_gray + "█" + e_dim + divider(divider_light));
+		}
+		else
+		{
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + e_bright + c_cyan + 	blocks + "███████████████████████████       ████      ███  ████  ██       ████      ████████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_magenta +	blocks + "███████████████████████████  ████  ██  ████  ██  █  █  ██  ████  ██  █████████████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_white + 	blocks + "███████████████████████████       ███  ████  ██        ██       ████      ████████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_magenta +	blocks + "███████████████████████████  ████████        ██   ██   ██  ████  ████████  ███████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_cyan + 	blocks + "███████████████████████████  ████████  ████  ██  ████  ██       ████      ████████████████████████████" + blocks + border);
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + c_red + 				blocks + "███████████████████████        ██   ███  ███      ███        ██   ███  ██        █████████████████████" + blocks + border);
+			console.log(border + c_yellow + 			blocks + "███████████████████████  ████████    ██  ██  ███████████  █████    ██  ██  ███████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_green + 	blocks + "███████████████████████      ████  █  █  ██  ███   █████  █████  █  █  ██      ███████████████████████" + blocks + border);
+			console.log(border + c_blue + 				blocks + "███████████████████████  ████████  ██    ██  ████  █████  █████  ██    ██  ███████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_magenta +	blocks + "███████████████████████        ██  ███   ███      ███        ██  ███   ██        █████████████████████" + blocks + border);
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + e_dim + c_gray + divider(divider_medium) + border);
+		}
 		
 	}
 	
@@ -104,22 +115,33 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	global.showTitleLebsian = function showTitle()
 	{
 		
+		const blocks = (is_production() || is_shortcut() ? "" : "██");
+		
 		// Output title
 		console.clear();
-		console.log(c_gray + divider_solid_top);
-		console.log(border + c_red + 				"█████████████████████████████       ████      ███  ████  ██       ████      ██████████████████████████████" + border);
-		console.log(border + c_yellow +				"█████████████████████████████  ████  ██  ████  ██  █  █  ██  ████  ██  ███████████████████████████████████" + border);
-		console.log(border + e_bright + c_white + 	"█████████████████████████████       ███  ████  ██        ██       ████      ██████████████████████████████" + border);
-		console.log(border + e_bright + c_magenta +	"█████████████████████████████  ████████        ██   ██   ██  ████  ████████  █████████████████████████████" + border);
-		console.log(border + e_dim + c_magenta + 	"█████████████████████████████  ████████  ████  ██  ████  ██       ████      ██████████████████████████████" + border);
-		console.log(c_gray + divider_solid_top);
-		console.log(border + c_red + 				"█████████████████████████        ██   ███  ███      ███        ██   ███  ██        ███████████████████████" + border);
-		console.log(border + c_yellow + 			"█████████████████████████  ████████    ██  ██  ███████████  █████    ██  ██  █████████████████████████████" + border);
-		console.log(border + e_bright + c_green + 	"█████████████████████████      ████  █  █  ██  ███   █████  █████  █  █  ██      █████████████████████████" + border);
-		console.log(border + c_blue + 				"█████████████████████████  ████████  ██    ██  ████  █████  █████  ██    ██  █████████████████████████████" + border);
-		console.log(border + e_bright + c_magenta +	"█████████████████████████        ██  ███   ███      ███        ██  ███   ██        ███████████████████████" + border);
-		console.log(c_gray + divider_solid_top);
-		console.log(border + e_dim + c_gray + divider_medium + border);
+		if (is_containerized())
+		{
+			console.log(c_gray + "█" + divider(divider_solid));
+			console.log(c_gray + "█" + e_dim + divider(divider_medium));
+			console.log(c_gray + "█" + e_dim + divider(divider_light));
+		}
+		else
+		{
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + c_red + 				blocks + "███████████████████████████       ████      ███  ████  ██       ████      ████████████████████████████" + blocks + border);
+			console.log(border + c_yellow +				blocks + "███████████████████████████  ████  ██  ████  ██  █  █  ██  ████  ██  █████████████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_white + 	blocks + "███████████████████████████       ███  ████  ██        ██       ████      ████████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_magenta +	blocks + "███████████████████████████  ████████        ██   ██   ██  ████  ████████  ███████████████████████████" + blocks + border);
+			console.log(border + e_dim + c_magenta + 	blocks + "███████████████████████████  ████████  ████  ██  ████  ██       ████      ████████████████████████████" + blocks + border);
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + c_red + 				blocks + "███████████████████████        ██   ███  ███      ███        ██   ███  ██        █████████████████████" + blocks + border);
+			console.log(border + c_yellow + 			blocks + "███████████████████████  ████████    ██  ██  ███████████  █████    ██  ██  ███████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_green + 	blocks + "███████████████████████      ████  █  █  ██  ███   █████  █████  █  █  ██      ███████████████████████" + blocks + border);
+			console.log(border + c_blue + 				blocks + "███████████████████████  ████████  ██    ██  ████  █████  █████  ██    ██  ███████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_magenta +	blocks + "███████████████████████        ██  ███   ███      ███        ██  ███   ██        █████████████████████" + blocks + border);
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + e_dim + c_gray + divider(divider_medium) + border);
+		}
 		
 	}
 	
@@ -129,29 +151,40 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	global.showTitlePuppey = function showTitle()
 	{
 		
+		const blocks = (is_production() || is_shortcut() ? "" : "██");
+		
 		// Output title
 		console.clear();
-		console.log(c_gray + divider_solid_top);
-		console.log(border + b_red + c_black + 				"█████████████████████████████       ████      ███  ████  ██       ████      ██████████████████████████████" + b_black + border);
-		console.log(border + b_red + c_blue +				"█████████████████████████████  ████  ██  ████  ██  █  █  ██  ████  ██  ███████████████████████████████████" + b_black + border);
-		console.log(border + b_red + e_bright + c_white + 	"█████████████████████████████       ███  ████  ██        ██       ████      ██████████████████████████████" + b_black + border);
-		console.log(border + b_red + c_blue +				"█████████████████████████████  ████████        ██   ██   ██  ████  ████████  █████████████████████████████" + b_black + border);
-		console.log(border + b_red + c_black +				"█████████████████████████████  ████████  ████  ██  ████  ██       ████      ██████████████████████████████" + b_black + border);
-		console.log(c_gray + divider_solid_top);
-		console.log(border + c_red + 						"█████████████████████████        ██   ███  ███      ███        ██   ███  ██        ███████████████████████" + border);
-		console.log(border + c_yellow + 					"█████████████████████████  ████████    ██  ██  ███████████  █████    ██  ██  █████████████████████████████" + border);
-		console.log(border + e_bright + c_green + 			"█████████████████████████      ████  █  █  ██  ███   █████  █████  █  █  ██      █████████████████████████" + border);
-		console.log(border + c_blue + 						"█████████████████████████  ████████  ██    ██  ████  █████  █████  ██    ██  █████████████████████████████" + border);
-		console.log(border + e_bright + c_magenta +			"█████████████████████████        ██  ███   ███      ███        ██  ███   ██        ███████████████████████" + border);
-		console.log(c_gray + divider_solid_top);
-		console.log(border + e_dim + c_gray + divider_medium + border);
+		if (is_containerized())
+		{
+			console.log(c_gray + "█" + divider(divider_solid));
+			console.log(c_gray + "█" + e_dim + divider(divider_medium));
+			console.log(c_gray + "█" + e_dim + divider(divider_light));
+		}
+		else
+		{
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + b_red + c_black + 				blocks + "███████████████████████████       ████      ███  ████  ██       ████      ████████████████████████████" + blocks + b_black + border);
+			console.log(border + b_red + c_blue +				blocks + "███████████████████████████  ████  ██  ████  ██  █  █  ██  ████  ██  █████████████████████████████████" + blocks + b_black + border);
+			console.log(border + b_red + e_bright + c_white + 	blocks + "███████████████████████████       ███  ████  ██        ██       ████      ████████████████████████████" + blocks + b_black + border);
+			console.log(border + b_red + c_blue +				blocks + "███████████████████████████  ████████        ██   ██   ██  ████  ████████  ███████████████████████████" + blocks + b_black + border);
+			console.log(border + b_red + c_black +				blocks + "███████████████████████████  ████████  ████  ██  ████  ██       ████      ████████████████████████████" + blocks + b_black + border);
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + c_red + 						blocks + "███████████████████████        ██   ███  ███      ███        ██   ███  ██        █████████████████████" + blocks + border);
+			console.log(border + c_yellow + 					blocks + "███████████████████████  ████████    ██  ██  ███████████  █████    ██  ██  ███████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_green + 			blocks + "███████████████████████      ████  █  █  ██  ███   █████  █████  █  █  ██      ███████████████████████" + blocks + border);
+			console.log(border + c_blue + 						blocks + "███████████████████████  ████████  ██    ██  ████  █████  █████  ██    ██  ███████████████████████████" + blocks + border);
+			console.log(border + e_bright + c_magenta +			blocks + "███████████████████████        ██  ███   ███      ███        ██  ███   ██        █████████████████████" + blocks + border);
+			console.log(c_gray + divider(divider_solid_top));
+			console.log(border + e_dim + c_gray + divider(divider_medium) + border);
+		}
 		
 	}
 	
 //#endregion
 
 
-//#region [Functions]
+//#region [Global Functions]
 	
 	/**
 	 * Outputs the specified message to the console. Optional player ID and message type arguments for formatting.
@@ -164,30 +197,29 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	{
 		
 		// Initialize maximum console line width and its total content space width
-		const console_line_width = 146;
-		const console_line_padding = console_line_width - (2 * border.length);
+		const console_line_width = (is_containerized() ? 71 : (is_production() || is_shortcut() ? 101 : 105));
 		
 		// Helper function to create a single formatted console line
-		function formatLine(content, is_first_line = false, is_stack_trace = false)
+		function formatLine(content, is_stack_trace = false)
 		{
 			
+			// Initialize left border
+			const border_left = (is_containerized() ? c_gray + "█" : border);
+			
+			// Initialize right border
+			const border_right = (is_containerized() ? "" : border);
+				
 			// Initialize padding space between the left border and the start of the message
 			const padding_left = (is_stack_trace ? 4 : 1);
 			
-			// Initialize the padding for the first line of every series of message lines output to the console
-			const padding_first_line = console_line_padding + 17 + (player != null ? player_nameplate_padding : 0);
-			
-			// Modify the console line padding to account for the first line
-			const modified_line_padding = (is_first_line ? padding_first_line : console_line_padding);
-			
 			// Get remaining space to fill with padding
-			const padding_right = modified_line_padding - content.length - padding_left;
+			const padding_right = console_line_width - length(content) - padding_left + 1;
 			
 			// Initialize message text colour
 			const colour = (is_stack_trace ? c_gray : c_white);
 			
 			// Return the formatted line
-			return border + colour + " ".repeat(padding_left) + content + " ".repeat(padding_right) + c_reset + border;
+			return border_left + colour + " ".repeat(padding_left) + content + " ".repeat(padding_right) + c_reset + border_right;
 			
 		}
 		
@@ -198,14 +230,12 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 		// Initialize player and nameplate in case they are needed
 		let player = null;
 		let player_nameplate = null;
-		let player_nameplate_padding = 0;
 		
 		// If a player ID was provided, generate a nameplate...
 		if (player_id != null)
 		{
 			player = Game.players[player_id];
 			player_nameplate = c_yellow + " [" + player.name + "]";
-			player_nameplate_padding = 5;
 		}
 		
 		// If a message type was provided, handle message by type...
@@ -218,7 +248,6 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 					
 					// Format nameplate for a regular chat message
 					player_nameplate = c_yellow + " [" + player.name + "]:" + c_reset;
-					player_nameplate_padding = 9;
 					
 					break;
 			}
@@ -255,7 +284,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 			let is_first_line = (paragraphIndex === 0);
 			
 			// Initialize the first line of the message
-			const first_line = timestamp_formatted + (player != null ? player_nameplate : "") + " ";
+			const first_line = (!is_containerized() ? timestamp_formatted : "") + (player != null ? player_nameplate : "") + " ";
 			
 			// Initialize the current line of the message, starting at the first line
 			let current_line = (is_first_line ? first_line : "");
@@ -265,7 +294,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 			{
 				
 				// If the length of the current line with the next word added to it is shorter than the space available (plus some extra for the formatting characters' lengths)...
-				if (current_line.length + word.length <= console_line_padding + 15)
+				if (length(current_line) + length(word) <= console_line_width)
 				{
 					
 					// Add the word to the current line
@@ -277,13 +306,12 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 				{
 					
 					// Format the current line and add it to the array of formatted message lines for output
-					lines.push(formatLine(current_line.trimStart(), is_first_line, is_stack_trace));
+					lines.push(formatLine(current_line.trimStart(), is_stack_trace));
 					
 					// Reset the current line
 					current_line = word;
 					
-					// Reset line formatting flags
-					is_stack_trace = false;
+					// Reset first line formatting flag
 					is_first_line = false;
 					
 				}
@@ -293,8 +321,11 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 			// Add the last line of the paragraph...
 			if (current_line)
 			{
-				lines.push(formatLine(current_line.trimStart(), is_first_line, is_stack_trace));
+				lines.push(formatLine(current_line.trimStart(), is_stack_trace));
 			}
+			
+			// Reset stack trace formatting flag
+			is_stack_trace = false;
 			
 		});
 		
@@ -302,5 +333,114 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 		lines.forEach(line => console.log(line));
 		
 	}
+	
+	/**
+	 * Gets a formatted text list of the environment flags currently applied to the server.
+	 *
+	 * @returns Returns a formatted string list of each currently active server flag.
+	 */
+	global.server_flags = function server_flags()
+	{
+		
+		// Initialize empty flags list and text
+		let flags = [];
+		let flags_text = "";
+		
+		// Add active flags to list...
+		if (Game.settings.is_production)
+		{
+			flags.push("Production");
+		}
+		
+		if (Game.settings.is_containerized)
+		{
+			flags.push("Containerized");
+		}
+		
+		if (Game.settings.is_shortcut)
+		{
+			flags.push("Shortcut");
+		}
+		
+		if (Game.settings.is_serverside)
+		{
+			flags.push("Serverside");
+		}
+		
+		// Format flags list text
+		if (flags.length > 0)
+		{
+			flags_text = " [" + flags.join(", ") + "]";
+		}
+		
+		// Return formatted list of flags
+		return flags_text;
+		
+	}
+	
+	/**
+	 * Gets a downsized version of the specified divider based on active server flags.
+	 *
+	 * @param {string} line The divider line to be downsized.
+	 * @returns Returns a sliced copy of the provided divider line.
+	 */
+	global.divider = function divider(line)
+	{
+		return (is_containerized() ? line.slice(0, 71) + c_reset : (is_production() || is_shortcut() ? line.slice(2, line.length - 2) : line));
+	}
+	
+//#endregion
+	
+	
+//#region [Functions]
+	
+	/**
+	 * Gets the length of a string excluding ANSI escape codes.
+	 *
+	 * @param {string} string The string to get the length of.
+	 * @returns Returns the length of the provided string.
+	 */
+	function length(string)
+	{
+		return string.replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, '').length;
+	}
+	
+	
+	//#region [Flags]
+		
+		/**
+		 * Flag indicating whether or not the game has detected that it is running in production mode.
+		 */
+		function is_production()
+		{
+			return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("production"));
+		}
+		
+		/**
+		 * Flag indicating whether or not the game has detected that it is running from a container.
+		 */
+		function is_containerized()
+		{
+			return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("container"));
+		}
+		
+		/**
+		 * Flag indicating whether or not the game has detected that it is running from the npm start command in the repository root directory.
+		 */
+		function is_shortcut()
+		{
+			return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("shortcut"));
+		}
+		
+		/**
+		 * Flag indicating whether or not the game has detected that it is running from a single shortcut in the repository root directory.
+		 */
+		function is_shortcut_single()
+		{
+			return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("shortcut-single"));
+		}
+		
+	//#endregion
+	
 	
 //#endregion

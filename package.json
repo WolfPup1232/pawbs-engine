@@ -5,8 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"tauri": "tauri",
-		"start": "concurrently \"node ./src/servers/dedicated-server.js\" \"node ./src/servers/http-server.js\" \"node ./src/servers/signaling-server.js\"",
-		"container": "NODE_ENV=container concurrently \"node ./src/servers/dedicated-server.js\" \"node ./src/servers/http-server.js\" \"node ./src/servers/signaling-server.js\""
+		"start": "concurrently \"node ./src/servers/dedicated-server.js shortcut\" \"node ./src/servers/http-server.js shortcut\" \"node ./src/servers/signaling-server.js shortcut\"",
+		"production": "concurrently \"node ./src/servers/dedicated-server.js production\" \"node ./src/servers/http-server.js production\" \"node ./src/servers/signaling-server.js production\"",
+		"container": "concurrently \"node ./src/servers/dedicated-server.js container\" \"node ./src/servers/http-server.js container\" \"node ./src/servers/signaling-server.js container\""
 	},
 	"devDependencies": {
 		"@tauri-apps/cli": "^1"

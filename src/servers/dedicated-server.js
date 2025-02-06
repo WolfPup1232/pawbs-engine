@@ -1,3 +1,6 @@
+// Console Utility Imports
+import './helpers/server-utility.js';
+
 //#region [Console Overrides]
 	
 	// Modify the console error function to format errors in the console's style before outputting them
@@ -8,9 +11,9 @@
 		const error_message = args.map(arg => (arg instanceof Error ? arg.stack : arg)).join(' ');
 		
 		// Output formatted string within borders
-		console.log(border + c_red + divider_dashed + border);
+		console.log(border + c_red + divider(divider_dashed) + border);
 		log(error_message);
-		console.log(border + c_red + divider_dashed + border);
+		console.log(border + c_red + divider(divider_dashed) + border);
 		
 	};
 	
@@ -36,7 +39,6 @@
 	
 //#endregion
 
-
 // WebSocket Imports
 import { WebSocketServer } from 'ws';
 
@@ -47,7 +49,6 @@ import * as FileSystem from 'fs';
 import { JSDOM } from 'jsdom';
 
 // Class Imports
-import './helpers/server-utility.js';
 import Player from '../classes/player.class.js';
 import Controls from '../classes/controls.class.js';
 
@@ -106,7 +107,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 		Game.paused = true;
 		
 		// Initialization complete
-		log("Pawbs Engine Dedicated Multiplayer Server" + (Game.settings.is_containerized ? " (Containerized)" : "") + " running on '" + Game.settings.multiplayer_dedicated_server + "'.");
+		log("Pawbs Engine Dedicated Multiplayer Server" + server_flags() + " running on '" + Game.settings.multiplayer_dedicated_server + "'.");
 		
 	});
 		
