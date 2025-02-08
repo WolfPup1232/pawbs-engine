@@ -161,7 +161,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						
 							// Get message data
 							const game_id = data.game_id;
-							const player_id = data.player_id;
+							let player_id = data.player_id;
 							const player_name = data.player_name;
 							
 							// Check if the client's specified game ID exists...
@@ -180,11 +180,11 @@ import Multiplayer from '../classes/multiplayer.class.js';
 								return;
 							}
 							
-							// Client successfully joined the game
-							log("joined the game.", player_id);
-							
 							// Add a new player to the game
 							player_id = addPlayer(connection, player_name);
+							
+							// Client successfully joined the game
+							log("joined the game.", player_id);
 							
 							// Send game details back to client in successful join message
 							connection.send(JSON.stringify({
@@ -195,7 +195,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							}));
 							
 							// Broadcast successful join message to all other clients
-							Multiplayer.broadcast({
+							broadcast({
 								type: 		 Multiplayer.MessageTypes.PLAYER_JOINED,
 								player_id: 	 player_id,
 								player_name: player_name,
@@ -227,7 +227,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							log(message, player_id, Multiplayer.MessageTypes.CHAT);
 							
 							// Broadcast chat message to all clients
-							Multiplayer.broadcast({
+							broadcast({
 								type: 		Multiplayer.MessageTypes.CHAT,
 								player_id: 	player_id,
 								message: 	message,
@@ -257,7 +257,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 								player.rotation.set(parseFloat(rotation.x), parseFloat(rotation.y), parseFloat(rotation.z));
 								
 								// Broadcast player update to all clients
-								Multiplayer.broadcast({
+								broadcast({
 									type: 		Multiplayer.MessageTypes.PLAYER_UPDATED,
 									player_id: 	player_id,
 									position: 	position,
@@ -289,15 +289,15 @@ import Multiplayer from '../classes/multiplayer.class.js';
 				{
 					
 					// Current player has left the game
-					log("left the game.", current_player_id);
+					log("left the game.", player.id);
 					
 					// Remove the current player from the game
-					removePlayer(current_player_id);
+					removePlayer(player.id);
 					
 					// Broadcast that current player has left the game to all clients
-					Multiplayer.broadcast({
+					broadcast({
 						type: 		Multiplayer.MessageTypes.PLAYER_LEFT,
-						player_id: 	current_player_id,
+						player_id: 	player.id,
 					});
 					
 				}
@@ -355,6 +355,37 @@ import Multiplayer from '../classes/multiplayer.class.js';
 		{
 			log("No players left, closing game ID " + Game.id);
 		}
+		
+	}
+	
+	/**
+	 * Broadcasts the specified data to all of the server's client connections.
+	 *
+	 * @param {object} data The message to be broadcast to all of the server's clients.
+	 * @param {string} id_skip The player ID to skip over sending a broadcast to.
+	 */
+	function broadcast(data, id_skip = null)
+	{
+		
+		// Iterate through each player...
+		Object.values(Game.players).forEach((player) => {
+			
+			// If the current player ID isn't flagged to be skipped and has an active server connection...
+			if (player.id != id_skip && player.connection)
+			{
+				
+				// If the player's connection is ready for broadcast...
+				if (player.connection.readyState === 1)
+				{
+					
+					// Send specified message to player
+					player.connection.send(JSON.stringify(data));
+					
+				}
+				
+			}
+			
+		});
 		
 	}
 	

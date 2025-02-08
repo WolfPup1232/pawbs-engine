@@ -281,8 +281,9 @@ class Multiplayer
 							// Get message data
 							const is_host = data.is_host;
 							
-							// Set P2P host flag
+							// Set P2P host flag and ID
 							this.p2p_is_host = is_host;
+							this.p2p_host_id = Game.player.id;
 							
 							// Add a new empty P2P connection for the peer to the connections list
 							this.p2p_connections["peer"] = {
@@ -292,6 +293,25 @@ class Multiplayer
 							
 							// Initialize empty P2P connection, event handlers, and data channel
 							this.initializeP2PConnection("peer");
+							
+							break;
+						}
+						
+						// P2P_HOST_LEFT
+						case this.MessageTypes.P2P_HOST_LEFT:
+						{
+							
+							// Get message data
+							const host_id = data.host_id;
+							
+							// If host left game...
+							if (host_id == this.p2p_host_id)
+							{
+								
+								// Quit game
+								Game.quit();
+								
+							}
 							
 							break;
 						}
@@ -389,11 +409,11 @@ class Multiplayer
 							{
 								
 								// Broadcast the chat message to all P2P clients
-								this.p2pBroadcast({
+								this.broadcastP2P({
 									type: 		Multiplayer.MessageTypes.CHAT,
 									player_id:	player_id,
 									message:	message,
-								});
+								}, player_id);
 								
 							}
 							
@@ -438,7 +458,7 @@ class Multiplayer
 								}));
 								
 								// Broadcast a PLAYER_JOINED event to all players except the one which was just sent the JOINED_GAME event right above this
-								this.p2pBroadcast({
+								this.broadcastP2P({
 									type: 		 Multiplayer.MessageTypes.PLAYER_JOINED,
 									player_id: 	 player_id,
 									player_name: player_name,
@@ -476,7 +496,8 @@ class Multiplayer
 							{
 								
 								// Broadcast a PLAYER_UPDATED event to all players except for the current player
-								this.p2pBroadcast(data, Game.player.id);
+								this.broadcastP2P(data, Game.player.id);
+								
 							}
 							
 							break;
@@ -489,20 +510,26 @@ class Multiplayer
 							// Get message data
 							const player_id = data.player_id;
 							
+							// If the multiplayer connection is via P2P and the current player is the host...
+							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
+							{
+								
+								// Broadcast a PLAYER_LEFT event to all players
+								this.broadcastP2P({
+									type: 		 Multiplayer.MessageTypes.PLAYER_LEFT,
+									player_id: 	 player_id,
+								});
+								
+							}
+							
 							// Add player left message to chat log
 							Game.ui.chat.addChatMessage(data);
 							
-							// Only remove players who aren't the current player...
-							if (Game.player.id != player_id)
-							{
-								
-								// Remove the player from the game world
-								Game.world.removeObject(Game.players[data.player_id].camera);
-								
-								// Remove the player from the game
-								delete Game.players[data.player_id];
-								
-							}
+							// Remove the player from the game world
+							Game.world.removeObject(Game.players[player_id].camera);
+							
+							// Remove the player from the game
+							delete Game.players[player_id];
 							
 							break;
 						}
@@ -816,42 +843,6 @@ class Multiplayer
 			//#endregion
 			
 			
-			//#region [Broadcasts]
-				
-				/**
-				 * Broadcasts the specified data to all of the server's client connections.
-				 *
-				 * @param {object} data The message to be broadcast to all of the server's clients.
-				 * @param {string} id_skip The player ID to skip over sending a broadcast to.
-				 */
-				static broadcast(data, id_skip = null)
-				{
-					
-					// Iterate through each player...
-					Object.values(Game.players).forEach((player) => {
-						
-						// If the current player ID isn't flagged to be skipped and has an active server connection...
-						if (player.id != id_skip && player.connection)
-						{
-							
-							// If the player's connection is ready for broadcast...
-							if (player.connection.readyState === 1)
-							{
-								
-								// Send specified message to player
-								player.connection.send(JSON.stringify(data));
-								
-							}
-							
-						}
-						
-					});
-					
-				}
-				
-			//#endregion
-			
-			
 		//#endregion
 		
 		
@@ -1157,7 +1148,7 @@ class Multiplayer
 				 * @param {object} data The message to be broadcast to all of the host's connected P2P clients.
 				 * @param {string} id_skip The player ID to skip over sending a broadcast to.
 				 */
-				static p2pBroadcast(data, id_skip = null)
+				static broadcastP2P(data, id_skip = null)
 				{
 					
 					// Iterate through each player ID...
