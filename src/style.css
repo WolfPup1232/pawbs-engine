@@ -35,6 +35,64 @@ button {
 	align-items: center;
 }
 
+/* Options Menu */
+#options-player-colour-picker {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#options-player-colour-grid {
+	display: grid;
+	grid-gap: 5px;
+	grid-template-columns: repeat(8, 16px);
+}
+.options-player-colour-cell {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	border: 1px solid #000;
+}
+#options-player-colour-info {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#options-player-selected-colour {
+	padding: 0px;
+	text-align: center;
+	width: 150px;
+	border: 1px solid #000;
+}
+
+/* Multiplayer Join Game Menu */
+#multiplayer-options-player-colour-picker {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#multiplayer-options-player-colour-grid {
+	display: grid;
+	grid-gap: 5px;
+	grid-template-columns: repeat(8, 16px);
+}
+.multiplayer-options-player-colour-cell {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	border: 1px solid #aaa;
+}
+#multiplayer-options-player-colour-info {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#multiplayer-options-player-selected-colour {
+	padding: 0px;
+	text-align: center;
+	width: 150px;
+	border: 1px solid #aaa;
+}
+
 
 /* Game UI Elements */
 
@@ -145,7 +203,7 @@ button {
 	align-items: center;
 }
 #editor-selected-objects-materials-selected-colour {
-	padding: 5px;
+	padding: 0px;
 	text-align: center;
 	width: 150px;
 	border: 1px solid #000;
@@ -192,16 +250,35 @@ button {
 	background: #fff; 
 	padding: .375em;
 }
-
 .hover-light-grey:hover {
 	background: #e9ecef;
 	color: #161310;
+}
+.hover-light-gradient {
+	transition: all .2s ease-in;
+	background-color: rgb(248, 249, 250);
+	background-image: linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0));
+	padding: .375em;
+}
+.hover-light-gradient:hover {
+	background-color: #e9ecef;
+	background-image: linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0));
+	color: #161310;
+}
+.tiny {
+	font-size: .75em !important;
 }
 .small-important {
 	font-size: .875em !important;
 }
 .mt-2px {
 	margin-top: 2px;
+}
+.mb-9px {
+	margin-bottom: 9px;
+}
+.me-neg2px {
+	margin-right: -2px;
 }
 .pe-20px {
 	padding-right: 20px;

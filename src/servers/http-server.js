@@ -42,6 +42,9 @@ import './helpers/server-utility.js';
 // Express Imports
 import express from 'express';
 
+// CORS Imports
+import cors from 'cors';
+
 // FileSystem Imports
 import * as FileSystem from 'fs';
 
@@ -84,16 +87,30 @@ import Multiplayer from '../classes/multiplayer.class.js';
 	 */
 	const path_root = path.dirname(fileURLToPath(import.meta.url));
 	
-	// Initialize HTTP server with static game files
+	// Enable CORS for all routes
+	server.use(cors());
+	
+	// Initialize custom HTTP server routes
+	server.get('/servers/servers.json', (req, res) => {
+		res.sendFile(path.join(path_root, '../servers/servers.json'), (error) => {
+			if (error)
+			{
+				console.error("Error sending file:", error);
+				return res.status(500).send("Internal Server Error");
+			}
+		});
+	});
+	
+	// Use static game files for all other routes
 	server.use(express.static(path.join(path_root, '../')));
 	
-	// Initialize HTTP server routes (in this case, serve index.html to all routes)
+	// Initialize all other HTTP server routes
 	server.get('*', (req, res) => {
 		res.sendFile(path.join(path_root, '../index.html'));
 	});
 	
 	// Start HTTP server
-	server.listen(port, () => {
+	server.listen(port, '0.0.0.0', () => {
 		
 		// Initialize Pawbs Engine
 		log("Initializing Pawbs Engine...");

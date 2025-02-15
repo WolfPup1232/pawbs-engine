@@ -24,29 +24,29 @@ export default function initializeEditorUIEventHandlers()
 		//#region [Editor UI]
 			
 			/**
-			 * Initializes the editor UI.
+			 * Initializes and shows the editor UI.
 			 */
-			Game.ui.editor.initialize = function initialize()
+			Game.ui.editor.show = function show()
 			{
 				
 				// Initialize selected objects material colour grid
-				Game.ui.editor.initializeColourGrid("#editor-selected-objects-materials-colour-grid", "editor-selected-objects-materials-colour-cell", "#editor-selected-objects-materials-selected-colour");
+				Game.ui.utilities.initializeColourGrid("#editor-selected-objects-materials-colour-grid", "editor-selected-objects-materials-colour-cell", "#editor-selected-objects-materials-selected-colour", Game.ui.utilities.getMSPaintColours, function() {
+					
+					// Get the background colour of the selected colour cell
+					const selected_colour = $(this).css('background-color');
+					
+					// Set the selected object's new colour
+					Editor.setSelectedObjectsColour(selected_colour);
+					
+					// Set the colour element's new colour
+					$("#editor-selected-objects-materials-selected-colour").val('#' + selected_colour.match(/\d+/g).map(function(value) { return ('0' + parseInt(value).toString(16)).slice(-2); }).join(''));
+					
+				});
 				
 				// Update editor UI
 				Game.ui.editor.update();
 				
 				// Show editor UI
-				Game.ui.editor.show();
-				
-			}
-			
-			/**
-			 * Shows the editor UI.
-			 */
-			Game.ui.editor.show = function show()
-			{
-				
-				// Show editor
 				$('#editor').show();
 				
 			}
@@ -215,60 +215,6 @@ export default function initializeEditorUIEventHandlers()
 					$('#editor-selected-objects').hide();
 					
 				}
-				
-			}
-			
-			/**
-			 * Initializes the specified colour grid UI elements.
-			 *
-			 * @param {string} grid_element The ID of the HTML DOM grid element to fill with colour cells.
-			 * @param {string} cell_class The class to be applied to individual colour cells.
-			 * @param {string} colour_element The ID of the HTML DOM selected colour element.
-			 */
-			Game.ui.editor.initializeColourGrid = function initializeColourGrid(grid_element, cell_class, colour_element)
-			{
-				
-				// Remove any existing event handlers
-				Game.ui.utilities.removeAllEventHandlers(grid_element);
-				Game.ui.utilities.removeAllEventHandlers(colour_element);
-				
-				// Reset the colour grid
-				$(grid_element).empty();
-				
-				// Initialize the colour grid using the MSPaint colours
-				Game.ui.utilities.getMSPaintColours().forEach(color => {
-					
-					// Get RGB values from the current hex colour
-					const r = parseInt(color.slice(1, 3), 16);
-					const g = parseInt(color.slice(3, 5), 16);
-					const b = parseInt(color.slice(5, 7), 16);
-					
-					// Initialize a new colour cell element for the colour picker UI
-					const cell = $('<div class="' + cell_class + '" data-bs-title="' + r + ', ' + g + ', ' + b + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
-					cell.css('background-color', color);
-					
-					// Add the new colour cell element to the colour picker UI
-					$(grid_element).append(cell);
-					
-				});
-				
-				// Colour cell click event
-				$('.' + cell_class).on('click', function()
-				{
-					
-					// Get the background colour of the selected colour cell
-					const selected_colour = $(this).css('background-color');
-					
-					// Set the selected object's new colour
-					Editor.setSelectedObjectsColour(selected_colour);
-					
-					// Set the colour element's new colour
-					$(colour_element).val('#' + selected_colour.match(/\d+/g).map(function(value) { return ('0' + parseInt(value).toString(16)).slice(-2); }).join(''));
-					
-				});
-				
-				// Re-initialize tooltips
-				Game.ui.utilities.initializeTooltips();
 				
 			}
 			

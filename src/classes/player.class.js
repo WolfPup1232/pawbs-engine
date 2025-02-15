@@ -40,6 +40,11 @@ class Player
 			this.name = "Noob";
 			
 			/**
+			 * The player's colour.
+			 */
+			this.colour = ["#ff71ce", "#01cdfe", "#05ffa1", "#b967ff", "#fffb96", "#ffa105"][THREE.MathUtils.randInt(0, 5)];
+			
+			/**
 			 * The player's height.
 			 */
 			this.height = 2;
@@ -136,6 +141,28 @@ class Player
 	
 	
 	//#region [Properties]
+		
+		/**
+		 * A simplified version of the player for multiplayer communication.
+		 */
+		get simplified()
+		{
+			return {
+				id: 		this.id,
+				name: 		this.name,
+				colour:		this.colour,
+				position: 	{ x: parseFloat(this.position.x).toFixed(4), y: parseFloat(this.position.y).toFixed(4), z: parseFloat(this.position.z).toFixed(4) },
+				rotation: 	{ x: parseFloat(this.rotation._x).toFixed(4), y: parseFloat(this.rotation._y).toFixed(4), z: parseFloat(this.rotation._z).toFixed(4) },
+			};
+		}
+		set simplified(player)
+		{
+			this.id = player.id;
+			this.name = player.name;
+			this.colour = player.colour;
+			this.position = player.position;
+			this.rotation = player.rotation;
+		}
 		
 		/**
 		 * The player's position in the game world.
@@ -255,7 +282,7 @@ class Player
 				setTimeout(() => {
 					
 					// Initialize player cylinder
-					let cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 10, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(Game.ui.utilities.getMSPaintColours()[THREE.MathUtils.randInt(0, 31)]) }));
+					let cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 10, 1), new THREE.MeshBasicMaterial({ color: this.colour }));
 					cylinder.name = this.name;
 					cylinder.userData.ignore_collision = true;
 					cylinder.userData.ignore_raycast = true;

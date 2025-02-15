@@ -1,35 +1,39 @@
 {
-	"multiplayer_development_dedicated_server":	"ws://localhost:3000",
-	"multiplayer_production_dedicated_server":	"wss://pawbs-engine.fly.dev:3443",
+	"multiplayer_local_dedicated_server":	"ws://localhost:3000",
+	"multiplayer_remote_dedicated_server":	"wss://pawbs-engine.fly.dev:3443",
 	
-	"multiplayer_development_http_server":		"http://localhost:4000",
-	"multiplayer_production_http_server":		"https://pawbs-engine.fly.dev",
+	"multiplayer_local_http_server":		"http://localhost:4000",
+	"multiplayer_remote_http_server":		"https://pawbs-engine.fly.dev",
 	
-	"multiplayer_development_signaling_server":	"ws://localhost:5000",
-	"multiplayer_production_signaling_server":	"wss://pawbs-engine.fly.dev:5443",
+	"multiplayer_local_signaling_server":	"ws://localhost:5000",
+	"multiplayer_remote_signaling_server":	"wss://pawbs-engine.fly.dev:5443",
 	
 	"multiplayer_nickname":             	"WolfPup",
+	"multiplayer_colour":             		"rgb(0, 128, 0)",
 	"multiplayer_chat_messages_max":    	100,
 	"multiplayer_chat_hide_duration":		30000,
 	
+	"multiplayer_default_server_name":		"My Puppey Game! :)",
 	"multiplayer_default_connection_type":	1,
 	
-	"development_path_root":			".",
-	"shortcut_path_root":				"..",
-	"shortcut_single_path_root":		"..",
-	"production_path_root":				"..",
-	"containerized_path_root":			"./src",
+	"path_local_root":					".",
+	"path_local_root_shortcut":			"..",
+	"path_local_root_shortcut_single":	"..",
+	"path_remote_root":					"..",
+	"path_remote_root_containerized":	"./src",
 	
-	"server_development_path_root":		"..",
-	"server_shortcut_path_root":		"./src",
-	"server_shortcut_single_path_root": "..",
-	"server_production_path_root":		"./src",
-	"server_containerized_path_root":	"./src",
+	"path_local_server_root":					"..",
+	"path_local_server_root_shortcut":			"./src",
+	"path_local_server_root_shortcut_single": 	"..",
+	"path_remote_server_root":					"./src",
+	"path_remote_server_root_containerized":	"./src",
 	
-	"default_path_settings":	"/settings.json",
-	"default_path_worlds":		"/worlds/worlds.json",
-	"default_path_objects":     "/objects/objects.json",
-	"default_path_textures":    "/textures/textures.json",
+	"path_local_settings":	"/settings.json",
+	"path_local_worlds":	"/worlds/worlds.json",
+	"path_local_objects":   "/objects/objects.json",
+	"path_local_textures":  "/textures/textures.json",
+	"path_local_servers":   "/servers/servers.json",
+	"path_remote_servers":  "https://pawbs-engine.fly.dev/servers/servers.json",
 	
 	"default_file_encoding": "utf8"
 }

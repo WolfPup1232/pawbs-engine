@@ -37,7 +37,7 @@ export default function initializeMainMenuUIEventHandlers()
 				{
 					
 					// Show main menu UI
-					$('#menu-main').fadeIn(256);
+					$('#menu-main').delay(256).fadeIn(256);
 					
 				}
 				
@@ -71,6 +71,9 @@ export default function initializeMainMenuUIEventHandlers()
 			$('#singleplayer-game').on('click', function()
 			{
 				
+				// Hide main menu
+				Game.ui.menus.hideMainMenu();
+				
 				// Start singleplayer game
 				Game.start();
 				
@@ -83,10 +86,10 @@ export default function initializeMainMenuUIEventHandlers()
 			{
 				
 				// Hide main menu UI
-				$('#menu-main').fadeOut(256);
+				Game.ui.menus.hideMainMenu();
 				
 				// Show multiplayer menu UI
-				$('#menu-multiplayer').delay(256).fadeIn(256);
+				Game.ui.menus.showMultiplayerMenu();
 				
 			});
 			
@@ -97,13 +100,10 @@ export default function initializeMainMenuUIEventHandlers()
 			{
 				
 				// Hide main menu UI
-				$('#menu-main').fadeOut(256);
+				Game.ui.menus.hideMainMenu();
 				
 				// Show options menu UI
-				$('#menu-options').delay(256).fadeIn(256);
-				
-				// Update options menu
-				Game.ui.menus.updateOptionsMenu();
+				Game.ui.menus.showOptionsMenu();
 				
 			});
 			
@@ -112,6 +112,9 @@ export default function initializeMainMenuUIEventHandlers()
 			 */
 			$('#exit-game').on('click', function()
 			{
+				
+				// Hide main menu
+				Game.ui.menus.hideMainMenu();
 				
 				// Exit game
 				Game.exit();

@@ -15,7 +15,7 @@ primary_region = 'yyz'
 [build]
 	
 	# Use included Dockerfile
-	dockerfile = "Dockerfile"
+	dockerfile = 'Dockerfile'
 	
 	
 # Dedicated Server Configuration
@@ -23,16 +23,20 @@ primary_region = 'yyz'
 	
 	# Internal WebSocket port
 	internal_port = 3000
-	protocol = "tcp"
+	protocol = 'tcp'
+	
+	# Do *not* autostart machine if incoming traffic detected on port while machine powered off
+	auto_start_machines = false
+	auto_stop_machines = 'off'
 	
 	# Public http:// WebSocket port (http:// traffic is automatically redirected to https:// by fly.io)
 	[[services.ports]]
-		handlers = ["http"]
+		handlers = ['http']
 		port = 3000  
 		
 	# Public https:// WebSocket port
 	[[services.ports]]
-		handlers = ["tls"]
+		handlers = ['tls']
 		port = 3443
 		
 		
@@ -41,16 +45,20 @@ primary_region = 'yyz'
 	
 	# Internal Express server port
 	internal_port = 4000
-	protocol = "tcp"
+	protocol = 'tcp'
+	
+	# Do *not* autostart machine if incoming traffic detected on port while machine powered off
+	auto_start_machines = false
+	auto_stop_machines = 'off'
 	
 	# Public http:// Express server port (http:// traffic is automatically redirected to https:// by fly.io)
 	[[services.ports]]
-		handlers = ["http"]
+		handlers = ['http']
 		port = 80
 		
 	# Public https:// Express server port
 	[[services.ports]]
-		handlers = ["tls"]
+		handlers = ['tls']
 		port = 443
 		
 		
@@ -59,16 +67,20 @@ primary_region = 'yyz'
 	
 	# Internal WebSocket port
 	internal_port = 5000
-	protocol = "tcp"
+	protocol = 'tcp'
+	
+	# Do *not* autostart machine if incoming traffic detected on port while machine powered off
+	auto_start_machines = false
+	auto_stop_machines = 'off'
 	
 	# Public http:// WebSocket port (http:// traffic is automatically redirected to https:// by fly.io)
 	[[services.ports]]
-		handlers = ["http"]
+		handlers = ['http']
 		port = 5000  
 		
 	# Public https:// WebSocket port
 	[[services.ports]]
-		handlers = ["tls"]
+		handlers = ['tls']
 		port = 5443
 		
 		
@@ -80,4 +92,4 @@ primary_region = 'yyz'
 	memory_mb = 512
 	
 [[restart]]
-	policy = "never"
+	policy = 'never'

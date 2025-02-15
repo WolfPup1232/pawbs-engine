@@ -13,13 +13,52 @@ export default function initializeOptionsMenuUIEventHandlers()
 		//#region [Options Menu]
 			
 			/**
-			 * Shows the options menu UI.
+			 * Initializes and shows the options menu UI.
 			 */
 			Game.ui.menus.showOptionsMenu = function showOptionsMenu()
 			{
 				
+				// Initialize colour grid...
+				Game.ui.utilities.initializeColourGrid("#options-player-colour-grid", "options-player-colour-cell", "#options-player-selected-colour", Game.ui.utilities.getMSPaintColours, function() {
+					
+					// Get background colour of selected colour cell
+					const selected_colour = $(this).css('background-color');
+					
+					// Set player colour
+					Game.settings.multiplayer_colour = selected_colour;
+					
+					// Set colour element's new colour
+					$("#options-player-selected-colour").val('#' + selected_colour.match(/\d+/g).map(function(value) { return ('0' + parseInt(value).toString(16)).slice(-2); }).join(''));
+					
+				});
+				
+				// Get player settings
+				$('#options-player-name').val(Game.settings.multiplayer_nickname);
+				$("#options-player-selected-colour").val('#' + Game.settings.multiplayer_colour.match(/\d+/g).map(function(value) { return ('0' + parseInt(value).toString(16)).slice(-2); }).join(''));
+				
+				// Get server settings
+				$('#options-custom-dedicated-server-list').val(Game.settings.path_remote_servers);
+				$('#options-custom-dedicated-server-list').attr('placeholder', Game.settings.path_local_servers);
+				
+				// If the game is running remotely...
+				if (Game.settings.is_remote)
+				{
+					
+					// Show remote settings
+					$('#options-signaling-server').val(Game.settings.multiplayer_remote_signaling_server);
+					
+					
+				} // Otherwise, if the game is running locally...
+				else
+				{
+					
+					// Show local settings
+					$('#options-signaling-server').val(Game.settings.multiplayer_local_signaling_server);
+					
+				}
+				
 				// Show options menu
-				$('#menu-options').fadeIn(256);
+				$('#menu-options').delay(256).fadeIn(256);
 				
 			}
 			
@@ -31,34 +70,6 @@ export default function initializeOptionsMenuUIEventHandlers()
 				
 				// Hide options menu
 				$('#menu-options').fadeOut(256);
-				
-			}
-			
-			/**
-			 * Updates the options menu UI.
-			 */
-			Game.ui.menus.updateOptionsMenu = function updateOptionsMenu()
-			{
-				
-				// Update multiplayer options
-				$('#options-player-name').val(Game.settings.multiplayer_nickname);
-				
-				// If the game is running in containerized mode...
-				if (Game.settings.is_containerized)
-				{
-					
-					// Show production mode settings
-					('#options-signaling-server').val(Game.settings.multiplayer_production_signaling_server);
-					
-					
-				} // Otherwise, if the game is not running in containerized mode...
-				else
-				{
-					
-					// Show development mode settings
-					$('#options-signaling-server').val(Game.settings.multiplayer_development_signaling_server);
-					
-				}
 				
 			}
 			
@@ -104,25 +115,47 @@ export default function initializeOptionsMenuUIEventHandlers()
 			});
 			
 			/**
+			 * Options player colour picker input event.
+			 */
+			$('#options-player-selected-colour').on('input', function()
+			{
+				
+				// Set player colour
+				Game.settings.multiplayer_colour = $('#options-player-selected-colour').val();
+				
+			});
+			
+			/**
+			 * Options custom dedicated server list text change event.
+			 */
+			$('#options-custom-dedicated-server-list').on('change', function()
+			{
+				
+				// Set custom dedicated server list
+				Game.settings.path_remote_servers = $('#options-custom-dedicated-server-list').val();
+				
+			});
+			
+			/**
 			 * Options signaling server address text change event.
 			 */
 			$('#options-signaling-server').on('change', function()
 			{
 				
-				// If the game is running in containerized mode...
-				if (Game.settings.is_containerized)
+				// If the game is running remotely...
+				if (Game.settings.is_remote)
 				{
 					
-					// Set production mode settings
-					Game.settings.multiplayer_production_signaling_server = $('#options-signaling-server').val();
+					// Set remote settings
+					Game.settings.multiplayer_remote_signaling_server = $('#options-signaling-server').val();
 					
 					
-				} // Otherwise, if the game is not running in containerized mode...
+				} // Otherwise, if the game is running locally...
 				else
 				{
 					
-					// Set development mode settings
-					Game.settings.multiplayer_development_signaling_server = $('#options-signaling-server').val();
+					// Set local settings
+					Game.settings.multiplayer_local_signaling_server = $('#options-signaling-server').val();
 					
 				}
 				

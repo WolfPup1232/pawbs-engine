@@ -996,42 +996,50 @@
 	
 	<!-- Multiplayer Host Game Menu -->
 	<div id="menu-multiplayer-host-game" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
-		<div class="modal-dialog modal-lg h-75">
+		<div class="modal-dialog modal-xl h-75">
 			<div class="modal-content h-100 rounded-4 shadow">
 				<div class="modal-body d-flex flex-column p-5">
-					<div class="d-flex justify-content-center">
-						<h2 class="fw-bold mb-3">Host Game</h2>
+					<div class="row">
+						<div class="col-12 text-center">
+							<h2 class="fw-bold mb-0">Host Game</h2>
+							<span id="menu-multiplayer-host-game-subtitle" class="tiny">Peer-to-Peer</span>
+						</div>
 					</div>
-					<div class="row justify-content-center">
-						<div class="col-12 col-lg-8 my-3">
-							<div class="form-check form-switch small p-0 mb-2">
-								<label id="multiplayer-p2p-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light"
-								data-bs-title="Host a peer-to-peer game from your computer." data-bs-toggle="tooltip" data-bs-placement="bottom">P2P</label>
+					<div class="row justify-content-center mb-1">
+						<div class="col-12 col-lg-5 my-3">
+							<div class="mt-2 mb-2 d-flex align-items-end">
+								<div class="form-check form-switch small p-0 m-0">
+									<label id="multiplayer-p2p-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light"
+									data-bs-title="Host a peer-to-peer game from your computer." data-bs-toggle="tooltip" data-bs-placement="bottom">P2P</label>
+								</div>
+								<div class="ms-auto me-1">
+									<span id="multiplayer-signaling-server-status" class="tiny fst-italic text-danger text-nowrap"></span>
+								</div>
 							</div>
-							<div id="multiplayer-signaling-server-panel" class="input-group input-group-sm">
-								<span class="d-block input-group-text col-3">Server IP:</span>
-								<input id="multiplayer-signaling-server" class="form-control form-control-sm" placeholder="localhost:4000" value="localhost:4000" type="text"
-								data-bs-title="Enter the IP address and port of the signaling server." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2">
+								<div class="mx-auto" data-bs-title="Customize your game." data-bs-toggle="tooltip" data-bs-placement="bottom">Customize Game</div>
 							</div>
-							<div id="multiplayer-game-name-panel" class="input-group input-group-sm mt-3 mb-3" style="transition: transform 0.5s ease;">
-								<span class="d-block input-group-text col-3">Game Name:</span>
-								<input id="multiplayer-game-name" class="form-control form-control-sm" placeholder="Multiplayer Game" value="Multiplayer Game" type="text"
-								data-bs-title="Enter a name for your multiplayer game." data-bs-toggle="tooltip" data-bs-placement="bottom">
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<span class="d-block input-group-text col-3">Password:</span>
-								<input id="multiplayer-game-password" class="form-control form-control-sm" type="password"
-								data-bs-title="(Optional) Enter a password for your game." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<div id="multiplayer-options-game" class="border border-top-0 rounded-bottom px-2 pt-2 pb-4">
+								<div class="row">
+									<div class="col-12">
+										<div class="input-group input-group-sm mb-2"
+										data-bs-title="Enter your game's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
+											<span class="d-block input-group-text col-12 col-sm-4">Game Name:</span>
+											<input id="multiplayer-options-game-name" class="form-control form-control-sm" type="text">
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
 					<div class="row justify-content-center">
-						<div class="col-12 col-lg-6 mb-5">
-							<button id="multiplayer-host-game" type="button" class="btn btn-lg btn-secondary w-100">Host Game</button>
+						<div class="col-12 col-lg-4 mt-2 mb-5">
+							<button id="multiplayer-host-game" type="button" class="btn btn-lg btn-secondary w-100"
+							data-bs-title="Host this game." data-bs-toggle="tooltip" data-bs-placement="bottom">Host Game</button>
 						</div>
 					</div>
 					<div class="row justify-content-center mt-auto">
-						<div class="col-12 col-lg-6">
+						<div class="col-12 col-lg-4">
 							<button id="multiplayer-host-game-back" type="button" class="btn btn-lg btn-secondary w-100">Back</button>
 						</div>
 					</div>
@@ -1042,32 +1050,90 @@
 	
 	<!-- Multiplayer Join Game Menu -->
 	<div id="menu-multiplayer-join-game" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
-		<div class="modal-dialog modal-lg h-75">
+		<div class="modal-dialog modal-xl h-75">
 			<div class="modal-content h-100 rounded-4 shadow">
 				<div class="modal-body d-flex flex-column p-5">
-					<div class="d-flex justify-content-center">
-						<h2 class="fw-bold mb-3">Join Game</h2>
-					</div>
-					<div class="row justify-content-center mb-1">
-						<div class="col-12">
-							<button id="multiplayer-refresh-games" type="button" class="btn btn-sm btn-secondary mx-0 mt-0 float-end"><i class="bi bi-arrow-clockwise"></i> Refresh Games</button>
-							<div class="form-check form-switch small p-0 mt-2 float-start">
-								<label id="multiplayer-p2p-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light fw-normal"
-								data-bs-title="Join a peer-to-peer game." data-bs-toggle="tooltip" data-bs-placement="bottom">P2P</label>
-								<input id="multiplayer-server-type" class="form-check-input float-none mx-0 mt-1" type="checkbox" role="switch" checked>
-								<label id="multiplayer-dedicated-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light fw-normal"
-								data-bs-title="Join a dedicated server." data-bs-toggle="tooltip" data-bs-placement="bottom">Dedicated</label>
-							</div>
-							<select id="multiplayer-games-list" size="10" class="form-select"></select>
+					<div class="row">
+						<div class="col-12 text-center">
+							<h2 class="fw-bold mb-0">Join Game</h2>
+							<span id="menu-multiplayer-join-game-subtitle" class="tiny">Dedicated Server</span>
 						</div>
 					</div>
-					<div class="row justify-content-center">
-						<div class="col-12 col-lg-6 mb-5">
-							<button id="multiplayer-join-game" type="button" class="btn btn-lg btn-secondary w-100">Select Game</button>
+					<div class="row justify-content-center h-100 mb-1">
+						<div class="col-12 col-md-12 col-lg-7 col-xl-8 h-100">
+							<div class="mt-2 mb-2 d-flex align-items-end">
+								<button id="multiplayer-refresh-games" type="button" class="btn btn-sm btn-light border-secondary-subtle tiny text-nowrap m-0"
+								data-bs-title="Refresh the servers list." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+								<div class="form-check form-switch small text-nowrap p-0 my-0 mx-3">
+									<label id="multiplayer-p2p-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light"
+									data-bs-title="Join a peer-to-peer game." data-bs-toggle="tooltip" data-bs-placement="bottom">P2P</label>
+									<input id="multiplayer-server-type" class="form-check-input float-none mx-0 mt-1" type="checkbox" role="switch" checked>
+									<label id="multiplayer-dedicated-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light"
+									data-bs-title="Join a dedicated server." data-bs-toggle="tooltip" data-bs-placement="bottom">Dedicated</label>
+								</div>
+								<div class="ms-auto me-1">
+									<span id="multiplayer-server-status" class="tiny fst-italic text-danger text-nowrap"></span>
+								</div>
+							</div>
+							<div class="d-flex align-items-center bg-body-secondary border rounded-top tiny fw-bold text-center p-2">
+								<div class="col-7 border-end me-neg2px">
+									<span class="d-block d-xl-none"
+									data-bs-title="Name of the server." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-image-alt"></i></span>
+									<span class="d-none d-xl-block"
+									data-bs-title="Name of the server." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-image-alt"></i> Server</span>
+								</div>
+								<div class="col-1 col-xl-2 border-end me-neg2px">
+									<span class="d-block d-xl-none"
+									data-bs-title="Number of players in-game." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-person-fill"></i></span>
+									<span class="d-none d-xl-block"
+									data-bs-title="Number of players in-game." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-person-fill"></i> Players</span>
+								</div>
+								<div class="col-2 col-xl-1 border-end me-neg2px">
+									<span class="d-block d-xl-none"
+									data-bs-title="Latency in milliseconds." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-wifi"></i></span>
+									<span class="d-none d-xl-block"
+									data-bs-title="Latency in milliseconds." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-wifi"></i> Ping</span>
+								</div>
+								<div class="col-2">&nbsp;</div>
+							</div>
+							<div id="multiplayer-games-list" class="border border-top-0 rounded-bottom p-2 h-75"></div>
+						</div>
+						<div class="d-none d-lg-block col-lg-5 col-xl-4">
+							<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-5">
+								<div class="mx-auto" data-bs-title="Customize your player." data-bs-toggle="tooltip" data-bs-placement="bottom">Customize Player</div>
+							</div>
+							<div id="multiplayer-options-player" class="border border-top-0 rounded-bottom p-2 h-75">
+								<div class="row">
+									<div class="col-12">
+										<div class="input-group input-group-sm mb-2"
+										data-bs-title="Enter your player's nickname." data-bs-toggle="tooltip" data-bs-placement="bottom">
+											<span class="d-block input-group-text col-12 col-sm-4">Nickname:</span>
+											<input id="multiplayer-options-player-name" class="form-control form-control-sm" type="text">
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-12">
+										<div class="input-group input-group-sm mb-2">
+											<div class="d-block input-group-text col-12 col-sm-4">
+												<span class="mx-auto mt-0"
+												data-bs-title="Pick a colour for your player." data-bs-toggle="tooltip" data-bs-placement="bottom">Colour:</span>
+											</div>
+											<div id="multiplayer-options-player-colour-picker" class="border col-12 col-sm-8 py-1">
+												<div id="multiplayer-options-player-colour-grid" class="mt-1 mb-2"></div>
+												<div id="multiplayer-options-player-colour-info" class="my-1">
+													<input id="multiplayer-options-player-selected-colour" value="#CCCCCC" class="form-control form-control-color" type="color"
+													data-bs-title="Pick a colour for your player." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 					<div class="row justify-content-center mt-auto">
-						<div class="col-12 col-lg-6">
+						<div class="col-12 col-lg-4">
 							<button id="multiplayer-join-game-back" type="button" class="btn btn-lg btn-secondary w-100">Back</button>
 						</div>
 					</div>
@@ -1078,7 +1144,7 @@
 	
 	<!-- Options Menu -->
 	<div id="menu-options" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
-		<div class="modal-dialog modal-lg h-75">
+		<div class="modal-dialog modal-xl h-75">
 			<div class="modal-content h-100 rounded-4 shadow">
 				<div class="modal-body d-flex flex-column p-5">
 					<div class="d-flex justify-content-center">
@@ -1112,11 +1178,28 @@
 												</div>
 											</div>
 											<div class="row">
-												<div class="col-12">
+												<div class="col-12 col-xl-9">
+													<div class="input-group input-group-sm mt-2 mb-3"
+													data-bs-title="Enter a nickname for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
+														<span class="d-block input-group-text col-12 col-sm-4">Nickname:</span>
+														<input id="options-player-name" class="form-control form-control-sm" type="text">
+													</div>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-12 col-xl-9">
 													<div class="input-group input-group-sm mt-2 mb-3">
-														<span class="d-block input-group-text col-4">Nickname:</span>
-														<input id="options-player-name" class="form-control form-control-sm" type="text"
-														data-bs-title="Enter a nickname for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
+														<div class="d-block input-group-text col-12 col-sm-4">
+															<span class="mx-auto mt-0"
+															data-bs-title="Pick a colour for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">Colour:</span>
+														</div>
+														<div id="options-player-colour-picker" class="border col-12 col-sm-8 py-1">
+															<div id="options-player-colour-grid" class="mt-1 mb-2"></div>
+															<div id="options-player-colour-info" class="my-1">
+																<input id="options-player-selected-colour" value="#CCCCCC" class="form-control form-control-color" type="color"
+																data-bs-title="Pick a custom colour for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
+															</div>
+														</div>
 													</div>
 												</div>
 											</div>
@@ -1128,11 +1211,20 @@
 												</div>
 											</div>
 											<div class="row">
-												<div class="col-12">
-													<div class="input-group input-group-sm mt-2 mb-3">
-														<span class="d-block input-group-text text-small col-4">Signaling Server:</span>
-														<input id="options-signaling-server" class="form-control form-control-sm" type="text"
-														data-bs-title="Enter the IP address or URL of the signaling server you wish to use signal dedicated or P2P multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
+												<div class="col-12 col-xl-9">
+													<div class="input-group input-group-sm mt-2 mb-3"
+													data-bs-title="Enter the file path or URL of the custom dedicated server list you wish to use.<br />(Defaults to local file path)." data-bs-toggle="tooltip" data-bs-placement="bottom">
+														<span class="d-block input-group-text text-small col-12 col-sm-5">Dedicated Server List:</span>
+														<input id="options-custom-dedicated-server-list" class="form-control form-control-sm" type="text">
+													</div>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-12 col-xl-9">
+													<div class="input-group input-group-sm mt-2 mb-3"
+													data-bs-title="Enter the IP address or URL of the WebRTC signaling server you wish to use find P2P multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
+														<span class="d-block input-group-text text-small col-12 col-sm-5">P2P Signaling Server:</span>
+														<input id="options-signaling-server" class="form-control form-control-sm" type="text">
 													</div>
 												</div>
 											</div>

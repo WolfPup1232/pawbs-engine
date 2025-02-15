@@ -587,8 +587,8 @@ class Editor
 				// Add player transform controls to the world
 				Game.world.scene.add(Game.player.controls.transform_controls);
 				
-				// Initialize editor UI
-				Game.ui.editor.initialize();
+				// Show editor UI
+				Game.ui.editor.show();
 				
 			}
 			

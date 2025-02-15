@@ -1,5 +1,9 @@
+// three.js Imports
+import * as THREE from '../libraries/threejs/three.js';
+
 // Class Imports
 import Player from './player.class.js';
+import Controls from './controls.class.js';
 
 // Static Class Imports
 import Game from './game.class.js';
@@ -100,11 +104,10 @@ class Multiplayer
 			static MessageTypes = {
 				
 				// Server
-					LIST_GAMES:	101,
-					GAMES_LIST:	102,
+						  PING: 101,
 				
 				// Errors
-						 ERROR: 103,
+						 ERROR: 102,
 				
 				
 			// Dedicated Server
@@ -173,24 +176,6 @@ class Multiplayer
 			switch (data.type)
 			{
 				
-				//#region [Server]
-					
-					// GAMES_LIST
-					case this.MessageTypes.GAMES_LIST:
-					{
-						
-						// Get message data
-						const games_list = data.games;
-						
-						// Attempt to update the games list...
-						Game.ui.menus.updateGamesList(games_list);
-						
-						break;
-					}
-					
-				//#endregion
-				
-				
 				//#region [Errors]
 					
 					// ERROR
@@ -219,16 +204,14 @@ class Multiplayer
 						{
 							
 							// Get message data
-							const game_id = data.game_id;
-							const player_id = data.player_id;
-							const players = data.players;
+							const game = data.game;
+							const player = data.player;
 							
 							// Forward message data as JOINED_GAME event
 							this.handleMessage({
 								type: 		Multiplayer.MessageTypes.JOINED_GAME,
-								game_id: 	game_id,
-								player_id: 	player_id,
-								players:	players,
+								game: 		game,
+								player: 	player,
 							});
 							
 							break;
@@ -425,20 +408,14 @@ class Multiplayer
 						{
 							
 							// Get message data
-							const player_id = data.player_id;
-							const player_name = data.player_name;
+							const player = data.player;
 							
 							// If a new player has joined the game...
-							if (Game.player.id != player_id)
+							if (player.id != Game.player.id)
 							{
 								
-								// Initialize new player
-								let player = new Player();
-								player.id = player_id;
-								player.name = player_name;
-								
-								// Add new player to game's list of players
-								Game.players[player_id] = player;
+								// Add new player to game
+								this.addPlayer(player);
 								
 								// Add player joined message to chat log
 								Game.ui.chat.addChatMessage(data);
@@ -450,19 +427,17 @@ class Multiplayer
 							{
 								
 								// Send a JOINED_GAME event back to the player who joined the game
-								this.p2p_connections[player_id].p2p_data_channel.send(JSON.stringify({
+								this.p2p_connections[player.id].p2p_data_channel.send(JSON.stringify({
 									type: 		Multiplayer.MessageTypes.JOINED_GAME,
-									game_id: 	Game.id,
-									player_id: 	player_id,
-									players:	Multiplayer.listPlayers(),
+									game: 		Game.simplified,
+									player: 	player,
 								}));
 								
-								// Broadcast a PLAYER_JOINED event to all players except the one which was just sent the JOINED_GAME event right above this
+								// Broadcast a PLAYER_JOINED event to all players except for the player which was just sent that JOINED_GAME event right above this
 								this.broadcastP2P({
 									type: 		 Multiplayer.MessageTypes.PLAYER_JOINED,
-									player_id: 	 player_id,
-									player_name: player_name,
-								}, player_id);
+									player: 	 player,
+								}, player.id);
 								
 							}
 							
@@ -544,35 +519,27 @@ class Multiplayer
 						{
 							
 							// Get message data
-							const game_id = data.game_id;
-							const player_id = data.player_id;
-							const players = data.players;
+							const game = data.game;
+							const player = data.player;
 							
 							// Set game ID
-							Game.id = game_id;
+							Game.id = game.id;
 							
 							// Replace player ID with the player ID generated server-side
-							if (Game.player.id != player_id)
+							if (Game.player.id != player.id)
 							{
-								Game.players[player_id] = Game.players[Game.player.id];
+								Game.players[player.id] = Game.players[Game.player.id];
 								delete Game.players[Game.player.id];
-								Game.player.id = player_id;
+								Game.player.id = player.id;
 							}
 							
 							// Add each player from the server's provided list of players to the game...
-							players.forEach((player) => {
+							game.players.forEach((player) => {
 								if (player.id != Game.player.id)
 								{
 									
-									// Initialize player
-									const other_player = new Player();
-									other_player.id = player.id;
-									other_player.name = player.name;
-									other_player.position.set(player.position.x, player.position.y, player.position.z);
-									other_player.rotation.set(player.rotation.x, player.rotation.y, player.rotation.z);
-									
 									// Add player to game
-									Game.players[other_player.id] = other_player;
+									this.addPlayer(player);
 									
 								}
 							});
@@ -604,11 +571,108 @@ class Multiplayer
 			//#region [Connectivity]
 				
 				/**
+				 * Pings the specified server and attempts to update its server listing.
+				 * @param {string} server_address The address of the server to ping.
+				 * @param {number} server_index Optional index of the server in its list.
+				 */
+				static ping(server_address, server_index = null)
+				{
+					
+					// Connect to the server
+					let server = new WebSocket(server_address);
+					
+					// Record ping start time
+					let start = Date.now();
+					
+					// Server connection open event
+					server.onopen = () => {
+						
+						// PING the server
+						server.send(JSON.stringify({
+							type: 	Multiplayer.MessageTypes.PING,
+						}));
+						
+					};
+					
+					// Server message event
+					server.onmessage = (event) => {
+						
+						// Get message data and parse it
+						let data;
+						try { data = JSON.parse(event.data); } catch { return; }
+						
+						// Handle message by type...
+						switch (data.type)
+						{
+							
+							// PING
+							case Multiplayer.MessageTypes.PING:
+							{
+								
+								 // Calculate latency
+								const latency = Date.now() - start;
+								
+								// Update the current dedicated server listing...
+								if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.DedicatedClient)
+								{
+									
+									// Get message data
+									const game_id = data.game_id;
+									const player_count = data.player_count;
+									
+									// Update server listing
+									Game.ui.menus.updateGamesListServerPlayerCount(server_index, player_count)
+									Game.ui.menus.updateGamesListServerPing(server_index, latency);
+									Game.ui.menus.updateGamesListServerGameID(server_index, game_id);
+									
+									
+								} // Otherwise, update *all* P2P game listings from the current P2P signaling server...
+								else if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.P2PClient)
+								{
+									
+									// Get message data
+									const games = data.games;
+									
+									// Update server listing
+									Game.ui.menus.updateGamesListCallback(games, latency);
+									
+								}
+								
+								break;
+							}
+							
+						}
+						
+						// Close server connection
+						server.close();
+						
+					};
+					
+					// Server connection error event
+					server.onerror = () => {
+						
+						// Server is offline, update server listing
+						Game.ui.menus.updateGamesListServerPing(server_index, 0);
+						
+					};
+					
+					// Server connection close event
+					server.onclose = () => {
+						
+						// Server connection closed
+						
+					};
+					
+				}
+				
+				/**
 				 * Connects to a multiplayer server according to the specified connection type.
 				 *
-				 * @param {Multiplayer.ConnectionTypes} type The type of multiplayer connection to initialize.
+				 * @param {string} server_address The address of the server to connect to.
+				 * @param {Multiplayer.ConnectionTypes} type Optional specific type of multiplayer connection to initialize (uses default otherwise).
+				 * @param {Function} callback Optional callback to invoke when a connection has successfully opened.
 				 */
-				static connect(type = null)
+				static connect(server_address, type = null, callback = null)
 				{
 					
 					// Enable multiplayer
@@ -628,15 +692,16 @@ class Multiplayer
 					{
 						
 						// Connect to the P2P signaling server
-						this.server_signaling = new WebSocket(Game.settings.multiplayer_signaling_server);
+						this.server_signaling = new WebSocket(server_address);
 						
 						// Signaling server connection open event
 						this.server_signaling.onopen = () => {
 							
-							// Update the P2P games list
-							setTimeout(() => {
-								Multiplayer.updateGamesList();
-							}, 512);
+							// Signaling server connection opened
+							if (callback)
+							{
+								callback();
+							}
 							
 						}
 						
@@ -650,10 +715,18 @@ class Multiplayer
 							this.handleMessage(data);
 						};
 						
+						// Signaling server connection error event
+						this.server_signaling.onerror = () => {
+							
+							// Server is offline
+							Game.ui.menus.updateHostGameServerStatus("Could not reach signaling server '" + server_address + "'.");
+							
+						};
+						
 						// Signaling server connection close event
 						this.server_signaling.onclose = () => {
 							
-							// Signaling server connection successfully closed, do nothing
+							// Signaling server connection closed
 							
 						};
 						
@@ -663,15 +736,16 @@ class Multiplayer
 					{
 						
 						// Connect to the dedicated server
-						this.server_dedicated = new WebSocket(Game.settings.multiplayer_dedicated_server);
+						this.server_dedicated = new WebSocket(server_address);
 						
 						// Dedicated server connection open event
 						this.server_dedicated.onopen = () => {
 							
-							// Update the games list
-							setTimeout(() => {
-								Multiplayer.updateGamesList();
-							}, 512);
+							// Dedicated server connection opened
+							if (callback)
+							{
+								callback();
+							}
 							
 						};
 						
@@ -689,7 +763,7 @@ class Multiplayer
 						// Dedicated server connection close event
 						this.server_dedicated.onclose = () => {
 							
-							// Dedicated server connection successfully closed, do nothing
+							// Dedicated server connection closed
 							
 						};
 						
@@ -726,9 +800,6 @@ class Multiplayer
 				static hostGame()
 				{
 					
-					// Pause game before starting
-					Game.paused = true;
-					
 					// Start the game with the post-start callback
 					Game.start(this.hostGameCallback);
 					
@@ -740,9 +811,6 @@ class Multiplayer
 				static hostGameCallback()
 				{
 					
-					// Set the player's name to their multiplayer nickname
-					Game.player.name = Game.settings.multiplayer_nickname;
-					
 					// If the player is connected to a P2P signaling server...
 					if (Multiplayer.connection_type == Multiplayer.ConnectionTypes.P2PClient)
 					{
@@ -751,7 +819,9 @@ class Multiplayer
 						Multiplayer.server_signaling.send(JSON.stringify({
 							type: 			Multiplayer.MessageTypes.P2P_HOST_GAME,
 							game_id: 		Game.id,
+							game_name:		Game.name,
 							player_id:		Game.player.id,
+							player_name: 	Game.player.name,
 						}));
 						
 					}
@@ -765,9 +835,6 @@ class Multiplayer
 				 */
 				static joinGame(game_id)
 				{
-					
-					// Pause game before starting
-					Game.paused = true;
 					
 					// Set the game's ID to the ID of the game being joined
 					Game.id = game_id;
@@ -783,19 +850,15 @@ class Multiplayer
 				static joinGameCallback()
 				{
 					
-					// Set the player's name to their multiplayer nickname
-					Game.player.name = Game.settings.multiplayer_nickname;
-					
 					// If the player is connected to a dedicated server...
 					if (Multiplayer.connection_type == Multiplayer.ConnectionTypes.DedicatedClient)
 					{
 						
 						// Send a DEDICATED_JOIN_GAME message to the dedicated server
 						Multiplayer.server_dedicated.send(JSON.stringify({
-							type: 			Multiplayer.MessageTypes.DEDICATED_JOIN_GAME,
-							game_id: 		Game.id,
-							player_id:		Game.player.id,
-							player_name: 	Game.player.name,
+							type:		Multiplayer.MessageTypes.DEDICATED_JOIN_GAME,
+							game_id:	Game.id,
+							player:		Game.player.simplified
 						}));
 						
 						
@@ -810,31 +873,6 @@ class Multiplayer
 							player_id:		Game.player.id,
 							player_name: 	Game.player.name,
 						}));
-						
-					}
-					
-				}
-				
-				/**
-				 * Requests a list of multiplayer games active on the connected server according to the current connection type.
-				 */
-				static updateGamesList()
-				{
-					
-					// If the player is connected to a dedicated server...
-					if (this.connection_type == this.ConnectionTypes.DedicatedClient)
-					{
-						
-						// Send a LIST_GAMES message to the dedicated server
-						this.server_dedicated.send(JSON.stringify({ type: Multiplayer.MessageTypes.LIST_GAMES }));
-						
-						
-					} // Otherwise, if the player is connected to a P2P signaling server...
-					else if (this.connection_type == this.ConnectionTypes.P2PClient)
-					{
-						
-						// Send a LIST_GAMES message to the signaling server
-						this.server_signaling.send(JSON.stringify({ type: Multiplayer.MessageTypes.LIST_GAMES }));
 						
 					}
 					
@@ -955,8 +993,7 @@ class Multiplayer
 								// Notify P2P host that player successfully connected
 								data_channel.send(JSON.stringify({
 									type: 		 Multiplayer.MessageTypes.PLAYER_JOINED,
-									player_id: 	 Game.player.id,
-									player_name: Game.player.name,
+									player: 	 Game.player.simplified
 								}));
 								
 							}
@@ -1356,22 +1393,6 @@ class Multiplayer
 			//#region [Functions]
 				
 				/**
-				 * Lists all games on the current server.
-				 *
-				 * @returns Returns a list of games on the current server.
-				 */
-				static listGames()
-				{
-					
-					// Return the list
-					return new Array({
-						game_id:		Game.id,
-						player_count: 	Object.keys(Game.players).length - 1,
-					});
-					
-				}
-				
-				/**
 				 * Lists all players in the current game with only the attributes which are required to initialize them in another player's game.
 				 *
 				 * @returns Returns a simplified list of players in the current game.
@@ -1379,8 +1400,8 @@ class Multiplayer
 				static listPlayers()
 				{
 					
-					// Initialize the empty list of simplified players
-					const players_simplified = [];
+					// Initialize the empty list of players
+					const players = [];
 					
 					// Iterate through each player ID...
 					const player_ids = Object.keys(Game.players);
@@ -1390,21 +1411,59 @@ class Multiplayer
 						// Get player by ID
 						const player = Game.players[player_ids[i]];
 						
-						// Initialize a simplified player object using the player's attributes
-						let player_simplified = {
-							id: 		player.id,
-							name: 		player.name,
-							position: 	{ x: player.position.x.toFixed(4), y: player.position.y.toFixed(4), z: player.position.z.toFixed(4) },
-							rotation: 	{ x: player.rotation._x.toFixed(4), y: player.rotation._y.toFixed(4), z: player.rotation._z.toFixed(4) },
-						};
-						
 						// Add the simplified player object to the list
-						players_simplified.push(player_simplified);
+						players.push(player.simplified);
 						
 					}
 					
 					// Return the list
-					return players_simplified;
+					return players;
+					
+				}
+				
+				/**
+				 * Adds a new player to the game.
+				 *
+				 * @param {Player} player The player to be added to the game.
+				 * @param {WebSocket} connection An optional WebSocketServer connection to the player.
+				 * @returns Returns the player's simplified object after they've been added to the game.
+				 */
+				static addPlayer(player, connection)
+				{
+					
+					// Initialize new player
+					let new_player = new Player();
+					new_player.id = player.id;
+					new_player.name = player.name;
+					new_player.colour = new THREE.Color(player.colour);
+					new_player.position.set(player.position.x, player.position.y, player.position.z);
+					new_player.rotation.set(player.rotation.x, player.rotation.y, player.rotation.z);
+					
+					// Initialize optional WebSocketServer connection...
+					if (connection)
+					{
+						new_player.connection = connection;
+						new_player.controls = new Controls();
+					}
+					
+					// Add player to game
+					Game.players[new_player.id] = new_player;
+					
+					// Return simplified new player
+					return new_player.simplified;
+					
+				}
+				
+				/**
+				 * Removes the specified player from the game.
+				 *
+				 * @param {string} player_id The unique ID of the player to be removed from the server.
+				 */
+				static removePlayer(player_id)
+				{
+					
+					// Remove player from game
+					delete Game.players[player_id];
 					
 				}
 				

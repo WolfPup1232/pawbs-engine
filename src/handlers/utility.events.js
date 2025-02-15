@@ -139,7 +139,7 @@ export default function initializeUtilityUIEventHandlers()
 				{
 					
 					// Initialize new tooltip
-					let tooltip = new bootstrap.Tooltip($(this));
+					let tooltip = new bootstrap.Tooltip($(this), { html: true, sanitize: false });
 					
 					// Add tooltip to the Map, using the DOM element as the key
 					Game.ui.tooltips.set(this, tooltip);
@@ -263,6 +263,60 @@ export default function initializeUtilityUIEventHandlers()
 						"#C0C0C0", "#FF8080", "#00FF80", "#4080FF", "#FF80FF", "#80FFFF", "#FFFF80", "#FF8000",
 						"#FFFFFF", "#FFC0C0", "#C0FFC0", "#C0C0FF", "#FFC0FF", "#C0FFFF", "#FFFFC0", "#FFC080"
 				];
+			}
+			
+			/**
+			 * Returns an array of hexidecimal vaporwave colour values.
+			 *
+			 * @return {array} Array of vaporwave colours.
+			 */
+			Game.ui.utilities.getVaporwaveColours = function getVaporwaveColours()
+			{
+				return ["#ff71ce", "#01cdfe", "#05ffa1", "#b967ff", "#fffb96", "#ffa105"];
+			}
+			
+			/**
+			 * Initializes the specified colour grid UI elements.
+			 *
+			 * @param {string} grid_element The ID of the HTML DOM grid element to fill with colour cells.
+			 * @param {string} cell_class The class to be applied to individual colour cells.
+			 * @param {string} colour_element The ID of the HTML DOM selected colour element.
+			 * @param {Function} getColoursCallback The function which is invoked to acquire a list of colours to initialize the grid with.
+			 * @param {Function} cellClickEventCallback The function which is invoked when a colour cell is clicked.
+			 */
+			Game.ui.utilities.initializeColourGrid = function initializeColourGrid(grid_element, cell_class, colour_element, getColoursCallback, cellClickEventCallback)
+			{
+				
+				// Remove any existing event handlers
+				Game.ui.utilities.removeAllEventHandlers(grid_element);
+				Game.ui.utilities.removeAllEventHandlers(colour_element);
+				
+				// Reset the colour grid
+				$(grid_element).empty();
+				
+				// Initialize the colour grid using the MSPaint colours
+				getColoursCallback().forEach(color => {
+					
+					// Get RGB values from the current hex colour
+					const r = parseInt(color.slice(1, 3), 16);
+					const g = parseInt(color.slice(3, 5), 16);
+					const b = parseInt(color.slice(5, 7), 16);
+					
+					// Initialize a new colour cell element for the colour picker UI
+					const cell = $('<div class="' + cell_class + '" data-bs-title="' + r + ', ' + g + ', ' + b + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
+					cell.css('background-color', color);
+					
+					// Add the new colour cell element to the colour picker UI
+					$(grid_element).append(cell);
+					
+				});
+				
+				// Colour cell click event
+				$('.' + cell_class).on('click', cellClickEventCallback);
+				
+				// Re-initialize tooltips
+				Game.ui.utilities.initializeTooltips();
+				
 			}
 			
 		//#endregion

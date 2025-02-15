@@ -48,10 +48,6 @@ import * as FileSystem from 'fs';
 // JSDOM Imports
 import { JSDOM } from 'jsdom';
 
-// Class Imports
-import Player from '../classes/player.class.js';
-import Controls from '../classes/controls.class.js';
-
 // Static Class Imports
 import Game from '../classes/game.class.js';
 import Multiplayer from '../classes/multiplayer.class.js';
@@ -107,7 +103,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 		Game.paused = true;
 		
 		// Initialization complete
-		log("Pawbs Engine Dedicated Multiplayer Server" + server_flags() + " running on '" + Game.settings.multiplayer_dedicated_server + "'.");
+		log("Pawbs Engine Dedicated Multiplayer Server" + server_flags() + " running on '" + Game.settings.multiplayer_dedicated_server + "' with game '" + Game.name + "' (" + Game.id + ").");
 		
 	});
 		
@@ -133,15 +129,16 @@ import Multiplayer from '../classes/multiplayer.class.js';
 			{
 				
 				//#region [Server]
-					
-					// LIST_GAMES
-					case Multiplayer.MessageTypes.LIST_GAMES:
+				
+					// PING
+					case Multiplayer.MessageTypes.PING:
 					{
 						
-						// Send list of games on the current server back to client
+						// Send a ping in return for latency measurement
 						connection.send(JSON.stringify({
-							type: 	Multiplayer.MessageTypes.GAMES_LIST,
-							games: 	Multiplayer.listGames(),
+							type: 			Multiplayer.MessageTypes.PING,
+							game_id: 		Game.id,
+							player_count: 	Object.keys(Game.players).length - 1,
 						}));
 						
 						break;
@@ -161,15 +158,14 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						
 							// Get message data
 							const game_id = data.game_id;
-							let player_id = data.player_id;
-							const player_name = data.player_name;
+							let player = data.player;
 							
 							// Check if the client's specified game ID exists...
 							if (Game.id != game_id)
 							{
 								
 								// Game ID doesn't exist, log error
-								log("attempted to join a game which doesn't exist using game_id " + game_id, player_id);
+								log("attempted to join a game which doesn't exist using game ID " + game_id, player.id);
 								
 								// Send ERROR message back to client
 								connection.send(JSON.stringify({
@@ -181,24 +177,22 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							}
 							
 							// Add a new player to the game
-							player_id = addPlayer(connection, player_name);
+							player = Multiplayer.addPlayer(player, connection);
 							
 							// Client successfully joined the game
-							log("joined the game.", player_id);
+							log("joined the game.", player.id);
 							
 							// Send game details back to client in successful join message
 							connection.send(JSON.stringify({
 								type: 		Multiplayer.MessageTypes.DEDICATED_JOINED_GAME,
-								game_id: 	game_id,
-								player_id: 	player_id,
-								players:	Multiplayer.listPlayers(),
+								game: 		Game.simplified,
+								player: 	player,
 							}));
 							
 							// Broadcast successful join message to all other clients
 							broadcast({
-								type: 		 Multiplayer.MessageTypes.PLAYER_JOINED,
-								player_id: 	 player_id,
-								player_name: player_name,
+								type: 		 	Multiplayer.MessageTypes.PLAYER_JOINED,
+								player: 	 	player
 							});
 							
 							break;
@@ -292,7 +286,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 					log("left the game.", player.id);
 					
 					// Remove the current player from the game
-					removePlayer(player.id);
+					Multiplayer.removePlayer(player.id);
 					
 					// Broadcast that current player has left the game to all clients
 					broadcast({
@@ -312,51 +306,6 @@ import Multiplayer from '../classes/multiplayer.class.js';
 
 
 //#region [Functions]
-	
-	/**
-	 * Adds a new player to the dedicated server's hosted game.
-	 *
-	 * @param {WebSocket} connection The WebSocketServer connection to the player to be added.
-	 * @param {string} player_name The multiplayer nickname of the player to be added.
-	 * @returns Returns the ID of the player after they've been added to the game.
-	 */
-	function addPlayer(connection, player_name)
-	{
-		
-		// Initialize joining player
-		let player = new Player();
-		player.name = player_name;
-		player.connection = connection;
-		
-		// Initialize joining player's keyboard/mouse controls
-		player.controls = new Controls();
-		
-		// Add joining player to game
-		Game.players[player.id] = player;
-		
-		// Return player's ID
-		return player.id;
-		
-	}
-	
-	/**
-	 * Removes the specified player from the dedicated server's hosted game.
-	 *
-	 * @param {string} player_id The unique ID of the player to be removed from the server.
-	 */
-	function removePlayer(player_id)
-	{
-		
-		// Remove the player from the server
-		delete Game.players[player_id];
-		
-		// Log if game is empty...
-		if (Object.keys(Game.players).length === 0)
-		{
-			log("No players left, closing game ID " + Game.id);
-		}
-		
-	}
 	
 	/**
 	 * Broadcasts the specified data to all of the server's client connections.

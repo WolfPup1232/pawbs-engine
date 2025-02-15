@@ -19,87 +19,97 @@ class Settings
 			//#region [Default Files/Folders]
 				
 				
-				//#region [Game Root Path]
+				//#region [Game Root Directory Path]
 					
 					/**
-					 * The default game root path.
+					 * The default local game root path.
 					 */
-					this.development_path_root = ".";
+					this.path_local_root = ".";
 					
 					/**
-					 * The default game root path when the game is started from the npm start command in the repository root directory.
+					 * The default local game root path when the game is started from the npm start command in the repository root directory.
 					 */
-					this.shortcut_path_root = "..";
+					this.path_local_root_shortcut = "..";
 					
 					/**
-					 * The default game root path when the game is started from a single shortcut in the repository root directory.
+					 * The default local game root path when the game is started from a single shortcut in the repository root directory.
 					 */
-					this.shortcut_single_path_root = "..";
+					this.path_local_root_shortcut_single = "..";
 					
 					/**
-					 * The default game root path in production mode.
+					 * The default remote game root path.
 					 */
-					this.production_path_root = "..";
+					this.path_remote_root = "..";
 					
 					/**
-					 * The default game root path when the game is running from inside a container.
+					 * The default remote game root path when the game is running from a container.
 					 */
-					this.containerized_path_root = "./src";
+					this.path_remote_root_containerized = "./src";
 					
 				//#endregion
 				
 				
-				//#region [Server Root Path]
+				//#region [Server Root Directory Path]
 					
 					/**
-					 * The default server root path.
+					 * The default local server root path.
 					 */
-					this.server_development_path_root = "..";
+					this.path_local_server_root = "..";
 					
 					/**
-					 * The default server root path when the server is started from the npm start command in the repository root directory.
+					 * The default local server root path when the server is started from the npm start command in the repository root directory.
 					 */
-					this.server_shortcut_path_root = "./src";
+					this.path_local_server_root_shortcut = "./src";
 					
 					/**
-					 * The default server root path when the server is started from a single shortcut in the repository root directory.
+					 * The default local server root path when the server is started from a single shortcut in the repository root directory.
 					 */
-					this.server_shortcut_single_path_root = "..";
+					this.path_local_server_root_shortcut_single = "..";
 					
 					/**
-					 * The default server root path in production mode.
+					 * The default remote server root path.
 					 */
-					this.server_production_path_root = "./src";
+					this.path_remote_server_root = "./src";
 					
 					/**
-					 * The default server root path when the server is running from inside a container.
+					 * The default remote server root path when the server is running from inside a container.
 					 */
-					this.server_containerized_path_root = "./src";
+					this.path_remote_server_root_containerized = "./src";
 					
 				//#endregion
 				
 				
-				//#region [File Paths]
+				//#region [JSON File Paths]
 					
 					/**
-					 * The default game settings file path.
+					 * The default local game settings JSON file path.
 					 */
-					this.default_path_settings = "/settings.json";
+					this.path_local_settings = "/settings.json";
 					
 					/**
-					 * The default game worlds list file path.
+					 * The default local game worlds list JSON file path.
 					 */
-					this.default_path_worlds = "/worlds/worlds.json";
+					this.path_local_worlds = "/worlds/worlds.json";
 					
 					/**
-					 * The default object assets list file path.
+					 * The default local object assets list JSON file path.
 					 */
-					this.default_path_objects = "/objects/objects.json";
+					this.path_local_objects = "/objects/objects.json";
 					
 					/**
-					 * The default texture assets list file path.
+					 * The default local texture assets list JSON file path.
 					 */
-					this.default_path_textures = "/textures/textures.json";
+					this.path_local_textures = "/textures/textures.json";
+					
+					/**
+					 * The default local dedicated servers list JSON file path.
+					 */
+					this.path_local_servers = "/servers/servers.json";
+					
+					/**
+					 * The default remote dedicated servers list JSON file path.
+					 */
+					this.path_remote_servers = "https://pawbs-engine.fly.dev/servers/servers.json";
 					
 				//#endregion
 				
@@ -115,6 +125,16 @@ class Settings
 				this.multiplayer_nickname = "Noob";
 				
 				/**
+				 * The player's multiplayer colour.
+				 */
+				this.multiplayer_colour = "rgb(0, 128, 0)";
+				
+				/**
+				 * The default multiplayer server name.
+				 */
+				this.multiplayer_default_server_name = "My Puppey Game! :)";
+				
+				/**
 				 * The default multiplayer server connection type.
 				 */
 				this.multiplayer_default_connection_type = Multiplayer.ConnectionTypes.None;
@@ -123,14 +143,15 @@ class Settings
 				//#region [Dedicated Server]
 					
 					/**
-					 * The Pawbs Engine dedicated server address.
+					 * The default local dedicated server address.
 					 */
-					this.multiplayer_development_dedicated_server = "ws://localhost:3000";
+					this.multiplayer_local_dedicated_server = "ws://localhost:3000";
 					
 					/**
-					 * The Pawbs Engine dedicated server address in production mode.
+					 * The default remote dedicated server address.
+					 * Change this to your own dedicated server's address if you want!
 					 */
-					this.multiplayer_production_dedicated_server = "wss://pawbs-engine.fly.dev:3443";
+					this.multiplayer_remote_dedicated_server = "wss://pawbs-engine.fly.dev:3443";
 					
 				//#endregion
 				
@@ -138,14 +159,15 @@ class Settings
 				//#region [Signaling Server]
 					
 					/**
-					 * The Pawbs Engine signaling server address.
+					 * The default local signaling server address.
 					 */
-					this.multiplayer_development_signaling_server = "ws://localhost:5000";
+					this.multiplayer_local_signaling_server = "ws://localhost:5000";
 					
 					/**
-					 * The Pawbs Engine signaling server address in production mode.
+					 * The default remote signaling server address.
+					 * Change this to your own signaling server's address if you want!
 					 */
-					this.multiplayer_production_signaling_server = "wss://pawbs-engine.fly.dev:5443";
+					this.multiplayer_remote_signaling_server = "wss://pawbs-engine.fly.dev:5443";
 					
 				//#endregion
 				
@@ -153,14 +175,15 @@ class Settings
 				//#region [HTTP Server]
 					
 					/**
-					 * The Pawbs Engine HTTP server address.
+					 * The default local HTTP server address.
 					 */
-					this.multiplayer_development_http_server = "http://localhost:4000";
+					this.multiplayer_local_http_server = "http://localhost:4000";
 					
 					/**
-					 * The Pawbs Engine HTTP server address in production mode.
+					 * The default remote HTTP server address.
+					 * Change this to your own HTTP server's address if you want!
 					 */
-					this.multiplayer_production_http_server = "https://pawbs-engine.fly.dev";
+					this.multiplayer_remote_http_server = "https://pawbs-engine.fly.dev";
 					
 				//#endregion
 				
@@ -213,21 +236,13 @@ class Settings
 			}
 			
 			/**
-			 * Flag indicating whether or not the game is currently being served from a production server address.
+			 * Flag indicating whether or not the game is currently being served from a remote server address.
 			 */
-			get is_serverside()
+			get is_remote()
 			{
-				return (typeof location !== 'undefined' && location.hostname != "" && (Game.settings.multiplayer_production_dedicated_server.includes(location.hostname) ||
-																					   Game.settings.multiplayer_production_http_server.includes(location.hostname) ||
-																					   Game.settings.multiplayer_production_signaling_server.includes(location.hostname)));
-			}
-			
-			/**
-			 * Flag indicating whether or not the game has detected that it is running in production mode.
-			 */
-			get is_production()
-			{
-				return (Game.settings.is_serverside) || (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("production"));
+				return (typeof location !== 'undefined' && location.hostname != "" && (Game.settings.multiplayer_remote_dedicated_server.includes(location.hostname) ||
+																					   Game.settings.multiplayer_remote_http_server.includes(location.hostname) ||
+																					   Game.settings.multiplayer_remote_signaling_server.includes(location.hostname)));
 			}
 			
 			/**
@@ -235,7 +250,7 @@ class Settings
 			 */
 			get is_containerized()
 			{
-				return (Game.settings.is_serverside) || (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("container"));
+				return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("container")); //(Game.settings.is_remote) || (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("container"));
 			}
 			
 			/**
@@ -265,51 +280,51 @@ class Settings
 			get path_root()
 			{
 				
-				// Get the default game root path
-				let path = Game.settings.development_path_root
+				// Get the default local root path
+				let path = Game.settings.path_local_root
 				
 				// If the game is being run from a server console...
 				if (Game.settings.is_server)
 				{
 					
-					// If server is in production mode...
-					if (Game.settings.is_production)
+					// If server running remotely from a container...
+					if (Game.settings.is_containerized)
 					{
 						
-						// Get default production server game root path
-						path = Game.settings.server_production_path_root;
+						// Get default containerized server root path
+						path = Game.settings.path_remote_server_root_containerized;
 						
 						
-					}  // Otherwise, if server running from a container...
-					else if (Game.settings.is_containerized)
+					}  // Otherwise, if server running remotely but uncontainerized...
+					else if (Game.settings.is_remote)
 					{
 						
-						// Get default server container game root path
-						path = Game.settings.server_containerized_path_root;
+						// Get default remote server root path
+						path = Game.settings.path_remote_server_root;
 						
 						
 					} // Otherwise, if server is being run from the npm start command in the repo root directory...
 					else if (Game.settings.is_shortcut)
 					{
 						
-						// Get default server shortcut game path root
-						path = Game.settings.server_shortcut_path_root;
+						// Get default server shortcut root path
+						path = Game.settings.path_local_server_root_shortcut;
 						
 						
 					} // Otherwise, if server is being run from a single shortcut in the repo root directory...
 					else if (Game.settings.is_shortcut_single)
 					{
 						
-						// Get default server shortcut game path root
-						path = Game.settings.server_shortcut_single_path_root;
+						// Get default server single shortcut root path
+						path = Game.settings.path_local_server_root_shortcut_single;
 						
 						
-					} // Othehrwise, if the server is being run in local development mode...
+					} // Othehrwise, if the server is running locally without any flags...
 					else
 					{
 						
-						// Get default development server game root path
-						path = Game.settings.server_development_path_root;
+						// Get default local server root path
+						path = Game.settings.path_local_server_root;
 						
 					}
 					
@@ -318,35 +333,36 @@ class Settings
 				else
 				{
 					
-					// If game is in production mode...
-					if (Game.settings.is_production)
+					// If game is hosted remotely from a container...
+					if (Game.settings.is_containerized)
 					{
 						
-						// Get default production game path root
-						path = Game.settings.production_path_root;
+						// Get default containerized root path
+						path = Game.settings.path_remote_root_containerized;
 						
 						
-					} // Otherwise, if game is running from a container...
-					else if (Game.settings.is_containerized)
+					} // Otherwise, if game is hosted remotely but uncontainerized...
+					else if (Game.settings.is_remote)
 					{
 						
-						// Get default container game path root
-						path = Game.settings.containerized_path_root;
+						// Get default remote root path
+						path = Game.settings.path_remote_root;
 						
 						
 					} // Otherwise, if game is being run from the npm start command in the repo root directory...
 					else if (Game.settings.is_shortcut)
 					{
 						
-						// Get default shortcut game path root
-						path = Game.settings.shortcut_path_root;
+						// Get default shortcut root path
+						path = Game.settings.path_local_root_shortcut;
+						
 						
 					} // Otherwise, if game is being run from a single shortcut in the repo root directory...
 					else if (Game.settings.is_shortcut_single)
 					{
 						
-						// Get default shortcut game path root
-						path = Game.settings.shortcut_single_path_root;
+						// Get default single shortcut root path
+						path = Game.settings.path_local_root_shortcut_single;
 						
 					}
 					
@@ -358,35 +374,69 @@ class Settings
 			}
 			
 			/**
-			 * The default game settings file path.
+			 * The default game settings JSON file path.
 			 */
 			get path_settings()
-			{		
-				return Game.settings.path_root + Game.settings.default_path_settings;
+			{
+				return Game.settings.path_root + Game.settings.path_local_settings;
 			}
 			
 			/**
-			 * The default game worlds list file path.
+			 * The default game worlds list JSON file path.
 			 */
 			get path_worlds()
-			{		
-				return Game.settings.path_root + Game.settings.default_path_worlds;
+			{
+				return Game.settings.path_root + Game.settings.path_local_worlds;
 			}
 			
 			/**
-			 * The default object assets list file path.
+			 * The default object assets list JSON file path.
 			 */
 			get path_objects()
-			{		
-				return Game.settings.path_root + Game.settings.default_path_objects;
+			{
+				return Game.settings.path_root + Game.settings.path_local_objects;
 			}
 			
 			/**
-			 * The default texture assets list file path.
+			 * The default texture assets list JSON file path.
 			 */
 			get path_textures()
-			{		
-				return Game.settings.path_root + Game.settings.default_path_textures;
+			{
+				return Game.settings.path_root + Game.settings.path_local_textures;
+			}
+			
+			/**
+			 * The default dedicated servers list JSON file path.
+			 */
+			get path_servers()
+			{
+				
+				// Get the default local root path
+				let path = Game.settings.path_root + Game.settings.path_local_servers;
+				
+				// If remote path has been defined...
+				if (Game.settings.path_remote_servers != "")
+				{
+					
+					// Get the default remote root path
+					path = Game.settings.path_remote_servers;
+					
+				}
+				
+				// Return file path
+				return path;
+				
+			}
+			
+			/**
+			 * The default local dedicated servers list JSON file path.
+			 */
+			get path_servers_local()
+			{
+				
+				// Return the default local root path
+				return Game.settings.path_root + Game.settings.path_local_servers;
+				
 			}
 			
 		//#endregion
@@ -403,28 +453,20 @@ class Settings
 				get multiplayer_dedicated_server()
 				{
 					
-					// If game is in production mode...
-					if (Game.settings.is_production)
+					// If game is hosted remotely...
+					if (Game.settings.is_remote)
 					{
 						
-						// Get the Pawbs Engine dedicated server address in production mode
-						return Game.settings.multiplayer_production_dedicated_server;
+						// Get the remote dedicated server address
+						return Game.settings.multiplayer_remote_dedicated_server;
 						
 						
-					} // Otherwise, if game is running from a container...
-					else if (Game.settings.is_containerized)
-					{
-						
-						// Get the Pawbs Engine dedicated server address in containerized mode
-						return Game.settings.multiplayer_production_dedicated_server;
-						
-						
-					} // Othehrwise, if the server is being run in local development mode...
+					} // Othehrwise, if the server is running locally...
 					else
 					{
 						
-						// Get the Pawbs Engine dedicated server address
-						return Game.settings.multiplayer_development_dedicated_server;
+						// Get the local dedicated server address
+						return Game.settings.multiplayer_local_dedicated_server;
 						
 					}
 				}
@@ -440,28 +482,20 @@ class Settings
 				get multiplayer_signaling_server()
 				{
 					
-					// If game is in production mode...
-					if (Game.settings.is_production)
+					// If game is hosted remotely...
+					if (Game.settings.is_remote)
 					{
 						
-						// Get the Pawbs Engine signaling server address in production mode
-						return Game.settings.multiplayer_production_signaling_server;
+						// Get the remote signaling server address
+						return Game.settings.multiplayer_remote_signaling_server;
 						
 						
-					} // Otherwise, if game is running from a container...
-					else if (Game.settings.is_containerized)
-					{
-						
-						// Get the Pawbs Engine signaling server address in containerized mode
-						return Game.settings.multiplayer_production_signaling_server;
-						
-						
-					} // Othehrwise, if the server is being run in local development mode...
+					} // Othehrwise, if the server is running locally...
 					else
 					{
 						
-						// Get the Pawbs Engine dedicated server address
-						return Game.settings.multiplayer_development_signaling_server;
+						// Get the local signaling server address
+						return Game.settings.multiplayer_local_signaling_server;
 						
 					}
 				}
@@ -477,28 +511,20 @@ class Settings
 				get multiplayer_http_server()
 				{
 					
-					// If game is in production mode...
-					if (Game.settings.is_production)
+					// If game is hosted remotely...
+					if (Game.settings.is_remote)
 					{
 						
-						// Get the Pawbs Engine HTTP server address in production mode
-						return Game.settings.multiplayer_production_http_server;
+						// Get the remote HTTP server address
+						return Game.settings.multiplayer_remote_http_server;
 						
 						
-					} // Otherwise, if game is running from a container...
-					else if (Game.settings.is_containerized)
-					{
-						
-						// Get the Pawbs Engine HTTP server address in containerized mode
-						return Game.settings.multiplayer_production_http_server;
-						
-						
-					} // Othehrwise, if the server is being run in local development mode...
+					} // Othehrwise, if the server is running locally...
 					else
 					{
 						
-						// Get the Pawbs Engine dedicated server address
-						return Game.settings.multiplayer_development_http_server;
+						// Get the local HTTP server address
+						return Game.settings.multiplayer_local_http_server;
 						
 					}
 				}

@@ -246,14 +246,29 @@ export default function initializeGameUIEventHandlers()
 				
 				// Get message data
 				const type = data.type;
-				const player_id = data.player_id;
-				const player = Game.players[player_id];
+				
+				// Get player by ID
+				let player = null;
+				let player_id = null;
+				if (data.player_id)
+				{
+					player_id = data.player_id;
+				}
+				else if (data.player)
+				{
+					player_id = data.player.id;
+				}
+				player = Game.players[player_id];
 				
 				// Get message
 				let message = data.message;
 				
 				// Initialize nameplate text
-				let nameplate = "[" + player.name + "]";
+				let nameplate = "";
+				if (player)
+				{
+					nameplate = '[<span style="color:#' + player.colour.getHexString() + ';" data-bs-title="<span style=\'color:#' + player.colour.getHexString() + ';\'>' + player.name + '</span>" data-bs-toggle="tooltip" data-bs-placement="top">' + player.name + '</span>]';
+				}
 				
 				// Initialize chat message HTML DOM element
 				const message_element = document.createElement('div');
@@ -262,7 +277,7 @@ export default function initializeGameUIEventHandlers()
 				Game.ui.chat.stopHideTimer();
 				
 				// Handle chat message content by chat message type...
-				switch (data.type)
+				switch (type)
 				{
 					// JOINED_GAME
 					case Multiplayer.MessageTypes.JOINED_GAME:
@@ -292,7 +307,7 @@ export default function initializeGameUIEventHandlers()
 				}
 				
 				// Assemble entire chat message content
-				message_element.textContent = nameplate + " " + message;
+				$(message_element).append('<p class="mb-0">' + nameplate + ' ' + message + '</p>');
 				
 				// Add chat message to chat log
 				$('#chat-container').fadeIn(256);
@@ -304,6 +319,9 @@ export default function initializeGameUIEventHandlers()
 				{
 					$('#chat-log').children().first().remove();
 				}
+				
+				// Reinitialize tooltips
+				Game.ui.utilities.initializeTooltips();
 				
 				// Start chat hide timer
 				Game.ui.chat.startHideTimer();

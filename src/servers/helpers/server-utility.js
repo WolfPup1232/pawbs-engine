@@ -79,7 +79,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	global.showTitleTrans = function showTitle()
 	{
 		
-		const blocks = (is_production() || is_shortcut() ? "" : "██");
+		const blocks = (is_remote() || is_shortcut() ? "" : "██");
 		
 		// Output title
 		console.clear();
@@ -115,7 +115,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	global.showTitleLebsian = function showTitle()
 	{
 		
-		const blocks = (is_production() || is_shortcut() ? "" : "██");
+		const blocks = (is_remote() || is_shortcut() ? "" : "██");
 		
 		// Output title
 		console.clear();
@@ -151,7 +151,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	global.showTitlePuppey = function showTitle()
 	{
 		
-		const blocks = (is_production() || is_shortcut() ? "" : "██");
+		const blocks = (is_remote() || is_shortcut() ? "" : "██");
 		
 		// Output title
 		console.clear();
@@ -197,7 +197,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	{
 		
 		// Initialize maximum console line width and its total content space width
-		const console_line_width = (is_containerized() ? 71 : (is_production() || is_shortcut() ? 101 : 105));
+		const console_line_width = (is_containerized() ? 71 : (is_remote() || is_shortcut() ? 101 : 105));
 		
 		// Helper function to create a single formatted console line
 		function formatLine(content, is_stack_trace = false)
@@ -347,9 +347,9 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 		let flags_text = "";
 		
 		// Add active flags to list...
-		if (Game.settings.is_production)
+		if (Game.settings.is_remote)
 		{
-			flags.push("Production");
+			flags.push("Remote");
 		}
 		
 		if (Game.settings.is_containerized)
@@ -360,11 +360,6 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 		if (Game.settings.is_shortcut)
 		{
 			flags.push("Shortcut");
-		}
-		
-		if (Game.settings.is_serverside)
-		{
-			flags.push("Serverside");
 		}
 		
 		// Format flags list text
@@ -386,7 +381,7 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	 */
 	global.divider = function divider(line)
 	{
-		return (is_containerized() ? line.slice(0, 71) + c_reset : (is_production() || is_shortcut() ? line.slice(2, line.length - 2) : line));
+		return (is_containerized() ? line.slice(0, 71) + c_reset : (is_remote() || is_shortcut() ? line.slice(2, line.length - 2) : line));
 	}
 	
 //#endregion
@@ -409,11 +404,13 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 	//#region [Flags]
 		
 		/**
-		 * Flag indicating whether or not the game has detected that it is running in production mode.
+		 * Flag indicating whether or not the game is currently being served from a remote server address.
 		 */
-		function is_production()
+		function is_remote()
 		{
-			return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("production"));
+			return (typeof location !== 'undefined' && location.hostname != "" && (Game.settings.multiplayer_remote_dedicated_server.includes(location.hostname) ||
+																				   Game.settings.multiplayer_remote_http_server.includes(location.hostname) ||
+																				   Game.settings.multiplayer_remote_signaling_server.includes(location.hostname)));
 		}
 		
 		/**

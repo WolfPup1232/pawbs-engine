@@ -118,29 +118,14 @@ import Multiplayer from '../classes/multiplayer.class.js';
 				
 				//#region [Server]
 					
-					// LIST_GAMES
-					case Multiplayer.MessageTypes.LIST_GAMES:
+					// PING
+					case Multiplayer.MessageTypes.PING:
 					{
 						
-						// Initialize empty simplified list of games
-						const games_list = [];
-						
-						// Iterate through each game in the list of available P2P games...
-						for (const [game_id, game] of Object.entries(games))
-						{
-							
-							// Add simplified game details to the list
-							games_list.push({
-								game_id:	  game_id,
-								player_count: game.player_count,
-							});
-							
-						}
-						
-						// Send the simplified list of games back to the client
+						// Send a ping in return for latency measurement
 						connection.send(JSON.stringify({
-							type: Multiplayer.MessageTypes.GAMES_LIST,
-							games: games_list,
+							type:	Multiplayer.MessageTypes.PING,
+							games:	games,
 						}));
 						
 						break;
@@ -168,14 +153,14 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							{
 								
 								// Client successfully joined the game
-								log("Player ID " + player_id + " joined game ID " + game_id + ".");
+								log("Player '" + player_name + "' (" + player_id + ") joined game '" + games[game_id].name + "' (" + game_id + ").");
 								
-								// Add a new player to the game
-								games[game_id].players[player_id] = connection;
-								games[game_id].player_count++;
+								// Add a new player to the game and update player count
+								games[game_id].connections[player_id] = connection;
+								games[game_id].player_count = Object.keys(games[game_id].connections).length;
 								
 								// Get the game host's ID
-								const host_id = Object.keys(games[game_id].players).find(key => games[game_id].players[key] === games[game_id].host_player)
+								const host_id = Object.keys(games[game_id].connections).find(key => games[game_id].connections[key] === games[game_id].host_connection)
 								
 								// Send successful join message back to client
 								connection.send(JSON.stringify({
@@ -185,11 +170,11 @@ import Multiplayer from '../classes/multiplayer.class.js';
 								}));
 								
 								// Check if the host's connection is still open...
-								if (games[game_id].host_player)
+								if (games[game_id].host_connection)
 								{
 									
 									// Notify the host to make a WebRTC P2P connection offer
-									games[game_id].host_player.send(JSON.stringify({
+									games[game_id].host_connection.send(JSON.stringify({
 										type: 			Multiplayer.MessageTypes.P2P_MAKE_OFFER,
 										player_id:		player_id,
 										player_name:	player_name,
@@ -212,27 +197,29 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						{
 							
 							// Get message data
-							const game_id = data.game_id;
+							const game_id = data.game_id
+							const game_name = data.game_name
 							const player_id = data.player_id;
+							const player_name = data.player_name;
 							
 							// Make sure game ID isn't already in use...
 							if (!games[game_id])
 							{
 								
 								// Game successfully hosted
-								log("Game ID " + game_id + " hosted by player " + player_id +".");
+								log("Game '" + game_name + "' (" + game_id + ") hosted by player '" + player_name + "' (" + player_id +").");
 								
 								// Initialize a new game
 								games[game_id] = {
-									game_id:	  game_id,
-									players: 	  [],
-									host_player:  connection,
-									player_count: 0,
+									name:	  	  		game_name,
+									connections: 	  	[],
+									host_connection:	connection,
+									player_count: 		0,
 								};
 								
-								// Add the host player to the game
-								games[game_id].players[player_id] = connection;
-								games[game_id].player_count++;
+								// Add the host player to the game and update player count
+								games[game_id].connections[player_id] = connection;
+								games[game_id].player_count = Object.keys(games[game_id].connections).length;
 								
 								// Notify the host player that the game has been created
 								connection.send(JSON.stringify({
@@ -261,13 +248,13 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							const signal = data.signal;
 							
 							// Get client by player ID
-							const player = games[game_id].players[player_id];
+							const player_connection = games[game_id].connections[player_id];
 							
 							// WebRTC signal sent
-							log("Host ID " + host_id + " sent a WebRTC signal of type '" + signal.type + "' to player ID " + player_id + ".");
+							//log("Host ID " + host_id + " sent a WebRTC signal of type '" + signal.type + "' to player ID " + player_id + ".");
 							
 							// Send WebRTC offer signal to client
-							player.send(JSON.stringify({
+							player_connection.send(JSON.stringify({
 								type: Multiplayer.MessageTypes.P2P_OFFER,
 								host_id: host_id,
 								signal,
@@ -292,14 +279,14 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							if (!game) return;
 							
 							// Check if the host's connection is still open...
-							if (game.host_player)
+							if (game.host_connection)
 							{
 								
 								// WebRTC signal sent
-								log("Player ID " + player_id + " sent a WebRTC signal of type '" + signal.type + "' back to host.");
+								//log("Player ID " + player_id + " sent a WebRTC signal of type '" + signal.type + "' back to host.");
 								
 								// Send WebRTC answer signal back to host
-								game.host_player.send(JSON.stringify({
+								game.host_connection.send(JSON.stringify({
 									type: Multiplayer.MessageTypes.P2P_ANSWER,
 									player_id: player_id,
 									signal,
@@ -317,14 +304,14 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							// Get message data
 							const game_id = data.game_id;
 							const player_id = data.player_id;
-							const target_id = data.target_id;
+							const target_player_id = data.target_id;
 							const signal = data.signal;
 							
 							// Get player by ID
-							const player = games[game_id].players[target_id];
+							const player_connection = games[game_id].connections[target_player_id];
 							
 							// Send WebRTC candidate signal to player
-							player.send(JSON.stringify({
+							player_connection.send(JSON.stringify({
 								type: Multiplayer.MessageTypes.P2P_CANDIDATE,
 								player_id: player_id,
 								signal,
@@ -352,24 +339,25 @@ import Multiplayer from '../classes/multiplayer.class.js';
 				const game = games[game_id];
 				
 				// Iterate through each player in the current game...
-				Object.keys(game.players).forEach((player_id) => {
+				Object.keys(game.connections).forEach((player_id) => {
 					
-					// Get current player
-					const player = game.players[player_id];
+					// Get current player and player count
+					const player_connection = game.connections[player_id];
+					const player_count = Object.keys(game.connections).length;
 					
 					// If the current player's connection is the one being closed...
-					if (player === connection)
+					if (player_connection === connection)
 					{
 						
 						// If the current player is the host...
-						if (player === game.host_player)
+						if (player_connection === game.host_connection)
 						{
 							
 							// Check if anybody was connected to the host...
-							if (game.player_count > 1)
+							if (player_count > 1)
 							{
 								
-								// Boot everybody from the game
+								// Boot everybody from the game!
 								broadcast({
 									type: 		Multiplayer.MessageTypes.P2P_HOST_LEFT,
 									host_id: 	player_id,
@@ -377,27 +365,38 @@ import Multiplayer from '../classes/multiplayer.class.js';
 								
 							}
 							
+							// Host has left game
+							log("Host (" + player_id + ") has closed the game '" + game.name + "' (" + game_id + ")." + (player_count > 1 ? " Kicked everyone to main menu." : ""));
+							
 							// Remove game
 							delete games[game_id];
-							
-							// Host has left game
-							log("Host ID " + player_id + " has left game ID " + game_id + ". Game closed, kicked everyone to main menu.");
 							
 							
 						} // Otherwise, if the current player is just a client...
 						else
 						{
 							
+							// Update player count
+							game.player_count = player_count - 1;
+							
 							// Tell the host to tell everyone a player just left
-							game.host_player.send(JSON.stringify({
+							game.host_connection.send(JSON.stringify({
 								type: 			Multiplayer.MessageTypes.PLAYER_LEFT,
 								player_id:		player_id,
 							}));
 							
+							// Player has left game
+							log("Player (" + player_id + ") has left game '" + game.name + "' (" + game_id + ").");
+							
+							// Remove player
+							delete game.connections[player_id];
+							
 						}
 						
 						return;
+						
 					}
+					
 				});
 				
 			});
@@ -425,21 +424,21 @@ import Multiplayer from '../classes/multiplayer.class.js';
 		const game = games[game_id];
 		
 		// Iterate through each player in the current game...
-		Object.keys(game.players).forEach((player_id) => {
+		Object.keys(game.connections).forEach((player_id) => {
 			
 			// If the current player ID isn't flagged to be skipped and has an active server connection...
-			if (player_id != id_skip && game.players[player_id])
+			if (player_id != id_skip && game.connections[player_id])
 			{
 				
 				// Get current player
-				const player = game.players[player_id];
+				const player_connection = game.connections[player_id];
 				
 				// If the player's connection is ready for broadcast...
-				if (player.readyState === 1)
+				if (player_connection.readyState === 1)
 				{
 					
 					// Send specified message to player
-					player.send(JSON.stringify(data));
+					player_connection.send(JSON.stringify(data));
 					
 				}
 				

@@ -41,6 +41,11 @@ class Game
 		static id = THREE.MathUtils.generateUUID();
 		
 		/**
+		 * The game's name.
+		 */
+		static name = "My First Game";
+		
+		/**
 		 * The game's birthday.
 		 */
 		static start_time = Date.now();
@@ -135,6 +140,28 @@ class Game
 		 * Static class constructor.
 		 */
 		static { }
+		
+	//#endregion
+	
+	
+	//#region [Properties]
+		
+		/**
+		 * A simplified version of the game for multiplayer communication.
+		 */
+		static get simplified()
+		{
+			return {
+				id: 		this.id,
+				name: 		this.name,
+				players:	Multiplayer.listPlayers(),
+			};
+		}
+		static set simplified(player)
+		{
+			this.id = player.id;
+			this.name = player.name;
+		}
 		
 	//#endregion
 	
@@ -254,9 +281,6 @@ class Game
 			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
 			{
 				
-				// Hide main menu
-				this.ui.menus.hideMainMenu();
-				
 				// Initialize renderer
 				this.renderer = new THREE.WebGLRenderer();
 				this.renderer = new CustomOutlineEffect(this.renderer, { defaultThickness: 0.0032 });
@@ -298,10 +322,23 @@ class Game
 					
 				}
 				
-				// Invoke multiplayer callback if necessary...
-				if (Multiplayer.enabled && multiplayerCallback)
+				// If game is multiplayer...
+				if (Multiplayer.enabled)
 				{
-					multiplayerCallback();
+					
+					// Set the game's multiplayer attributes
+					this.name = this.settings.multiplayer_default_server_name;
+					
+					// Set the player's multiplayer attributes
+					this.player.name = this.settings.multiplayer_nickname;
+					this.player.colour = new THREE.Color(this.settings.multiplayer_colour);
+					
+					// Invoke multiplayer callback if necessary...
+					if (multiplayerCallback)
+					{
+						multiplayerCallback();
+					}
+					
 				}
 				
 				// Start the game loop
@@ -476,6 +513,9 @@ class Game
 		 */
 		static quit()
 		{
+			
+			// Pause game
+			this.paused = true;
 			
 			// Disable the editor...
 			if (Editor.enabled)

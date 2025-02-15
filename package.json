@@ -6,7 +6,6 @@
 	"scripts": {
 		"tauri": "tauri",
 		"start": "concurrently \"node ./src/servers/dedicated-server.js shortcut\" \"node ./src/servers/http-server.js shortcut\" \"node ./src/servers/signaling-server.js shortcut\"",
-		"production": "concurrently \"node ./src/servers/dedicated-server.js production\" \"node ./src/servers/http-server.js production\" \"node ./src/servers/signaling-server.js production\"",
 		"container": "concurrently \"node ./src/servers/dedicated-server.js container\" \"node ./src/servers/http-server.js container\" \"node ./src/servers/signaling-server.js container\""
 	},
 	"devDependencies": {
@@ -14,6 +13,7 @@
 	},
 	"dependencies": {
 		"concurrently": "^9.1.2",
+		"cors": "^2.8.5",
 		"express": "^4.21.2",
 		"jsdom": "^26.0.0",
 		"ws": "^8.18.0"
