@@ -42,14 +42,24 @@ import './helpers/server-utility.js';
 // WebSocket Imports
 import { WebSocketServer } from 'ws';
 
+// fflate Imports
+import * as fflate from 'fflate';
+
+// MessagePack Imports
+import * as msgpack from 'msgpack-lite';
+
 // FileSystem Imports
 import * as FileSystem from 'fs';
 
 // JSDOM Imports
 import { JSDOM } from 'jsdom';
 
+// three.js Imports
+import * as THREE from '../libraries/threejs/three.js';
+
 // Static Class Imports
 import Game from '../classes/game.class.js';
+import Editor from '../classes/editor.class.js';
 import Multiplayer from '../classes/multiplayer.class.js';
 
 /**
@@ -92,6 +102,11 @@ import Multiplayer from '../classes/multiplayer.class.js';
 	 */
 	const server = new WebSocketServer({ port: port });
 	
+	/**
+	 * Flag indicating whether or not to output debug incoming message info.
+	 */
+	const debug_incoming_message = false;
+	
 	
 	// Initialize Pawbs Engine
 	log("Initializing Pawbs Engine...");
@@ -122,7 +137,25 @@ import Multiplayer from '../classes/multiplayer.class.js';
 			
 			// Get incoming JSON message data and parse it into an object
 			let data;
-			try { data = JSON.parse(raw); } catch { return; }
+			data = msgpack.decode(fflate.decompressSync(new Uint8Array(raw)));
+			
+			// Show incoming message debug info if flagged...
+			if (debug_incoming_message)
+			{
+				let player_id = null;
+				
+				if (data.player)
+				{
+					player_id = data.player.id;
+				}
+				else if (data.player_id)
+				{
+					player_id = data.player_id;
+				}
+				
+				const message_type = Object.keys(Multiplayer.MessageTypes).find(key => Multiplayer.MessageTypes[key] === data.type);
+				log(c_cyan + message_type + c_reset, player_id);
+			}
 			
 			// Handle messages by type...
 			switch (data.type)
@@ -135,11 +168,11 @@ import Multiplayer from '../classes/multiplayer.class.js';
 					{
 						
 						// Send a ping in return for latency measurement
-						connection.send(JSON.stringify({
+						connection.send(fflate.compressSync(msgpack.encode({
 							type: 			Multiplayer.MessageTypes.PING,
 							game_id: 		Game.id,
 							player_count: 	Object.keys(Game.players).length - 1,
-						}));
+						})));
 						
 						break;
 					}
@@ -168,10 +201,10 @@ import Multiplayer from '../classes/multiplayer.class.js';
 								log("attempted to join a game which doesn't exist using game ID " + game_id, player.id);
 								
 								// Send ERROR message back to client
-								connection.send(JSON.stringify({
+								connection.send(fflate.compressSync(msgpack.encode({
 									type: 		Multiplayer.MessageTypes.ERROR,
 									message: 	'Game not found.',
-								}));
+								})));
 								
 								return;
 							}
@@ -183,11 +216,12 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							log("joined the game.", player.id);
 							
 							// Send game details back to client in successful join message
-							connection.send(JSON.stringify({
+							connection.send(fflate.compressSync(msgpack.encode({
 								type: 		Multiplayer.MessageTypes.DEDICATED_JOINED_GAME,
 								game: 		Game.simplified,
 								player: 	player,
-							}));
+								editor:		Editor.simplified,
+							})));
 							
 							// Broadcast successful join message to all other clients
 							broadcast({
@@ -263,6 +297,92 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							break;
 						}
 						
+						// ADD_OBJECT
+						case Multiplayer.MessageTypes.ADD_OBJECT:
+						{
+							
+							// Get message data
+							const player_id = data.player_id;
+							const object = data.object;
+							
+							// Initialize new object from message data
+							const ObjectType = THREE[object.type] || THREE.Object3D;
+							const new_object = new ObjectType();
+							new_object.setSimplified(object);
+							
+							// Add new object to game
+							Game.world.addObject(new_object, false);
+							
+							// Broadcast new object to all clients
+							broadcast({
+								type: 		Multiplayer.MessageTypes.OBJECT_ADDED,
+								player_id: 	player_id,
+								object: 	object,
+							});
+							
+							break;
+						}
+						
+						// UPDATE_OBJECT
+						case Multiplayer.MessageTypes.UPDATE_OBJECT:
+						{
+							
+							// Get message data
+							const player_id = data.player_id;
+							const object = data.object;
+							
+							// Get object by ID
+							const update_object = Game.world.scene.getObjectByProperty('uuid', object.uuid);
+							
+							// If object exists...
+							if (update_object)
+							{
+								
+								// Update object
+								update_object.setSimplified(object);
+								
+							}
+							
+							// Broadcast object update to all clients
+							broadcast({
+								type: 		Multiplayer.MessageTypes.OBJECT_UPDATED,
+								player_id: 	player_id,
+								object: 	object,
+							});
+							
+							break;
+						}
+						
+						// REMOVE_OBJECT
+						case Multiplayer.MessageTypes.REMOVE_OBJECT:
+						{
+							
+							// Get message data
+							const player_id = data.player_id;
+							const object_id = data.object_id;
+							
+							// Get object by ID
+							const object = Game.world.scene.getObjectByProperty('uuid', object_id);
+							
+							// If object exists...
+							if (object)
+							{
+								
+								// Remove object
+								Game.world.removeObject(object, false);
+								
+							}
+							
+							// Broadcast remove object to all clients
+							broadcast({
+								type: 		Multiplayer.MessageTypes.OBJECT_REMOVED,
+								player_id: 	player_id,
+								object_id: 	object_id,
+							});
+							
+							break;
+						}
+						
 					//#endregion
 					
 					
@@ -310,7 +430,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 	/**
 	 * Broadcasts the specified data to all of the server's client connections.
 	 *
-	 * @param {object} data The message to be broadcast to all of the server's clients.
+	 * @param {Object} data The message to be broadcast to all of the server's clients.
 	 * @param {string} id_skip The player ID to skip over sending a broadcast to.
 	 */
 	function broadcast(data, id_skip = null)
@@ -328,7 +448,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 				{
 					
 					// Send specified message to player
-					player.connection.send(JSON.stringify(data));
+					player.connection.send(fflate.compressSync(msgpack.encode(data)));
 					
 				}
 				

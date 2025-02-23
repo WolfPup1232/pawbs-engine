@@ -143,7 +143,7 @@ class Player
 	//#region [Properties]
 		
 		/**
-		 * A simplified version of the player for multiplayer communication.
+		 * A simplified version of the player for storage and communication.
 		 */
 		get simplified()
 		{
@@ -160,8 +160,8 @@ class Player
 			this.id = player.id;
 			this.name = player.name;
 			this.colour = player.colour;
-			this.position = player.position;
-			this.rotation = player.rotation;
+			this.position.set(player.position.x, player.position.y, player.position.z);
+			this.rotation.set(player.position.x, player.rotation.y, player.rotation.z);
 		}
 		
 		/**
@@ -297,7 +297,7 @@ class Player
 					this.camera.add(cylinder);
 					
 					// Add camera to game world
-					Game.world.addObject(this.camera);
+					Game.world.addObject(this.camera, false);
 					
 				}, 1000);
 				

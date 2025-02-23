@@ -11,6 +11,8 @@
 	<link href="./libraries/bootstrap/bootstrap-icons.min.css" rel="stylesheet">
 	<script src="./libraries/bootstrap/bootstrap.bundle.min.js"></script>
 	<script src="./libraries/jquery/jquery-3.7.1.min.js"></script>
+	<script src="./libraries/fflate/fflate-0.8.2.min.js"></script>
+	<script src="./libraries/msgpack/msgpack-lite-0.1.26.min.js"></script>
 	
 	<!-- Game CSS -->
 	<link rel="stylesheet" href="./style.css">
@@ -39,117 +41,113 @@
 		
 		<!-- Editor Main Menu -->
 		<div id="editor-menu" class="row">
-			<div class="editor-window col-12 col-xl-8">
-				<div class="card p-2 mt-3 shadow-sm">
-					<div class="input-group">
-						<div class="row w-100 m-0 overflow-hidden">
+			<div class="editor-window col-12 p-2">
+				<div class="row w-100 m-0 overflow-hidden">
+					
+					<!-- World Options -->
+					<div class="col p-0" style="max-width: 36em;">
+						<div class="editor-panel card-title fw-bold input-group-text mx-1 my-1">
+							<span class="editor-title" data-bs-title="Awrrruff!🐺" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Edit World</span>
 							
-							<!-- World Options -->
-							<div class="col p-0" style="max-width: 36em;">
-								<div class="editor-panel card-title fw-bold input-group-text mx-1 my-1">
-									<span class="editor-title">🐾 Edit World</span>
-									
-									<div class="vr ms-3"></div>
-									
-									<!-- World Name -->
-									<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
-									data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
-									
-									<div class="vr"></div>
-									
-									<!-- New/Load/Save World -->
-									<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-1 my-0"
-									data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-file-earmark"></i>
-									</button>
-									<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Load existing world." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-folder2-open"></i>
-									</button>
-									<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
-									data-bs-title="Save current world." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-floppy"></i>
-									</button>
-									
-									<div class="vr"></div>
-									
-									<!-- World Event Triggers -->
-									<button id="editor-world-triggers" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
-									data-bs-title="World event triggers." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>
-										<i class="bi bi-list-check"></i>
-									</button>
-								</div>
-							</div>
+							<div class="vr ms-3"></div>
 							
-							<!-- Camera Modes -->
-							<div class="col p-0 text-nowrap" style="max-width: 4.1em;">
-								<div class="editor-panel card-title input-group-text mx-1 my-1">
-									<input id="editor-camera-walk" name="editor-camera-types" value="walk" class="btn-check" type="checkbox" checked>
-									<label for="editor-camera-walk" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-									data-bs-title="Player walking mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-person-walking"></i>
-									</label>
-								</div>
-							</div>
+							<!-- World Name -->
+							<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
+							data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
 							
-							<!-- Object Selection Types -->
-							<div class="col p-0 text-nowrap" style="max-width: 13.2em;">
-								<div class="editor-panel card-title input-group-text mx-1 my-1">
-									<input id="editor-select-objects" name="editor-select-types" value="1" class="btn-check" type="radio" checked>
-									<label for="editor-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-									data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-box-seam"></i>
-									</label>
-									
-									<input id="editor-select-faces" name="editor-select-types" value="2" class="btn-check" type="radio">
-									<label for="editor-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-box2"></i>
-									</label>
-									
-									<input id="editor-select-vertices" name="editor-select-types" value="3" class="btn-check" type="radio">
-									<label for="editor-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
-									data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-bounding-box"></i>
-									</label>
-									
-									<div class="vr"></div>
-									
-									<input id="editor-select-terrain" value="terrain" class="btn-check" type="checkbox">
-									<label for="editor-select-terrain" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
-									data-bs-title="Terrain selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-bounding-box-circles" style="float: right;"></i>
-										<i class="bi bi-image-alt" style="font-size: 0.5em; position: relative; top: -3px; left: 4px;"></i>
-									</label>
-									
-								</div>
-							</div>
+							<div class="vr"></div>
 							
-							<!-- Tools -->
-							<div class="col p-0 text-nowrap" style="max-width: 9em;">
-								<div class="editor-panel card-title input-group-text mx-1 my-1">
-									<input id="editor-tool-spawn" name="editor-tool-types" value="1" class="btn-check" type="checkbox">
-									<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-									data-bs-title="Spawn/build tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-hammer"></i>
-									</label>
-									
-									<input id="editor-tool-npcs" name="editor-tool-types" value="2" class="btn-check" type="checkbox" disabled>
-									<label for="editor-tool-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="NPC editor tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-person-arms-up"></i>
-									</label>
-									
-									<input id="editor-tool-cinematics" name="editor-tool-types" value="3" class="btn-check" type="checkbox" disabled>
-									<label for="editor-tool-cinematics" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-									data-bs-title="Cinematics tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										<i class="bi bi-camera-reels"></i>
-									</label>
-								</div>
-							</div>
+							<!-- New/Load/Save World -->
+							<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-1 my-0"
+							data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-file-earmark"></i>
+							</button>
+							<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+							data-bs-title="Load existing world." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-folder2-open"></i>
+							</button>
+							<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
+							data-bs-title="Save current world." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-floppy"></i>
+							</button>
+							
+							<div class="vr"></div>
+							
+							<!-- World Event Triggers -->
+							<button id="editor-world-triggers" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
+							data-bs-title="World event triggers." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>
+								<i class="bi bi-list-check"></i>
+							</button>
+						</div>
+					</div>
+					
+					<!-- Camera Modes -->
+					<div class="col p-0 text-nowrap" style="max-width: 4.1em;">
+						<div class="editor-panel card-title input-group-text mx-1 my-1">
+							<input id="editor-camera-walk" name="editor-camera-types" value="walk" class="btn-check" type="checkbox" checked>
+							<label for="editor-camera-walk" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+							data-bs-title="Player walking mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-person-walking"></i>
+							</label>
+						</div>
+					</div>
+					
+					<!-- Object Selection Types -->
+					<div class="col p-0 text-nowrap" style="max-width: 13.2em;">
+						<div class="editor-panel card-title input-group-text mx-1 my-1">
+							<input id="editor-select-objects" name="editor-select-types" value="1" class="btn-check" type="radio" checked>
+							<label for="editor-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+							data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-box-seam"></i>
+							</label>
+							
+							<input id="editor-select-faces" name="editor-select-types" value="2" class="btn-check" type="radio">
+							<label for="editor-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+							data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-box2"></i>
+							</label>
+							
+							<input id="editor-select-vertices" name="editor-select-types" value="3" class="btn-check" type="radio">
+							<label for="editor-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
+							data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-bounding-box"></i>
+							</label>
+							
+							<div class="vr"></div>
+							
+							<input id="editor-select-terrain" value="terrain" class="btn-check" type="checkbox">
+							<label for="editor-select-terrain" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
+							data-bs-title="Terrain selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-bounding-box-circles" style="float: right;"></i>
+								<i class="bi bi-image-alt" style="font-size: 0.5em; position: relative; top: -3px; left: 4px;"></i>
+							</label>
 							
 						</div>
 					</div>
+					
+					<!-- Tools -->
+					<div class="col p-0 text-nowrap" style="max-width: 9em;">
+						<div class="editor-panel card-title input-group-text mx-1 my-1">
+							<input id="editor-tool-spawn" name="editor-tool-types" value="1" class="btn-check" type="checkbox">
+							<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+							data-bs-title="Spawn/build tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-hammer"></i>
+							</label>
+							
+							<input id="editor-tool-npcs" name="editor-tool-types" value="2" class="btn-check" type="checkbox" disabled>
+							<label for="editor-tool-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+							data-bs-title="NPC editor tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-person-arms-up"></i>
+							</label>
+							
+							<input id="editor-tool-cinematics" name="editor-tool-types" value="3" class="btn-check" type="checkbox" disabled>
+							<label for="editor-tool-cinematics" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+							data-bs-title="Cinematics tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-camera-reels"></i>
+							</label>
+						</div>
+					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -157,11 +155,11 @@
 		<!-- Selected Objects Window -->
 		<div id="editor-selected-objects" class="row" style="display: none;">
 			<div class="editor-window col-6 col-md-5 col-lg-4 col-xl-2 overflow-hidden">
-				<div id="editor-selected-objects-inner" class="card pt-2 ps-2 pe-2 pb-2 mt-3 shadow-sm">
+				<div id="editor-selected-objects-inner">
 					<div class="accordion">
 						
 						<!-- Selected Objects General -->
-						<div class="editor-panel card-title fw-bold input-group-text d-block w-100 mb-2">
+						<div class="editor-panel fw-bold input-group-text d-block w-100 mb-2">
 							<div class="d-flex">
 								
 								<!-- Save Objects -->
@@ -297,7 +295,7 @@
 						<div class="accordion-item">
 							
 							<!-- Transform Title -->
-							<div class="card-title accordion-title w-100 mb-0">
+							<div class="accordion-title w-100 mb-0">
 								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-transform">
 									<span data-bs-title="Move/scale/rotate objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										Transform
@@ -488,7 +486,7 @@
 								<div id="editor-selected-objects-materials-texture-picker" class="mt-3">
 									<select id="editor-selected-objects-materials-texture-select" class="form-select form-select-sm"
 									data-bs-title="Select a texture category." data-bs-toggle="tooltip" data-bs-placement="bottom"></select>
-									<div id="editor-selected-objects-materials-texture-grid" class="my-1"></div>
+									<div id="editor-selected-objects-materials-texture-grid" class="my-3"></div>
 								</div>
 								
 							</div>
@@ -502,8 +500,8 @@
 		
 		<!-- Editor Spawn Tool -->
 		<div id="editor-spawn-tool" class="row fixed-bottom mx-1 my-3" style="display: none;">
-			<div class="editor-window col-12 col-lg-9 col-xl-7 mx-auto">
-				<div id="editor-spawn-tool-container" class="card px-2 pt-2 pb-0 shadow-sm overflow-hidden">
+			<div class="editor-window col-12 col-lg-10 col-xl-7 mx-auto">
+				<div id="editor-spawn-tool-container" class="px-2 pt-2 pb-0 shadow-sm overflow-hidden">
 					<div id="editor-spawn-tool-scroll" class="row h-138px overflow-scroll">
 						
 						<!-- Spawn Tool Panels -->
@@ -948,24 +946,29 @@
 	<!-- Menu UIs -->
 	
 	<!-- Main Menu -->
-	<div id="menu-main" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
+	<div id="menu-main" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
 		<div class="modal-dialog">
-			<div class="modal-content rounded-4 shadow">
+			<div class="modal-content border-brown rounded-4 shadow-lg">
 				<div class="modal-body p-5">
 					<div class="d-flex justify-content-center">
-						<h2 class="fw-bold mb-4">🏳️‍⚧️ Pawbs Engine 🐾</h2>
+						<h2 class="fw-bold mb-4"
+						data-bs-title="Thanks, WolfPup! 🐺" data-bs-toggle="tooltip" data-bs-placement="bottom">🏳️‍⚧️ Pawbs Engine 🐾</h2>
 					</div>
 					<div class="d-flex mb-1 justify-content-center">
-						<button id="singleplayer-game" type="button" class="btn btn-lg btn-secondary w-100">Singleplayer</button>
+						<button id="singleplayer-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Start a new singleplayer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Singleplayer</button>
 					</div>
 					<div class="d-flex mb-1 justify-content-center">
-						<button id="multiplayer-game" type="button" class="btn btn-lg btn-secondary w-100">Multiplayer</button>
+						<button id="multiplayer-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Join or host a multiplayer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Multiplayer</button>
 					</div>
 					<div class="d-flex mb-5 justify-content-center">
-						<button id="options-menu" type="button" class="btn btn-lg btn-secondary w-100">Options</button>
+						<button id="options-menu" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Change game settings and player options." data-bs-toggle="tooltip" data-bs-placement="bottom">Options</button>
 					</div>
 					<div class="d-flex justify-content-center">
-						<button id="exit-game" type="button" class="btn btn-lg btn-secondary w-100">Exit</button>
+						<button id="exit-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Exit the game." data-bs-toggle="tooltip" data-bs-placement="bottom">Exit</button>
 					</div>
 				</div>
 			</div>
@@ -973,21 +976,25 @@
 	</div>
 	
 	<!-- Multiplayer Menu -->
-	<div id="menu-multiplayer" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
+	<div id="menu-multiplayer" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
 		<div class="modal-dialog">
-			<div class="modal-content rounded-4 shadow">
+			<div class="modal-content border-brown rounded-4 shadow-lg">
 				<div class="modal-body p-5">
 					<div class="d-flex justify-content-center">
-						<h2 class="fw-bold mb-3">Multiplayer</h2>
+						<h2 class="fw-bold mb-3"
+						data-bs-title="Need a friend? Get a dog!" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Multiplayer 🦴</h2>
 					</div>
 					<div class="d-flex mb-1 justify-content-center">
-						<button id="multiplayer-host-game-menu" type="button" class="btn btn-lg btn-secondary w-100">Host Game</button>
+						<button id="multiplayer-host-game-menu" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Host a new peer-to-peer multiplayer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Host Game</button>
 					</div>
 					<div class="d-flex mb-5 justify-content-center">
-						<button id="multiplayer-join-game-menu" type="button" class="btn btn-lg btn-secondary w-100">Join Game</button>
+						<button id="multiplayer-join-game-menu" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Join a dedicated server or peer-to-peer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Join Game</button>
 					</div>
 					<div class="d-flex justify-content-center">
-						<button id="multiplayer-menu-back" type="button" class="btn btn-lg btn-secondary w-100">Back</button>
+						<button id="multiplayer-menu-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Back to main menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 					</div>
 				</div>
 			</div>
@@ -995,14 +1002,16 @@
 	</div>
 	
 	<!-- Multiplayer Host Game Menu -->
-	<div id="menu-multiplayer-host-game" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
-		<div class="modal-dialog modal-xl h-75">
-			<div class="modal-content h-100 rounded-4 shadow">
+	<div id="menu-multiplayer-host-game" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
+		<div class="modal-dialog modal-xl h-85">
+			<div class="modal-content h-100 border-brown rounded-4 shadow-lg">
 				<div class="modal-body d-flex flex-column p-5">
 					<div class="row">
 						<div class="col-12 text-center">
-							<h2 class="fw-bold mb-0">Host Game</h2>
-							<span id="menu-multiplayer-host-game-subtitle" class="tiny">Peer-to-Peer</span>
+							<h2 class="fw-bold mb-0"
+							data-bs-title="Hosting a P2P game puts YOU in the driver's seat!" data-bs-toggle="tooltip" data-bs-placement="bottom">🖥️ Host Game 🌐</h2>
+							<span id="menu-multiplayer-host-game-subtitle" class="tiny"
+							data-bs-title="P2P games use a star to communicate!⭐" data-bs-toggle="tooltip" data-bs-placement="bottom">Peer-to-Peer</span>
 						</div>
 					</div>
 					<div class="row justify-content-center mb-1">
@@ -1019,7 +1028,7 @@
 							<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2">
 								<div class="mx-auto" data-bs-title="Customize your game." data-bs-toggle="tooltip" data-bs-placement="bottom">Customize Game</div>
 							</div>
-							<div id="multiplayer-options-game" class="border border-top-0 rounded-bottom px-2 pt-2 pb-4">
+							<div id="multiplayer-options-game" class="border border-top-0 rounded-bottom shadow px-2 pt-2 pb-4">
 								<div class="row">
 									<div class="col-12">
 										<div class="input-group input-group-sm mb-2"
@@ -1034,13 +1043,14 @@
 					</div>
 					<div class="row justify-content-center">
 						<div class="col-12 col-lg-4 mt-2 mb-5">
-							<button id="multiplayer-host-game" type="button" class="btn btn-lg btn-secondary w-100"
-							data-bs-title="Host this game." data-bs-toggle="tooltip" data-bs-placement="bottom">Host Game</button>
+							<button id="multiplayer-host-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
+							data-bs-title="Host this P2P game." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>Host Game</button>
 						</div>
 					</div>
-					<div class="row justify-content-center mt-auto">
+					<div class="row justify-content-center mt-5">
 						<div class="col-12 col-lg-4">
-							<button id="multiplayer-host-game-back" type="button" class="btn btn-lg btn-secondary w-100">Back</button>
+							<button id="multiplayer-host-game-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
+							data-bs-title="Back to multiplayer menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 						</div>
 					</div>
 				</div>
@@ -1049,20 +1059,22 @@
 	</div>
 	
 	<!-- Multiplayer Join Game Menu -->
-	<div id="menu-multiplayer-join-game" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
-		<div class="modal-dialog modal-xl h-75">
-			<div class="modal-content h-100 rounded-4 shadow">
+	<div id="menu-multiplayer-join-game" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
+		<div class="modal-dialog modal-xl h-85">
+			<div class="modal-content h-100 border-brown rounded-4 shadow-lg">
 				<div class="modal-body d-flex flex-column p-5">
 					<div class="row">
 						<div class="col-12 text-center">
-							<h2 class="fw-bold mb-0">Join Game</h2>
-							<span id="menu-multiplayer-join-game-subtitle" class="tiny">Dedicated Server</span>
+							<h2 class="fw-bold mb-0"
+							data-bs-title="Find the wolf pack that's right for you!🐺" data-bs-toggle="tooltip" data-bs-placement="bottom">🐺 Join Game 🐺</h2>
+							<span id="menu-multiplayer-join-game-subtitle" class="tiny"
+							data-bs-title="You can toggle between P2P and dedicated servers." data-bs-toggle="tooltip" data-bs-placement="bottom">Dedicated Server</span>
 						</div>
 					</div>
-					<div class="row justify-content-center h-100 mb-1">
-						<div class="col-12 col-md-12 col-lg-7 col-xl-8 h-100">
+					<div class="row justify-content-center h-85 mb-1">
+						<div class="col-12 col-md-12 col-lg-7 col-xl-8 h-75">
 							<div class="mt-2 mb-2 d-flex align-items-end">
-								<button id="multiplayer-refresh-games" type="button" class="btn btn-sm btn-light border-secondary-subtle tiny text-nowrap m-0"
+								<button id="multiplayer-refresh-games" type="button" class="btn btn-sm btn-secondary tiny text-nowrap m-0"
 								data-bs-title="Refresh the servers list." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
 								<div class="form-check form-switch small text-nowrap p-0 my-0 mx-3">
 									<label id="multiplayer-p2p-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light"
@@ -1078,9 +1090,9 @@
 							<div class="d-flex align-items-center bg-body-secondary border rounded-top tiny fw-bold text-center p-2">
 								<div class="col-7 border-end me-neg2px">
 									<span class="d-block d-xl-none"
-									data-bs-title="Name of the server." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-image-alt"></i></span>
+									data-bs-title="The name of the server." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-image-alt"></i></span>
 									<span class="d-none d-xl-block"
-									data-bs-title="Name of the server." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-image-alt"></i> Server</span>
+									data-bs-title="The name of the server." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-image-alt"></i> Server</span>
 								</div>
 								<div class="col-1 col-xl-2 border-end me-neg2px">
 									<span class="d-block d-xl-none"
@@ -1096,13 +1108,13 @@
 								</div>
 								<div class="col-2">&nbsp;</div>
 							</div>
-							<div id="multiplayer-games-list" class="border border-top-0 rounded-bottom p-2 h-75"></div>
+							<div id="multiplayer-games-list" class="border border-top-0 rounded-bottom shadow p-2"></div>
 						</div>
 						<div class="d-none d-lg-block col-lg-5 col-xl-4">
-							<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-5">
+							<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-44px">
 								<div class="mx-auto" data-bs-title="Customize your player." data-bs-toggle="tooltip" data-bs-placement="bottom">Customize Player</div>
 							</div>
-							<div id="multiplayer-options-player" class="border border-top-0 rounded-bottom p-2 h-75">
+							<div id="multiplayer-options-player" class="border border-top-0 rounded-bottom shadow p-2">
 								<div class="row">
 									<div class="col-12">
 										<div class="input-group input-group-sm mb-2"
@@ -1132,9 +1144,10 @@
 							</div>
 						</div>
 					</div>
-					<div class="row justify-content-center mt-auto">
+					<div class="row justify-content-center mt-3">
 						<div class="col-12 col-lg-4">
-							<button id="multiplayer-join-game-back" type="button" class="btn btn-lg btn-secondary w-100">Back</button>
+							<button id="multiplayer-join-game-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
+							data-bs-title="Back to multiplayer menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 						</div>
 					</div>
 				</div>
@@ -1143,101 +1156,106 @@
 	</div>
 	
 	<!-- Options Menu -->
-	<div id="menu-options" class="modal modal-sheet bg-body-secondary p-4 py-md-5" style="display: none;">
-		<div class="modal-dialog modal-xl h-75">
-			<div class="modal-content h-100 rounded-4 shadow">
+	<div id="menu-options" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
+		<div class="modal-dialog modal-xl h-85">
+			<div class="modal-content h-100 border-brown rounded-4 shadow-lg">
 				<div class="modal-body d-flex flex-column p-5">
 					<div class="d-flex justify-content-center">
-						<h2 class="fw-bold mb-3">Options</h2>
+						<h2 class="fw-bold mb-3"
+						data-bs-title="Puns like this, and more!" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Pawptions 📝</h2>
 					</div>
 					<div class="row justify-content-center">
 						<div class="col mb-1">
-							<ul class="nav nav-tabs" role="tablist">
-								<li class="nav-item" role="presentation">
-									<button id="options-general" data-bs-target="#options-tab-general" class="nav-link text-black" data-bs-toggle="tab" type="button" role="tab">General</button>
+							<ul class="nav nav-tabs tiny fw-bold" role="tablist">
+								<li class="nav-item" role="presentation"
+								data-bs-title="General game settings." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<button id="options-general" data-bs-target="#options-tab-general" class="nav-link" data-bs-toggle="tab" type="button" role="tab">General</button>
 								</li>
-								<li class="nav-item" role="presentation">
-									<button id="options-multiplayer" data-bs-target="#options-tab-multiplayer" class="nav-link text-black active" data-bs-toggle="tab" type="button" role="tab">Multiplayer</button>
+								<li class="nav-item" role="presentation"
+								data-bs-title="Multiplayer game settings." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<button id="options-multiplayer" data-bs-target="#options-tab-multiplayer" class="nav-link active" data-bs-toggle="tab" type="button" role="tab">Multiplayer</button>
 								</li>
-								<li class="nav-item" role="presentation">
-									<button id="options-other" data-bs-target="#options-tab-other" class="nav-link text-black" data-bs-toggle="tab" type="button" role="tab">Other</button>
+								<li class="nav-item" role="presentation"
+								data-bs-title="Something else! Who knows?!" data-bs-toggle="tooltip" data-bs-placement="bottom">
+									<button id="options-other" data-bs-target="#options-tab-other" class="nav-link" data-bs-toggle="tab" type="button" role="tab">Other</button>
 								</li>
 							</ul>
 						</div>
 					</div>
 					<div class="row justify-content-center">
-						<div class="col mb-5">
-							<div class="tab-content">
-								<div id="options-tab-general" class="tab-pane fade"  role="tabpanel">Hello world.</div>
-								<div id="options-tab-multiplayer" class="tab-pane fade show active"  role="tabpanel">
-									<div class="row">
+						<div class="col">
+							<div class="tab-content h-100">
+								<div id="options-tab-general" class="h-100 tab-pane fade"  role="tabpanel">N/A</div>
+								<div id="options-tab-multiplayer" class="h-100 tab-pane fade show active"  role="tabpanel">
+									<div class="row mb-3 h-100">
 										<div class="col-12 col-lg-6">
-											<div class="row">
-												<div class="col-12 pt-2">
-													Player Settings
-												</div>
+											<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-2">
+												<div class="mx-auto" data-bs-title="Customize your player." data-bs-toggle="tooltip" data-bs-placement="bottom">Player Settings</div>
 											</div>
-											<div class="row">
-												<div class="col-12 col-xl-9">
-													<div class="input-group input-group-sm mt-2 mb-3"
-													data-bs-title="Enter a nickname for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
-														<span class="d-block input-group-text col-12 col-sm-4">Nickname:</span>
-														<input id="options-player-name" class="form-control form-control-sm" type="text">
+											<div id="multiplayer-options-player" class="border border-top-0 rounded-bottom shadow p-2">
+												<div class="row">
+													<div class="col-12">
+														<div class="input-group input-group-sm mb-2"
+														data-bs-title="Enter a nickname for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
+															<span class="d-block input-group-text col-12 col-sm-4">Nickname:</span>
+															<input id="options-player-name" class="form-control form-control-sm" type="text">
+														</div>
 													</div>
 												</div>
-											</div>
-											<div class="row">
-												<div class="col-12 col-xl-9">
-													<div class="input-group input-group-sm mt-2 mb-3">
-														<div class="d-block input-group-text col-12 col-sm-4">
-															<span class="mx-auto mt-0"
-															data-bs-title="Pick a colour for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">Colour:</span>
-														</div>
-														<div id="options-player-colour-picker" class="border col-12 col-sm-8 py-1">
+												<div class="row">
+													<div class="col-12">
+														<div class="input-group input-group-sm">
+															<div class="d-block input-group-text col-12 col-sm-4">
+																<span class="mx-auto mt-0"
+																data-bs-title="Pick a colour for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">Colour:</span>
+															</div>
+															<div id="options-player-colour-picker" class="border col-12 col-sm-8 py-1">
 															<div id="options-player-colour-grid" class="mt-1 mb-2"></div>
 															<div id="options-player-colour-info" class="my-1">
 																<input id="options-player-selected-colour" value="#CCCCCC" class="form-control form-control-color" type="color"
 																data-bs-title="Pick a custom colour for yourself in multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
 															</div>
 														</div>
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-										<div class="col-12 col-lg-6 border-start-lg">
-											<div class="row">
-												<div class="col-12 pt-2">
-													Server Settings
-												</div>
+										<div class="col-12 col-lg-6 border-start-lg-brown">
+											<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-2">
+												<div class="mx-auto" data-bs-title="Customize your multiplayer server connections." data-bs-toggle="tooltip" data-bs-placement="bottom">Server Settings</div>
 											</div>
-											<div class="row">
-												<div class="col-12 col-xl-9">
-													<div class="input-group input-group-sm mt-2 mb-3"
-													data-bs-title="Enter the file path or URL of the custom dedicated server list you wish to use.<br />(Defaults to local file path)." data-bs-toggle="tooltip" data-bs-placement="bottom">
-														<span class="d-block input-group-text text-small col-12 col-sm-5">Dedicated Server List:</span>
-														<input id="options-custom-dedicated-server-list" class="form-control form-control-sm" type="text">
+											<div id="multiplayer-options-server" class="border border-top-0 rounded-bottom shadow p-2">
+												<div class="row">
+													<div class="col-12">
+														<div class="input-group input-group-sm mb-2"
+														data-bs-title="Enter the file path or URL of the custom dedicated server list you wish to use.<br />(Defaults to local file path)." data-bs-toggle="tooltip" data-bs-placement="bottom">
+															<span class="d-block input-group-text text-small col-12 col-sm-5">Dedicated Server List:</span>
+															<input id="options-custom-dedicated-server-list" class="form-control form-control-sm" type="text">
+														</div>
 													</div>
 												</div>
-											</div>
-											<div class="row">
-												<div class="col-12 col-xl-9">
-													<div class="input-group input-group-sm mt-2 mb-3"
-													data-bs-title="Enter the IP address or URL of the WebRTC signaling server you wish to use find P2P multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
-														<span class="d-block input-group-text text-small col-12 col-sm-5">P2P Signaling Server:</span>
-														<input id="options-signaling-server" class="form-control form-control-sm" type="text">
+												<div class="row">
+													<div class="col-12">
+														<div class="input-group input-group-sm"
+														data-bs-title="Enter the IP address or URL of the WebRTC signaling server you wish to use find P2P multiplayer games." data-bs-toggle="tooltip" data-bs-placement="bottom">
+															<span class="d-block input-group-text text-small col-12 col-sm-5">P2P Signaling Server:</span>
+															<input id="options-signaling-server" class="form-control form-control-sm" type="text">
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
 									</div>
 								</div>
-								<div id="options-tab-other" class="tab-pane fade" role="tabpanel">This is a test.</div>
+								<div id="options-tab-other" class="h-100 tab-pane fade" role="tabpanel">N/A</div>
 							</div>
 						</div>
 					</div>
 					<div class="row justify-content-center mt-auto">
-						<div class="col-12 col-lg-6">
-							<button id="options-menu-back" type="button" class="btn btn-lg btn-secondary w-100">Back</button>
+						<div class="col-12 col-lg-4">
+							<button id="options-menu-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
+							data-bs-title="Back to main menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 						</div>
 					</div>
 				</div>
@@ -1248,19 +1266,23 @@
 	<!-- Pause Menu -->
 	<div id="menu-pause" class="modal modal-sheet p-4 py-md-5" style="display: none;">
 		<div class="modal-dialog">
-			<div class="modal-content rounded-4 shadow">
+			<div class="modal-content border-brown rounded-4 shadow-lg">
 				<div class="modal-body p-5">
 					<div class="d-flex justify-content-center">
-						<h2 class="fw-bold mb-3">Game Pawbsed 🐾</h2>
+						<h2 class="fw-bold mb-3"
+						data-bs-title="...unless it's multiplayer." data-bs-toggle="tooltip" data-bs-placement="bottom">Game Pawbsed 🐾</h2>
 					</div>
 					<div class="d-flex mb-4 justify-content-center">
-						<button id="pause-menu-resume" type="button" class="btn btn-lg btn-secondary w-100">Resume</button>
+						<button id="pause-menu-resume" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Resume the game." data-bs-toggle="tooltip" data-bs-placement="bottom">Resume</button>
 					</div>
 					<div class="d-flex mb-1 justify-content-center">
-						<button id="pause-menu-quit" type="button" class="btn btn-lg btn-secondary w-100">Main Menu</button>
+						<button id="pause-menu-quit" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Quit the game and return to the main menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Main Menu</button>
 					</div>
 					<div class="d-flex justify-content-center">
-						<button id="pause-menu-exit" type="button" class="btn btn-lg btn-secondary w-100">Exit Game</button>
+						<button id="pause-menu-exit" type="button" class="btn btn-lg btn-secondary shadow w-100"
+						data-bs-title="Exit the game." data-bs-toggle="tooltip" data-bs-placement="bottom">Exit Game</button>
 					</div>
 					
 				</div>

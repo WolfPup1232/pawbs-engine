@@ -7,6 +7,7 @@ import Controls from './controls.class.js';
 
 // Static Class Imports
 import Game from './game.class.js';
+import Editor from './editor.class.js';
 
 /**
  * The (multiplayer) game. Handles joining/hosting multiplayer games and multiplayer server communications.
@@ -141,12 +142,45 @@ class Multiplayer
 				 PLAYER_JOINED: 402,
 				PLAYER_UPDATED: 403,
 				   PLAYER_LEFT: 404,
+				  OBJECT_ADDED: 405,
+				OBJECT_UPDATED: 406,
+				OBJECT_REMOVED: 407,
+				   
 				
 				// Actions
 				   JOINED_GAME: 501,
 				 UPDATE_PLAYER: 502,
+					ADD_OBJECT: 503,
+				 UPDATE_OBJECT: 504,
+				 REMOVE_OBJECT: 505,
 				
 			};
+			
+		//#endregion
+		
+		
+		//#region [Message Limits]
+			
+			/**
+			 * A timestamp indicating the last time the player attempted to send a player update.
+			 */
+			static player_update_last = 0;
+			
+			/**
+			 * The number of milliseconds a player must wait before they can send another player update. (16ms = 62.5fps)
+			 */
+			static player_update_rate = 16;
+			
+			
+			/**
+			 * A timestamp indicating the last time the player attempted to send an object update.
+			 */
+			static object_update_last = 0;
+			
+			/**
+			 * The number of milliseconds a player must wait before they can send another object update. (42ms = 23.8fps)
+			 */
+			static object_update_rate = 42;
 			
 		//#endregion
 		
@@ -203,16 +237,9 @@ class Multiplayer
 						case this.MessageTypes.DEDICATED_JOINED_GAME:
 						{
 							
-							// Get message data
-							const game = data.game;
-							const player = data.player;
-							
-							// Forward message data as JOINED_GAME event
-							this.handleMessage({
-								type: 		Multiplayer.MessageTypes.JOINED_GAME,
-								game: 		game,
-								player: 	player,
-							});
+							// Forward message data as JOINED_GAME event for compatibility
+							data.type = Multiplayer.MessageTypes.JOINED_GAME
+							this.handleMessage(data);
 							
 							break;
 						}
@@ -427,11 +454,12 @@ class Multiplayer
 							{
 								
 								// Send a JOINED_GAME event back to the player who joined the game
-								this.p2p_connections[player.id].p2p_data_channel.send(JSON.stringify({
+								this.send(this.p2p_connections[player.id].p2p_data_channel, {
 									type: 		Multiplayer.MessageTypes.JOINED_GAME,
 									game: 		Game.simplified,
 									player: 	player,
-								}));
+									editor:		Editor.simplified,
+								});
 								
 								// Broadcast a PLAYER_JOINED event to all players except for the player which was just sent that JOINED_GAME event right above this
 								this.broadcastP2P({
@@ -440,6 +468,37 @@ class Multiplayer
 								}, player.id);
 								
 							}
+							
+							break;
+						}
+						
+						// PLAYER_LEFT
+						case this.MessageTypes.PLAYER_LEFT:
+						{
+							
+							// Get message data
+							const player_id = data.player_id;
+							
+							// If the multiplayer connection is via P2P and the current player is the host...
+							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
+							{
+								
+								// Broadcast a PLAYER_LEFT event to all players
+								this.broadcastP2P({
+									type: 		 Multiplayer.MessageTypes.PLAYER_LEFT,
+									player_id: 	 player_id,
+								});
+								
+							}
+							
+							// Add player left message to chat log
+							Game.ui.chat.addChatMessage(data);
+							
+							// Remove the player from the game world
+							Game.world.removeObject(Game.players[player_id].camera);
+							
+							// Remove the player from the game
+							delete Game.players[player_id];
 							
 							break;
 						}
@@ -478,33 +537,114 @@ class Multiplayer
 							break;
 						}
 						
-						// PLAYER_LEFT
-						case this.MessageTypes.PLAYER_LEFT:
+						// OBJECT_ADDED
+						case this.MessageTypes.OBJECT_ADDED:
 						{
 							
 							// Get message data
 							const player_id = data.player_id;
+							const object = data.object;
+							
+							// Only update players who aren't the current player...
+							if (Game.player.id != player_id)
+							{
+								
+								// Get object type from message data
+								const ObjectType = THREE[object.type] || THREE.Object3D;
+								
+								// Initialize new object from message data
+								const new_object = new ObjectType();
+								new_object.setSimplified(object);
+								
+								// Add new object to game
+								Game.world.addObject(new_object, false);
+								
+							}
 							
 							// If the multiplayer connection is via P2P and the current player is the host...
 							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
 							{
 								
-								// Broadcast a PLAYER_LEFT event to all players
-								this.broadcastP2P({
-									type: 		 Multiplayer.MessageTypes.PLAYER_LEFT,
-									player_id: 	 player_id,
-								});
+								// Broadcast a OBJECT_UPDATED event to all players except for the current player
+								this.broadcastP2P(data, Game.player.id);
 								
 							}
 							
-							// Add player left message to chat log
-							Game.ui.chat.addChatMessage(data);
+							break;
+						}
+						
+						// OBJECT_UPDATED
+						case this.MessageTypes.OBJECT_UPDATED:
+						{
 							
-							// Remove the player from the game world
-							Game.world.removeObject(Game.players[player_id].camera);
+							// Get message data
+							const player_id = data.player_id;
+							const object = data.object;
 							
-							// Remove the player from the game
-							delete Game.players[player_id];
+							// Only update players who aren't the current player...
+							if (Game.player.id != player_id)
+							{
+								
+								// Get object by ID
+								const update_object = Game.world.scene.getObjectByProperty('uuid', object.uuid);
+								
+								// If object exists...
+								if (update_object)
+								{
+								
+									// Update object
+									update_object.setSimplified(object);
+								
+								}
+								
+							}
+							
+							// If the multiplayer connection is via P2P and the current player is the host...
+							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
+							{
+								
+								// Broadcast a OBJECT_UPDATED event to all players except for the current player
+								this.broadcastP2P(data, Game.player.id);
+								
+							}
+							
+							break;
+						}
+						
+						// OBJECT_REMOVED
+						case this.MessageTypes.OBJECT_REMOVED:
+						{
+							
+							// Get message data
+							const player_id = data.player_id;
+							const object_id = data.object_id;
+							
+							// Only update players who aren't the current player...
+							if (Game.player.id != player_id)
+							{
+								
+								// Get object by ID
+								const object = Game.world.scene.getObjectByProperty('uuid', object_id);
+								
+								// If object exists...
+								if (object)
+								{
+								
+									// Remove object
+									Game.world.removeObject(object, false);
+								
+								}
+								
+							}
+							
+							// If the multiplayer connection is via P2P and the current player is the host...
+							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
+							{
+								
+								// Broadcast a OBJECT_REMOVED event to all players except for the current player
+								this.broadcastP2P(data, Game.player.id);
+								
+							}
 							
 							break;
 						}
@@ -521,6 +661,7 @@ class Multiplayer
 							// Get message data
 							const game = data.game;
 							const player = data.player;
+							const editor = data.editor;
 							
 							// Set game ID
 							Game.id = game.id;
@@ -543,6 +684,9 @@ class Multiplayer
 									
 								}
 							});
+							
+							// Set editor state
+							Editor.simplified = editor;
 							
 							// Add player joined message to chat log
 							Game.ui.chat.addChatMessage(data);
@@ -574,12 +718,22 @@ class Multiplayer
 				 * Pings the specified server and attempts to update its server listing.
 				 * @param {string} server_address The address of the server to ping.
 				 * @param {number} server_index Optional index of the server in its list.
+				 * @param {boolean} skip_compression Flag indicating whether or not to skip encoding and compressing message data.
 				 */
-				static ping(server_address, server_index = null)
+				static ping(server_address, server_index = null, skip_compression = false)
 				{
 					
 					// Connect to the server
 					let server = new WebSocket(server_address);
+					
+					// If not flagged to skip compression...
+					if (!skip_compression)
+					{
+						
+						// Set connection binary type for compressing and encoding messages
+						server.binaryType = "arraybuffer";
+						
+					}
 					
 					// Record ping start time
 					let start = Date.now();
@@ -588,18 +742,25 @@ class Multiplayer
 					server.onopen = () => {
 						
 						// PING the server
-						server.send(JSON.stringify({
+						this.send(server, {
 							type: 	Multiplayer.MessageTypes.PING,
-						}));
+						}, skip_compression);
 						
 					};
 					
 					// Server message event
 					server.onmessage = (event) => {
 						
-						// Get message data and parse it
+						// Get message data and parse it according to its source...
 						let data;
-						try { data = JSON.parse(event.data); } catch { return; }
+						if (!skip_compression)
+						{
+							try { data = msgpack.decode(fflate.decompressSync(new Uint8Array(event.data))); } catch { return; }
+						}
+						else
+						{
+							try { data = JSON.parse(event.data); } catch { return; }
+						}
 						
 						// Handle message by type...
 						switch (data.type)
@@ -697,6 +858,10 @@ class Multiplayer
 						// Signaling server connection open event
 						this.server_signaling.onopen = () => {
 							
+							// Server is online
+							Game.ui.menus.updateHostGameButton(false);
+							Game.ui.menus.updateHostGameServerStatus("");
+							
 							// Signaling server connection opened
 							if (callback)
 							{
@@ -713,12 +878,14 @@ class Multiplayer
 							
 							// Handle message by type
 							this.handleMessage(data);
+							
 						};
 						
 						// Signaling server connection error event
 						this.server_signaling.onerror = () => {
 							
 							// Server is offline
+							Game.ui.menus.updateHostGameButton(true);
 							Game.ui.menus.updateHostGameServerStatus("Could not reach signaling server '" + server_address + "'.");
 							
 						};
@@ -737,6 +904,7 @@ class Multiplayer
 						
 						// Connect to the dedicated server
 						this.server_dedicated = new WebSocket(server_address);
+						this.server_dedicated.binaryType = "arraybuffer";
 						
 						// Dedicated server connection open event
 						this.server_dedicated.onopen = () => {
@@ -753,7 +921,7 @@ class Multiplayer
 						this.server_dedicated.onmessage = (event) => {
 							
 							// Get message data
-							const data = JSON.parse(event.data);
+							const data = Game.msgpack.decode(Game.fflate.decompressSync(new Uint8Array(event.data)));
 							
 							// Handle message by type
 							this.handleMessage(data);
@@ -816,13 +984,13 @@ class Multiplayer
 					{
 						
 						// Send a P2P_HOST_GAME message to the P2P signaling server
-						Multiplayer.server_signaling.send(JSON.stringify({
+						Multiplayer.send(Multiplayer.server_signaling, {
 							type: 			Multiplayer.MessageTypes.P2P_HOST_GAME,
 							game_id: 		Game.id,
 							game_name:		Game.name,
 							player_id:		Game.player.id,
 							player_name: 	Game.player.name,
-						}));
+						}, true);
 						
 					}
 					
@@ -855,11 +1023,11 @@ class Multiplayer
 					{
 						
 						// Send a DEDICATED_JOIN_GAME message to the dedicated server
-						Multiplayer.server_dedicated.send(JSON.stringify({
+						Multiplayer.send(Multiplayer.server_dedicated, {
 							type:		Multiplayer.MessageTypes.DEDICATED_JOIN_GAME,
 							game_id:	Game.id,
 							player:		Game.player.simplified
-						}));
+						});
 						
 						
 					} // Otherwise, if the player is connected to a P2P signaling server...
@@ -867,12 +1035,12 @@ class Multiplayer
 					{
 						
 						// Send a P2P_JOIN_GAME message to the signaling server
-						Multiplayer.server_signaling.send(JSON.stringify({
+						Multiplayer.send(Multiplayer.server_signaling, {
 							type: 			Multiplayer.MessageTypes.P2P_JOIN_GAME,
 							game_id: 		Game.id,
 							player_id:		Game.player.id,
 							player_name: 	Game.player.name,
-						}));
+						}, true);
 						
 					}
 					
@@ -942,7 +1110,7 @@ class Multiplayer
 							{
 								
 								// Send candidate info to opposite P2P connection peer (client->host & host->client, it's actually a 2-way exchange)
-								this.server_signaling.send(JSON.stringify({
+								this.send(this.server_signaling, {
 									type: 		this.MessageTypes.P2P_CANDIDATE,
 									game_id: 	Game.id,
 									player_id:	Game.player.id,
@@ -951,7 +1119,7 @@ class Multiplayer
 													type: 		'candidate',
 													candidate:  event.candidate,
 												}
-								}));
+								}, true);
 								
 							}
 							
@@ -968,6 +1136,7 @@ class Multiplayer
 						
 						// Initialize P2P data channel
 						const data_channel = this.p2p_connections[player_id].p2p_data_channel;
+						data_channel.binaryType = "arraybuffer";
 						
 						// Data channel connection open event
 						data_channel.onopen = () => {
@@ -991,10 +1160,10 @@ class Multiplayer
 							{
 								
 								// Notify P2P host that player successfully connected
-								data_channel.send(JSON.stringify({
+								this.send(data_channel, {
 									type: 		 Multiplayer.MessageTypes.PLAYER_JOINED,
 									player: 	 Game.player.simplified
-								}));
+								});
 								
 							}
 							
@@ -1004,7 +1173,7 @@ class Multiplayer
 						data_channel.onmessage = (event) => {
 							
 							// Get message data
-							const data = JSON.parse(event.data);
+							const data = Game.msgpack.decode(Game.fflate.decompressSync(new Uint8Array(event.data)));
 							
 							// Handle message by type
 							this.handleMessage(data);
@@ -1045,7 +1214,7 @@ class Multiplayer
 							{
 								
 								// Send candidate info signal to opposing P2P connection peer
-								this.server_signaling.send(JSON.stringify({
+								this.send(this.server_signaling, {
 									type: 		this.MessageTypes.P2P_CANDIDATE,
 									game_id: 	Game.id,
 									player_id:	Game.player.id,
@@ -1054,7 +1223,7 @@ class Multiplayer
 													type: 		'candidate',
 													candidate:  event.candidate,
 												}
-								}));
+								}, true);
 								
 							}
 							
@@ -1066,13 +1235,13 @@ class Multiplayer
 							.then(() => {
 								
 								// Send WebRTC data channel offer signal to P2P client
-								this.server_signaling.send(JSON.stringify({
+								this.send(this.server_signaling, {
 									type: 		this.MessageTypes.P2P_OFFER,
 									host_id:	Game.player.id,
 									game_id: 	Game.id,
 									player_id:	player_id,
 									signal: 	this.p2p_connections[player_id].p2p_connection.localDescription
-								}));
+								}, true);
 								
 							})
 							.catch(error => console.error(error));
@@ -1106,12 +1275,12 @@ class Multiplayer
 								.then(() => {
 									
 									// Send WebRTC data channel answer signal to P2P host
-									this.server_signaling.send(JSON.stringify({
+									this.send(this.server_signaling, {
 										type: 		this.MessageTypes.P2P_ANSWER,
 										game_id: 	Game.id,
 										player_id: 	Game.player.id,
 										signal: 	this.p2p_connections[host_id].p2p_connection.localDescription
-									}));
+									}, true);
 									
 								}).catch(error => console.error(error));
 								
@@ -1182,7 +1351,7 @@ class Multiplayer
 				/**
 				 * Broadcasts the specified data to all of the host's P2P connections.
 				 *
-				 * @param {object} data The message to be broadcast to all of the host's connected P2P clients.
+				 * @param {Object} data The message to be broadcast to all of the host's connected P2P clients.
 				 * @param {string} id_skip The player ID to skip over sending a broadcast to.
 				 */
 				static broadcastP2P(data, id_skip = null)
@@ -1208,7 +1377,7 @@ class Multiplayer
 								{
 									
 									// Send specified message over data channel
-									p2p_connection.p2p_data_channel.send(JSON.stringify(data));
+									this.send(p2p_connection.p2p_data_channel, data);
 									
 								}
 								
@@ -1243,102 +1412,223 @@ class Multiplayer
 					if (message != "")
 					{
 						
-						// If the player is connected to a dedicated server...
-						if (this.connection_type == this.ConnectionTypes.DedicatedClient)
-						{
+						// Initialize message data
+						const data = {
+							type: 		Multiplayer.MessageTypes.CHAT,
+							player_id: 	Game.player.id,
+							message: 	message,
+						};
+						
+						// Send message data
+						this.sendByConnectionType(data, Multiplayer.MessageTypes.CHAT, Multiplayer.MessageTypes.CHAT, false,
+						function() {
 							
-							// If the dedicated server is ready for broadcast...
-							if (this.server_dedicated && this.server_dedicated.readyState === WebSocket.OPEN)
-							{
-								
-								// Send the chat message to the dedicated server for broadcast
-								this.server_dedicated.send(JSON.stringify({
-									type: 		Multiplayer.MessageTypes.CHAT,
-									player_id: 	Game.player.id,
-									message: 	message,
-								}));
-								
-								// Clear the chat input box
-								Game.ui.chat.clearChatMessage();
-								
-							}
+							// Dedicated Server Callback
 							
+							// Clear the chat input box
+							Game.ui.chat.clearChatMessage();
 							
-						} // Otherwise, if the player is connected to a P2P signaling server...
-						else if (this.connection_type == this.ConnectionTypes.P2PClient)
-						{
+						},
+						function() {
 							
-							// If the player is the P2P host...
-							if (this.p2p_is_host)
-							{
-								
-								// Forward message data as CHAT event
-								this.handleMessage({
-									type: 		Multiplayer.MessageTypes.CHAT,
-									player_id:	Game.player.id,
-									message:	message,
-								});
-								
-								// Clear the chat input box
-								Game.ui.chat.clearChatMessage();
-								
-								
-							} // Otherwise, if the player is not the P2P host...
-							else
-							{
-								
-								// Get the P2P host's data channel
-								const p2p_data_channel = this.p2p_connections[this.p2p_host_id].p2p_data_channel;
-								
-								// If the P2P host's data channel is ready for broadcast...
-								if (p2p_data_channel && p2p_data_channel.readyState === 'open')
-								{
-									
-									// Send the chat message to the P2P host for broadcast
-									const data = {
-										type: 	 	Multiplayer.MessageTypes.CHAT,
-										player_id: 	Game.player.id,
-										message: 	message,
-									};
-									p2p_data_channel.send(JSON.stringify(data));
-									
-									// Clear the chat input box
-									Game.ui.chat.clearChatMessage();
-									
-									// Add chat message to chat log
-									Game.ui.chat.addChatMessage(data);
-									
-								}
-								
-							}
+							// P2P Client Callback
 							
-						}
+							// Clear the chat input box
+							Game.ui.chat.clearChatMessage();
+							
+							// Add chat message to chat log
+							Game.ui.chat.addChatMessage(data);
+							
+						},
+						function() {
+							
+							// P2P Host Callback
+							
+							// Clear the chat input box
+							Game.ui.chat.clearChatMessage();
+							
+						});
 						
 					}
 					
 				}
 				
 				/**
-				 * Broadcasts an update with each of the current player's modified attributes to all players in the game.
+				 * Broadcasts an update with the current player's attributes to all players in the game.
 				 */
 				static sendPlayerUpdate()
 				{
 					
-					// If the player is connected to a P2P signaling server...
-					if (this.connection_type == this.ConnectionTypes.P2PClient)
+					// Get timestamp
+					const now = performance.now();
+					
+					// If the player's update rate allows them to send a message...
+					if (now - this.player_update_last >= this.player_update_rate)
 					{
+						
+						// Set new player update timestamp
+						this.player_update_last = now;
+						
+						// Initialize message data
+						const data = {
+							type: 		Multiplayer.MessageTypes.PLAYER_UPDATED,
+							player_id: 	Game.player.id,
+							position: 	{ x: Game.player.position.x.toFixed(4), y: Game.player.position.y.toFixed(4), z: Game.player.position.z.toFixed(4) },
+							rotation: 	{ x: Game.player.rotation._x.toFixed(4), y: Game.player.rotation._y.toFixed(4), z: Game.player.rotation._z.toFixed(4) },
+						};
+						
+						// Send message data
+						this.sendByConnectionType(data, Multiplayer.MessageTypes.UPDATE_PLAYER, Multiplayer.MessageTypes.PLAYER_UPDATED);
+						
+					}
+					
+				}
+				
+				/**
+				 * Broadcasts an update to add the specified object to the world.
+				 *
+				 * @param {THREE.Object3D} object The object to add to the world.
+				 */
+				static sendObjectAdd(object)
+				{
+					
+					// If the object isn't empty...
+					if (object)
+					{
+						
+						// Initialize message data
+						const data = {
+							type: 		Multiplayer.MessageTypes.OBJECT_ADDED,
+							player_id: 	Game.player.id,
+							object: 	object.simplified(),
+						};
+						
+						// Send message data
+						this.sendByConnectionType(data, Multiplayer.MessageTypes.ADD_OBJECT, Multiplayer.MessageTypes.OBJECT_ADDED);
+						
+					}
+					
+				}
+				
+				/**
+				 * Broadcasts an update with the specified object's attributes to all players in the game.
+				 *
+				 * @param {THREE.Object3D} object The object to be updated.
+				 */
+				static sendObjectUpdate(object)
+				{
+					
+					// If the object exists...
+					if (object)
+					{
+						
+						// Initialize message data
+						const data = {
+							type: 		Multiplayer.MessageTypes.OBJECT_UPDATED,
+							player_id: 	Game.player.id,
+							object: 	object,
+						};
+						
+						// Send message data
+						this.sendByConnectionType(data, Multiplayer.MessageTypes.UPDATE_OBJECT, Multiplayer.MessageTypes.OBJECT_UPDATED);
+						
+					}
+					
+				}
+				
+				/**
+				 * Broadcasts an update to remove the specified object from the world.
+				 *
+				 * @param {THREE.Object3D} object The object to be removed from the world.
+				 */
+				static sendObjectRemove(object)
+				{
+					
+					// If the object exists...
+					if (object)
+					{
+						
+						// Initialize message data
+						const data = {
+							type: 		Multiplayer.MessageTypes.REMOVE_OBJECT,
+							player_id: 	Game.player.id,
+							object_id: 	object.uuid,
+						};
+						
+						// Send message data
+						this.sendByConnectionType(data, Multiplayer.MessageTypes.REMOVE_OBJECT, Multiplayer.MessageTypes.OBJECT_REMOVED);
+						
+					}
+					
+				}
+				
+			//#endregion
+			
+			
+			//#region [Functions]
+				
+				/**
+				 * Sends the provided message data through the player's active multiplayer connection, optionally modifying message type and invoking callback methods according to multiplayer connection type.
+				 *
+				 * @param {Object} data The message data to be sent.
+				 * @param {Multiplayer.MessageTypes} type_dedicated Optional message type to be sent to a dedicated server.
+				 * @param {Multiplayer.MessageTypes} type_p2p Optional message type to be sent to a P2P host.
+				 * @param {boolean} skip_compression Optional flag indicating whether or not to skip encoding and compressing message data.
+				 * @param {Function} dedicatedCallback Optional callback function which is invoked after message data is sent to a dedicated server.
+				 * @param {Function} p2pClientCallback Optional callback function which is invoked after message data is sent to a P2P host.
+				 * @param {Function} p2pHostCallback Optional callback function which is invoked after message data is broadcast to all P2P clients.
+				 */
+				static sendByConnectionType(data, type_dedicated = null, type_p2p = null, skip_compression = false, dedicatedCallback = null, p2pClientCallback = null, p2pHostCallback = null)
+				{
+					
+					// If the player is connected to a dedicated server...
+					if (this.connection_type == this.ConnectionTypes.DedicatedClient)
+					{
+						
+						// If the dedicated server is ready for broadcast...
+						if (this.server_dedicated && this.server_dedicated.readyState === WebSocket.OPEN)
+						{
+							
+							// Set type to be received by a dedicated server...
+							if (type_dedicated)
+							{
+								data.type = type_dedicated;
+							}
+							
+							// Send the message to the dedicated server for broadcast
+							this.send(this.server_dedicated, data, skip_compression);
+							
+							// Invoke dedicated server message sent callback...
+							if (dedicatedCallback)
+							{
+								dedicatedCallback();
+							}
+							
+						}
+						
+						
+					} // Otherwise, if the player is connected to a P2P signaling server...
+					else if (this.connection_type == this.ConnectionTypes.P2PClient)
+					{
+						
+						// Set type to be received by a P2P host...
+						if (type_p2p)
+						{
+							data.type = type_p2p;
+						}
 						
 						// If the player is the P2P host...
 						if (this.p2p_is_host)
 						{
 							
-							// Forward message data as PLAYER_UPDATED event
-							this.handleMessage({
-								type: 		Multiplayer.MessageTypes.PLAYER_UPDATED,
-								player_id: 	Game.player.id,
-								position: 	{ x: Game.player.position.x.toFixed(4), y: Game.player.position.y.toFixed(4), z: Game.player.position.z.toFixed(4) },
-								rotation: 	{ x: Game.player.rotation._x.toFixed(4), y: Game.player.rotation._y.toFixed(4), z: Game.player.rotation._z.toFixed(4) },
-							});
+							// Forward message data to self as a received event for broadcast to all peers
+							this.handleMessage(data);
+							
+							// Invoke P2P host message broadcast callback...
+							if (p2pHostCallback)
+							{
+								p2pHostCallback();
+							}
 							
 							
 						} // Otherwise, if the player is not the P2P host...
@@ -1352,34 +1642,16 @@ class Multiplayer
 							if (p2p_data_channel && p2p_data_channel.readyState === 'open')
 							{
 								
-								// Send the PLAYER_UPDATED message to the P2P host for broadcast
-								p2p_data_channel.send(JSON.stringify({
-									type: 		Multiplayer.MessageTypes.PLAYER_UPDATED,
-									player_id: 	Game.player.id,
-									position: 	{ x: Game.player.position.x.toFixed(4), y: Game.player.position.y.toFixed(4), z: Game.player.position.z.toFixed(4) },
-									rotation: 	{ x: Game.player.rotation._x.toFixed(4), y: Game.player.rotation._y.toFixed(4), z: Game.player.rotation._z.toFixed(4) },
-								}));
+								// Send the message to the P2P host for broadcast
+								this.send(p2p_data_channel, data, skip_compression);
+								
+								// Invoke P2P client message sent callback...
+								if (p2pClientCallback)
+								{
+									p2pClientCallback();
+								}
 								
 							}
-							
-						}
-						
-						
-					} // Otherwise, if the player is connected to a dedicated server...
-					else
-					{
-						
-						// If the dedicated server is ready for broadcast...
-						if (this.server_dedicated && this.server_dedicated.readyState === WebSocket.OPEN)
-						{
-							
-							// Send the UPDATE_PLAYER message to the dedicated server for broadcast
-							this.server_dedicated.send(JSON.stringify({
-								type: 		Multiplayer.MessageTypes.UPDATE_PLAYER,
-								player_id: 	Game.player.id,
-								position: 	{ x: Game.player.position.x.toFixed(4), y: Game.player.position.y.toFixed(4), z: Game.player.position.z.toFixed(4) },
-								rotation: 	{ x: Game.player.rotation._x.toFixed(4), y: Game.player.rotation._y.toFixed(4), z: Game.player.rotation._z.toFixed(4) },
-							}));
 							
 						}
 						
@@ -1387,10 +1659,40 @@ class Multiplayer
 					
 				}
 				
-			//#endregion
-			
-			
-			//#region [Functions]
+				/**
+				 * Sends the provided message data through the specified communication channel (either a WebSocket or an RTCDataChannel).
+				 *
+				 * @param {Object} channel The communication channel through which to send data. Object must have a send() function.
+				 * @param {Object} data The message data to be sent.
+				 * @param {boolean} skip_compression Flag indicating whether or not to skip encoding and compressing message data.
+				 */
+				static send(channel, data, skip_compression = false)
+				{
+					
+					// If communication channel object has a send() function...
+					if (typeof channel["send"] === 'function')
+					{
+						
+						// If flagged to skip compression...
+						if (skip_compression)
+						{
+							
+							// Send message data as regular JSON string
+							channel.send(JSON.stringify(data));
+							
+							
+						} // Otherwise, if not flagged to skip compression...
+						else
+						{
+							
+							// Send message data after encoding it with MessagePack and compressing it with fflate 
+							channel.send(Game.fflate.compressSync(Game.msgpack.encode(data)));
+							
+						}
+						
+					}
+					
+				}
 				
 				/**
 				 * Lists all players in the current game with only the attributes which are required to initialize them in another player's game.
@@ -1435,7 +1737,7 @@ class Multiplayer
 					let new_player = new Player();
 					new_player.id = player.id;
 					new_player.name = player.name;
-					new_player.colour = new THREE.Color(player.colour);
+					new_player.colour = new THREE.Color(player.colour.r, player.colour.g, player.colour.b)
 					new_player.position.set(player.position.x, player.position.y, player.position.z);
 					new_player.rotation.set(player.rotation.x, player.rotation.y, player.rotation.z);
 					

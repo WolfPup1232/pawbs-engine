@@ -4,6 +4,7 @@
 
 // Static Class Imports
 import Game from '../../../classes/game.class.js';
+import Multiplayer from '../../../classes/multiplayer.class.js';
 
 import {
 	BoxGeometry,
@@ -526,6 +527,17 @@ class CustomTransformControls extends Object3D {
 
 			}
 
+		}
+		
+		// Attempt to send multiplayer object update...
+		if (Multiplayer.enabled)
+		{
+			const now = performance.now();
+			if (now - Multiplayer.object_update_last >= Multiplayer.object_update_rate)
+			{
+				Multiplayer.object_update_last = now;
+				Multiplayer.sendObjectUpdate(object.simplified());
+			}
 		}
 
 		this.dispatchEvent( _changeEvent );

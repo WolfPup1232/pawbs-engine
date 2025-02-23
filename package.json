@@ -6,7 +6,7 @@
 	"scripts": {
 		"tauri": "tauri",
 		"start": "concurrently \"node ./src/servers/dedicated-server.js shortcut\" \"node ./src/servers/http-server.js shortcut\" \"node ./src/servers/signaling-server.js shortcut\"",
-		"container": "concurrently \"node ./src/servers/dedicated-server.js container\" \"node ./src/servers/http-server.js container\" \"node ./src/servers/signaling-server.js container\""
+		"container": "concurrently \"node ./src/servers/dedicated-server.js remote container\" \"node ./src/servers/http-server.js remote container\" \"node ./src/servers/signaling-server.js remote container\""
 	},
 	"devDependencies": {
 		"@tauri-apps/cli": "^1"
@@ -15,7 +15,9 @@
 		"concurrently": "^9.1.2",
 		"cors": "^2.8.5",
 		"express": "^4.21.2",
+		"fflate": "^0.8.2",
 		"jsdom": "^26.0.0",
+		"msgpack-lite": "^0.1.26",
 		"ws": "^8.18.0"
 	}
 }

@@ -1,6 +1,5 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
-import { CustomObjectLoader } from '../libraries/threejs/modules/CustomObjectLoader.js';
 import { CustomOutlineEffect } from '../libraries/threejs/modules/CustomOutlineEffect.js';
 
 // Static Class Imports
@@ -262,7 +261,7 @@ class Assets
 			{
 				
 				// Initialize object loader
-				let object_loader = new CustomObjectLoader();
+				let object_loader = new THREE.ObjectLoader();
 				
 				// Get list of object paths
 				this.paths_objects = object_paths;

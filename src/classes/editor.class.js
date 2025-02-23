@@ -9,6 +9,7 @@ import Game from './game.class.js';
 import Assets from './assets.class.js';
 import Shaders from './shaders.class.js';
 import Debug from './debug.class.js';
+import Multiplayer from './multiplayer.class.js';
 
 /**
  * The in-game world editor.
@@ -319,128 +320,7 @@ class Editor
 		/**
 		 * Initializes the in-game world editor.
 		 */
-		static
-		{
-			
-			// Add a deep clone function to the Object3D type along with a userData clone function to handle recursion (the Object3D's default clone method doesn't clone certain stuff, sad puppey)
-			THREE.Object3D.prototype.userDataClone = function(clone)
-			{
-				if (this.userData)
-				{
-					Object.entries(this.userData).forEach(([key, value]) => {
-						if (typeof value.clone === 'function')
-						{
-							clone.userData[key] = value.clone();
-						}
-						else
-						{
-							clone.userData[key] = structuredClone(value);
-						}
-					});
-				}
-				
-				if (this.geometry)
-				{
-					clone.geometry = this.geometry.clone();
-				}
-				
-				if (this.material)
-				{
-					clone.material = this.material.clone();
-				}
-				
-				if (this.children && this.children.length > 0)
-				{
-					for (let i = 0; i < this.children.length; i++)
-					{
-						this.children[i].userDataClone(clone.children[i]);
-					}
-				}
-			};
-			THREE.Object3D.prototype.deepClone = function()
-			{
-				const clone = this.clone(true);
-				
-				if (this.geometry)
-				{
-					clone.geometry = this.geometry.clone();
-				}
-				
-				if (this.material)
-				{
-					clone.material = this.material.clone();
-				}
-				
-				this.userDataClone(clone);
-				
-				if (this.children && this.children.length > 0)
-				{
-					for (let i = 0; i < this.children.length; i++)
-					{
-						this.children[i].userDataClone(clone.children[i]);
-					}
-				}
-				
-				return clone;
-			};
-			
-			// Add a function to the Object3D type which gets the top-most parent from an object's chain of parents' parents.
-			THREE.Object3D.prototype.getTopMostParent = function()
-			{
-				let object = this;
-				
-				while (object.parent && !(object.parent instanceof THREE.Scene))
-				{
-					object = object.parent;
-				}
-				
-				return object;
-			};
-			
-			// Add a function to the Object3D type which raycasts only objects which are not flagged to be skipped by the raycaster
-			THREE.Raycaster.prototype.intersectRaycastableObjects = function(objects, recursive = false, intersects = [])
-			{
-				
-				// Iterate through the specified list of objects...
-				for (let i = 0; i < objects.length; i++)
-				{
-					let object = objects[i];
-					
-					// Make sure the object is on the same layers as the raycaster...
-					if (object.layers.test(Game.player.raycaster.layers))
-					{
-						
-						// Skip raycasting flagged objects
-						let skip_raycast = false;
-						if (object.userData && object.userData.ignore_raycast)
-						{
-							skip_raycast = true;
-						}
-						
-						// Raycast unflagged objects
-						if (!skip_raycast)
-						{
-							object.raycast(Game.player.raycaster, intersects);
-						}
-						
-					}
-					
-					// If flagged as recursive, call this function for object's children
-					if (recursive)
-					{
-						Game.player.raycaster.intersectRaycastableObjects(object.children, true, intersects);
-					}
-				}
-				
-				// Sort list of intersected objects by distance
-				intersects.sort(function(a, b) { return a.distance - b.distance; });
-				
-				// Return list of intersected objects
-				return intersects;
-				
-			};
-			
-		}
+		static { }
 		
 	//#endregion
 	
@@ -764,7 +644,7 @@ class Editor
 			}
 			
 			/**
-			 * Saves the world to a JSON file using a save file dialog.
+			 * Saves the world to a binary file using a save file dialog.
 			 */
 			static saveWorld()
 			{
@@ -776,10 +656,10 @@ class Editor
 				let link = document.createElement('a');
 				
 				// Serialize the game world's contents to an object URL for download
-				link.href = URL.createObjectURL(new Blob([JSON.stringify(Game.world.toJSON())], { type: "application/json" }));
+				link.href = URL.createObjectURL(new Blob([Game.fflate.compressSync(Game.msgpack.encode(Game.world.simplified))], { type: "application/octet-stream" }));
 				
 				// Set the download file name
-				link.download = Game.world.name + ".json";
+				link.download = Game.world.name + ".bin";
 				
 				// Append the link element to the document body
 				document.body.appendChild(link);
@@ -955,12 +835,12 @@ class Editor
 					// Get the first object or group of objects that the player is looking at
 					new_highlighted_objects = intersects[0].object.getTopMostParent();
 					
-					// Reset previously highlighted objects
-					this.resetHighlightedObjects();
-					
 					// If the new highlighted objects are different than the current highlighted objects or any of the selected objects...
-					if (!this.highlighted_objects.getObjectById(new_highlighted_objects.id) && !this.selected_objects.getObjectById(new_highlighted_objects.id))
+					if (new_highlighted_objects.unlocked() && !this.highlighted_objects.getObjectById(new_highlighted_objects.id) && !this.selected_objects.getObjectById(new_highlighted_objects.id))
 					{
+						
+						// Reset previously highlighted objects
+						this.resetHighlightedObjects();
 						
 						// If the new highlighted objects are a group...
 						if (new_highlighted_objects.isGroup)
@@ -989,13 +869,12 @@ class Editor
 						// Set the highlighted objects to the newly highlighted objects
 						this.highlighted_objects = new_highlighted_objects;
 						
-						
-					} // Otherwise, if the new highlighted objects are the same as any of the selected objects...
-					else if (this.selected_objects.getObjectById(new_highlighted_objects.id))
-					{
-						
-						// Reset the highlighted objects
-						this.resetHighlightedObjects();
+						// Send multiplayer object update...
+						if (Multiplayer.enabled)
+						{
+							this.highlighted_objects.lock();
+							Multiplayer.sendObjectUpdate(this.highlighted_objects.simplified());
+						}
 						
 					}
 					
@@ -1018,7 +897,7 @@ class Editor
 			{
 				
 				// If objects are highlighted...
-				if (this.highlighted_objects)
+				if (this.highlighted_objects && this.highlighted_objects.unlocked() && this.highlighted_objects.userData && this.highlighted_objects.userData.original_material)
 				{
 					
 					// If the highlighted objects are a group...
@@ -1048,6 +927,13 @@ class Editor
 						
 					}
 					
+					// Send multiplayer object update...
+					if (Multiplayer.enabled)
+					{
+						this.highlighted_objects.unlock();
+						Multiplayer.sendObjectUpdate(this.highlighted_objects.simplified());
+					}
+					
 					// Reset the highlighted objects group
 					this.highlighted_objects = new THREE.Group();
 					
@@ -1060,9 +946,6 @@ class Editor
 			 */
 			static selectObjects()
 			{
-				
-				// Detatch transform controls if they're attached to anything
-				Game.player.controls.transform_controls.detach();
 				
 				// Cast a ray from the player's position in the direction the player is looking
 				Game.player.raycaster.ray.origin.copy(Game.player.position);
@@ -1078,101 +961,111 @@ class Editor
 					// Get the first object or group of objects that the player is looking at
 					let new_selected_object = intersects[0].object.getTopMostParent();
 					
-					// If the new selected objects are highlighted...
-					if (this.highlighted_objects.getObjectById(new_selected_object.id))
+					// If the new selected objects are unlocked...
+					if (new_selected_object.unlocked())
 					{
 						
-						// Reset highlighted objects
-						this.resetHighlightedObjects();
+						// Detatch transform controls if they're attached to anything
+						Game.player.controls.transform_controls.detach();
 						
-					}
-					
-					// If the new selected object is different than the current selected object...
-					if (!this.selected_objects.getObjectById(new_selected_object.id))
-					{
-						
-						// If the new selected objects are a group...
-						if (new_selected_object.isGroup)
+						// If the new selected objects are highlighted...
+						if (this.highlighted_objects.getObjectById(new_selected_object.id))
 						{
 							
-							// Make the new selected object's children's material wireframe
-							new_selected_object.traverse((child) => {
-								if (child.isMesh)
-								{
-									child.userData.original_material = child.material.clone();
-									child.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
-								}
-							});
+							// Reset highlighted objects
+							this.resetHighlightedObjects();
 							
-							
-						} // Otherwise, if the new selected object is a singular object...
-						else
-						{
-						
-							// Make the new selected object's material wireframe
-							new_selected_object.userData.original_material = new_selected_object.material.clone();
-							new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
-						
 						}
 						
-						// Remove the new selected objects from the world in preparation to add it to the selected objects group
-						this.removeObject(new_selected_object);
-						
-						// Select multiple objects if shift or control key is held down...
-						if (Game.player.controls.modifier_shift_left_pressed || Game.player.controls.modifier_control_left_pressed)
+						// If the new selected object is different than the current selected object...
+						if (!this.selected_objects.getObjectById(new_selected_object.id))
 						{
 							
-							// Remove the selected objects group from the world because it may already be in it if multiple objects are being selected
-							this.removeObject(this.selected_objects);
+							// If the new selected objects are a group...
+							if (new_selected_object.isGroup)
+							{
+								
+								// Make the new selected object's children's material wireframe
+								new_selected_object.traverse((child) => {
+									if (child.isMesh)
+									{
+										child.userData.original_material = child.material.clone();
+										child.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+									}
+								});
+								
+								
+							} // Otherwise, if the new selected object is a singular object...
+							else
+							{
+							
+								// Make the new selected object's material wireframe
+								new_selected_object.userData.original_material = new_selected_object.material.clone();
+								new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+							
+							}
+							
+							// Remove the new selected objects from the world in preparation to add it to the selected objects group
+							this.removeObject(new_selected_object);
+							
+							// Select multiple objects if shift or control key is held down...
+							if (Game.player.controls.modifier_shift_left_pressed || Game.player.controls.modifier_control_left_pressed)
+							{
+								
+								// Remove the selected objects group from the world because it may already be in it if multiple objects are being selected
+								this.removeObject(this.selected_objects);
+								
+								
+							} // Otherwise, if only one object is being selected...
+							else
+							{
+								
+								// Reset the selected objects if only one object is being selected
+								this.resetSelectedObjects();
+								
+							}
+							
+							// If no previous objects have been selected yet...
+							if (this.selected_objects.children.length == 0)
+							{
+								
+								// Set the selected objects group's position to that of the newly selected object
+								this.selected_objects.position.copy(new_selected_object.position);
+								
+							}
+							
+							// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
+							let selected_objects_offset = new THREE.Vector3().subVectors(new_selected_object.position, this.selected_objects.position);
+							selected_objects_offset.divide(this.selected_objects.scale);
+							selected_objects_offset.applyQuaternion(this.selected_objects.quaternion.clone().invert());
+							
+							// Set the new selected object's position/scale/rotation according to the offset
+							new_selected_object.position.copy(selected_objects_offset);
+							new_selected_object.scale.divide(this.selected_objects.scale);
+							new_selected_object.quaternion.premultiply(this.selected_objects.quaternion.clone().invert());
+							
+							// Get the new selected object
+							this.selected_objects.add(new_selected_object);
+							
+							// Add (or re-add) the selected object group back to the world
+							this.selected_objects.lock();
+							this.addObject(this.selected_objects);
+							
+							// Attach transform controls to the selected objects group
+							Game.player.controls.transform_controls.attach(this.selected_objects);
+							
+							// Update selected objects UI
+							Game.ui.editor.updateSelectedObjectsWindow();
 							
 							
-						} // Otherwise, if only one object is being selected...
+						} // Otherwise, if the new selected object is the same as the current selected object...
 						else
 						{
 							
-							// Reset the selected objects if only one object is being selected
+							// Reset the selected objects
 							this.resetSelectedObjects();
 							
 						}
-						
-						// If no previous objects have been selected yet...
-						if (this.selected_objects.children.length == 0)
-						{
-							
-							// Set the selected objects group's position to that of the newly selected object
-							this.selected_objects.position.copy(new_selected_object.position);
-							
-						}
-						
-						// Calculate the position/scale/rotation offset between the selected objects group and the object being currently selected
-						let selected_objects_offset = new THREE.Vector3().subVectors(new_selected_object.position, this.selected_objects.position);
-						selected_objects_offset.divide(this.selected_objects.scale);
-						selected_objects_offset.applyQuaternion(this.selected_objects.quaternion.clone().invert());
-						
-						// Set the new selected object's position/scale/rotation according to the offset
-						new_selected_object.position.copy(selected_objects_offset);
-						new_selected_object.scale.divide(this.selected_objects.scale);
-						new_selected_object.quaternion.premultiply(this.selected_objects.quaternion.clone().invert());
-						
-						// Get the new selected object
-						this.selected_objects.add(new_selected_object);
-						
-						// Add (or re-add) the selected object group back to the world
-						this.addObject(this.selected_objects);
-						
-						// Attach transform controls to the selected objects group
-						Game.player.controls.transform_controls.attach(this.selected_objects);
-						
-						// Update selected objects UI
-						Game.ui.editor.updateSelectedObjectsWindow();
-						
-						
-					} // Otherwise, if the new selected object is the same as the current selected object...
-					else
-					{
-						
-						// Reset the selected objects
-						this.resetSelectedObjects();
 						
 					}
 					
@@ -1214,6 +1107,7 @@ class Editor
 					});
 					
 					// Remove the selected objects from the world to re-add them to the world outside of the selected objects group
+					this.selected_objects.unlock();
 					this.removeObject(this.selected_objects);
 					
 					// Prepare the selected objects to be deselected by iterating through the selected objects group's children
@@ -1399,6 +1293,7 @@ class Editor
 				this.selected_objects = this.clipboard_objects.deepClone();
 				
 				// Re-add the group back to the world
+				this.selected_objects.lock();
 				this.addObject(this.selected_objects);
 				this.selected_objects.updateMatrixWorld();
 				
@@ -1471,6 +1366,7 @@ class Editor
 					this.selected_objects.add(grouped_objects);
 					
 					// Re-add the group back to the world
+					this.selected_objects.lock();
 					this.addObject(this.selected_objects);
 					
 					// Attach transform controls to new selected object
@@ -1526,6 +1422,7 @@ class Editor
 					this.selected_objects = selected_object_group;
 					
 					// Re-add the child to the world
+					this.selected_objects.lock();
 					this.addObject(this.selected_objects);
 					
 					// Attach transform controls to new selected object
@@ -1554,6 +1451,13 @@ class Editor
 							child.material.color.set(new THREE.Color(selected_colour));
 							child.userData.original_material = child.material.clone();
 							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+							
+							// Send multiplayer object update...
+							if (Multiplayer.enabled)
+							{
+								Multiplayer.sendObjectUpdate(child.simplified());
+							}
+							
 						}
 					});
 				}
@@ -1586,35 +1490,49 @@ class Editor
 					const intersect_object = intersects[0].object;
 					const intersect_face_index = intersects[0].faceIndex;
 					
-					// If geometry is indexed and doesn't have any deleted faces...
-					if (intersect_object.geometry.index && !intersect_object.userData.has_deleted_faces)
+					// If intersected object is unlocked...
+					if (intersect_object.unlocked())
 					{
 						
-						// Store the original geometry in the intersected object's userData
-						intersect_object.userData.original_geometry = intersect_object.geometry;
-						
-						// Initialize values to hold the collection of selected object faces and a flag indicating whether or not any faces have been deleted
-						intersect_object.userData.selected_faces = new Set();
-						intersect_object.userData.has_deleted_faces = false;
-						
-						// Convert geometry to non-indexed geometry for face manipulation
-						intersect_object.geometry = intersect_object.geometry.toNonIndexed();
-						
-						// Assign a default white colour to each of the geometry's vertices
-						const colors = [];
-						for (let i = 0; i < intersect_object.geometry.attributes.position.count; i++)
+						// If geometry is indexed and doesn't have any deleted faces...
+						if (intersect_object.geometry.index && !intersect_object.userData.has_deleted_faces)
 						{
-							colors.push(1, 1, 1);
+							
+							// Store the original geometry in the intersected object's userData
+							intersect_object.userData.original_geometry = intersect_object.geometry;
+							
+							// Initialize values to hold the collection of selected object faces and a flag indicating whether or not any faces have been deleted
+							intersect_object.userData.selected_faces = new Set();
+							intersect_object.userData.selected_faces.type = "Set";
+							intersect_object.userData.has_deleted_faces = false;
+							
+							// Convert geometry to non-indexed geometry for face manipulation
+							intersect_object.geometry = intersect_object.geometry.toNonIndexed();
+							
+							// Assign a default white colour to each of the geometry's vertices
+							const colors = [];
+							for (let i = 0; i < intersect_object.geometry.attributes.position.count; i++)
+							{
+								colors.push(1, 1, 1);
+							}
+							intersect_object.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+							intersect_object.material.vertexColors = true;
+							intersect_object.material.needsUpdate = true;
+							
+							// Create groups of faces/triangles for highlighting/selecting/deleting later
+							this.createFaceGroups(intersect_object);
+							
+							// Send multiplayer object update...
+							if (Multiplayer.enabled)
+							{
+								intersect_object.lock();
+								Multiplayer.sendObjectUpdate(intersect_object.simplified());
+							}
+							
 						}
-						intersect_object.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-						intersect_object.material.vertexColors = true;
-						intersect_object.material.needsUpdate = true;
-						
-						// Create groups of faces/triangles for highlighting/selecting/deleting later
-						this.createFaceGroups(intersect_object);
 						
 					}
-					
+						
 					// The object is now non-indexed and has its face groups identified
 					
 					// If the previously hovered face index is different than the currently intersected face index, or the currently intersected object
@@ -1623,7 +1541,7 @@ class Editor
 					{
 						
 						// If an object face was previously being hovered over, reset its colour...
-						if (this.hovered_faces_object && this.previously_hovered_face_index !== null)
+						if (this.hovered_faces_object && this.hovered_faces_object.unlocked() && this.previously_hovered_face_index !== null)
 						{
 							
 							// Get the previously hovered face's group id and group
@@ -1634,79 +1552,121 @@ class Editor
 							if (!(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id)))
 							{
 								this.setFaceGroupColour(this.hovered_faces_object, face_group, new THREE.Color(0xffffff));
+								
+								// Send multiplayer object update...
+								if (Multiplayer.enabled)
+								{
+									this.hovered_faces_object.unlock();
+									Multiplayer.sendObjectUpdate(this.hovered_faces_object.simplified());
+								}
 							}
 							
 						}
 						
-						// If the currently intersected face isn't already selected, highlight it...
-						if (!(intersect_object.userData.selected_faces && (intersect_object.userData.face_group_ids && intersect_object.userData.selected_faces.has(intersect_object.userData.face_group_ids.getX(intersect_face_index * 3)))))
+						// If intersected object is unlocked...
+						if (intersect_object.unlocked())
 						{
 							
-							// Get the intersected face's group
-							const face_group = intersect_object.userData.face_groups[intersect_object.userData.face_group_ids.getX(intersect_face_index * 3)];
-							
-							// Highlight the face group...
-							const color = new THREE.Color(this.highlighted_face_colour);
-							if (face_group)
+							// If the currently intersected face isn't already selected, highlight it...
+							if (!(intersect_object.userData.selected_faces && (intersect_object.userData.face_group_ids && intersect_object.userData.selected_faces.has(intersect_object.userData.face_group_ids.getX(intersect_face_index * 3)))))
 							{
-								face_group.forEach((fIndex) => {
-									const vertex_indices = [fIndex * 3, fIndex * 3 + 1, fIndex * 3 + 2];
-									vertex_indices.forEach((i) => {
-										intersect_object.geometry.attributes.color.setXYZ(i, color.r, color.g, color.b);
+								
+								// Get the intersected face's group
+								const face_group = intersect_object.userData.face_groups[intersect_object.userData.face_group_ids.getX(intersect_face_index * 3)];
+								
+								// Highlight the face group...
+								const color = new THREE.Color(this.highlighted_face_colour);
+								if (face_group)
+								{
+									face_group.forEach((fIndex) => {
+										const vertex_indices = [fIndex * 3, fIndex * 3 + 1, fIndex * 3 + 2];
+										vertex_indices.forEach((i) => {
+											intersect_object.geometry.attributes.color.setXYZ(i, color.r, color.g, color.b);
+										});
 									});
-								});
-								intersect_object.geometry.attributes.color.needsUpdate = true;
+									intersect_object.geometry.attributes.color.needsUpdate = true;
+									
+									// Send multiplayer object update...
+									if (Multiplayer.enabled)
+									{
+										intersect_object.lock();
+										Multiplayer.sendObjectUpdate(intersect_object.simplified());
+									}
+								}
+								
 							}
+							
+							// Set the hovered faces object and face index
+							this.hovered_faces_object = intersect_object;
+							this.previously_hovered_face_index = intersect_face_index;
 							
 						}
 						
-						// Set the hovered faces object and face index
-						this.hovered_faces_object = intersect_object;
-						this.previously_hovered_face_index = intersect_face_index;
-						
 					}
+						
 					
 					
 				} // Otherwise, if the player isn't looking at any objects...
 				else
 				{
 					
-					// If an object face was previously being hovered over, reset its colour...
-					if (this.hovered_faces_object && this.previously_hovered_face_index !== null)
+					// If the previously hovered object exists and is unlocked...
+					if (this.hovered_faces_object && this.hovered_faces_object.unlocked())
 					{
 						
-						// Get the previously hovered face's group id and group
-						const face_group_id = this.hovered_faces_object.userData.face_group_ids.getX(this.previously_hovered_face_index * 3);
-						const face_group = this.hovered_faces_object.userData.face_groups[face_group_id];
-						
-						// Reset the colour of the face which was previously being hovered over...
-						if (!(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id)))
+						// If an object face was previously being hovered over, reset its colour...
+						if (this.previously_hovered_face_index !== null)
 						{
-							this.setFaceGroupColour(this.hovered_faces_object, face_group, new THREE.Color(0xffffff));
+							
+							// Get the previously hovered face's group id and group
+							const face_group_id = this.hovered_faces_object.userData.face_group_ids.getX(this.previously_hovered_face_index * 3);
+							const face_group = this.hovered_faces_object.userData.face_groups[face_group_id];
+							
+							// Reset the colour of the face which was previously being hovered over...
+							if (!(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id)))
+							{
+								this.setFaceGroupColour(this.hovered_faces_object, face_group, new THREE.Color(0xffffff));
+								
+								// Send multiplayer object update...
+								if (Multiplayer.enabled)
+								{
+									this.hovered_faces_object.unlock();
+									Multiplayer.sendObjectUpdate(this.hovered_faces_object.simplified());
+								}
+							}
+							
 						}
 						
+						// Convert the object back to indexed geometry if it's allowed to be (only it has no selected or deleted faces)...
+						if (this.hovered_faces_object && (this.hovered_faces_object.userData && this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.size === 0 && !this.hovered_faces_object.userData.has_deleted_faces && this.hovered_faces_object.userData.original_geometry))
+						{
+							
+							// Reset the object's geometry back to its original indexed geometry
+							this.hovered_faces_object.geometry = this.hovered_faces_object.userData.original_geometry;
+							this.hovered_faces_object.material.vertexColors = false;
+							this.hovered_faces_object.material.needsUpdate = true;
+							
+							// Delete the object's geometry face modification related userData values
+							delete this.hovered_faces_object.userData.original_geometry;
+							delete this.hovered_faces_object.userData.face_groups;
+							delete this.hovered_faces_object.userData.face_group_ids;
+							delete this.hovered_faces_object.userData.selected_faces;
+							delete this.hovered_faces_object.userData.has_deleted_faces;
+							
+							// Send multiplayer object update...
+							if (Multiplayer.enabled)
+							{
+								this.hovered_faces_object.unlock();
+								Multiplayer.sendObjectUpdate(this.hovered_faces_object.simplified());
+							}
+							
+						}
+						
+						// Reset the hovered faces object and face index
+						this.hovered_faces_object = null;
+						this.previously_hovered_face_index = null;
+						
 					}
-					
-					// Convert the object back to indexed geometry if it's allowed to be (only it has no selected or deleted faces)...
-					if (this.hovered_faces_object && (this.hovered_faces_object.userData && this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.size === 0 && !this.hovered_faces_object.userData.has_deleted_faces && this.hovered_faces_object.userData.original_geometry))
-					{
-						
-						// Reset the object's geometry back to its original indexed geometry
-						this.hovered_faces_object.geometry = this.hovered_faces_object.userData.original_geometry;
-						this.hovered_faces_object.material.vertexColors = false;
-						this.hovered_faces_object.material.needsUpdate = true;
-						
-						// Delete the object's geometry face modification related userData values
-						delete this.hovered_faces_object.userData.original_geometry;
-						delete this.hovered_faces_object.userData.face_groups;
-						delete this.hovered_faces_object.userData.selected_faces;
-						delete this.hovered_faces_object.userData.has_deleted_faces;
-						
-					}
-					
-					// Reset the hovered faces object and face index
-					this.hovered_faces_object = null;
-					this.previously_hovered_face_index = null;
 					
 				}
 				
@@ -1719,7 +1679,7 @@ class Editor
 			{
 				
 				// If an object is being hovered over...
-				if (this.hovered_faces_object && this.previously_hovered_face_index !== null)
+				if (this.hovered_faces_object && this.hovered_faces_object.unlocked() && this.previously_hovered_face_index !== null)
 				{
 					
 					// Get the hovered face's group id and group
@@ -1738,11 +1698,13 @@ class Editor
 							object.traverse((child) => {
 								
 								// If any of the child object's faces are selected...
-								if (child.userData.selected_faces)
+								if (child.userData.selected_faces && child.userData.selected_faces.size > 0)
 								{
 									
 									// Reset the object's selected faces
 									child.userData.selected_faces.clear();
+									child.userData.selected_faces = new Set();
+									child.userData.selected_faces.type = "Set";
 									
 									// Reset the object's selected face colours
 									if (child.material && child.material.vertexColors)
@@ -1754,6 +1716,13 @@ class Editor
 											colours.setXYZ(i, colour.r, colour.g, colour.b);
 										}
 										colours.needsUpdate = true;
+									}
+									
+									// Send multiplayer object update...
+									if (Multiplayer.enabled)
+									{
+										child.unlock();
+										Multiplayer.sendObjectUpdate(child.simplified());
 									}
 									
 								}
@@ -1768,6 +1737,13 @@ class Editor
 					{
 						this.hovered_faces_object.userData.selected_faces.add(face_group_id);
 						this.setFaceGroupColour(this.hovered_faces_object, face_group, new THREE.Color(this.selected_face_colour));
+						
+						// Send multiplayer object update...
+						if (Multiplayer.enabled)
+						{
+							this.hovered_faces_object.lock();
+							Multiplayer.sendObjectUpdate(this.hovered_faces_object.simplified());
+						}
 					}
 					
 					
@@ -1780,11 +1756,13 @@ class Editor
 						object.traverse((child) => {
 							
 							// If any of the child object's faces are selected...
-							if (child.userData.selected_faces)
+							if (child.userData.selected_faces && child.userData.selected_faces.size > 0)
 							{
 								
 								// Reset the object's selected faces
 								child.userData.selected_faces.clear();
+								child.userData.selected_faces = new Set();
+								child.userData.selected_faces.type = "Set";
 								
 								// Reset the object's selected face colours
 								if (child.material && child.material.vertexColors)
@@ -1796,6 +1774,13 @@ class Editor
 										colours.setXYZ(i, colour.r, colour.g, colour.b);
 									}
 									colours.needsUpdate = true;
+								}
+								
+								// Send multiplayer object update...
+								if (Multiplayer.enabled)
+								{
+									child.unlock();
+									Multiplayer.sendObjectUpdate(child.simplified());
 								}
 								
 							}
@@ -1832,17 +1817,26 @@ class Editor
 							delete child.userData.selected_faces;
 							delete child.userData.has_deleted_faces;
 							
+							// Send multiplayer object update...
+							if (Multiplayer.enabled)
+							{
+								child.unlock();
+								Multiplayer.sendObjectUpdate(child.simplified());
+							}
+							
 							
 						} // Otherwise, if the object is not allowed to be converted back to indexed geometry...
 						else
 						{
 							
 							// If any of the child object's faces are selected...
-							if (child.userData.selected_faces)
+							if (child.userData.selected_faces && child.userData.selected_faces.size > 0)
 							{
 								
 								// Reset the object's selected faces
 								child.userData.selected_faces.clear();
+								child.userData.selected_faces = new Set();
+								child.userData.selected_faces.type = "Set";
 								
 								// Reset selected face colours
 								if (child.material && child.material.vertexColors)
@@ -1854,6 +1848,13 @@ class Editor
 										colours.setXYZ(i, colour.r, colour.g, colour.b);
 									}
 									colours.needsUpdate = true;
+								}
+								
+								// Send multiplayer object update...
+								if (Multiplayer.enabled)
+								{
+									child.unlock();
+									Multiplayer.sendObjectUpdate(child.simplified());
 								}
 								
 							}
@@ -1955,6 +1956,8 @@ class Editor
 								
 								// Clear the object's selected faces and flag it as having deleted faces
 								child.userData.selected_faces.clear();
+								child.userData.selected_faces = new Set();
+								child.userData.selected_faces.type = "Set";
 								child.userData.has_deleted_faces = true;
 								
 								// Compute geometry normals
@@ -1962,6 +1965,12 @@ class Editor
 								
 								// Re-create the object's face groups
 								this.createFaceGroups(child);
+								
+								// Send multiplayer object update...
+								if (Multiplayer.enabled)
+								{
+									Multiplayer.sendObjectUpdate(child.simplified());
+								}
 								
 							}
 							
@@ -2030,6 +2039,7 @@ class Editor
 				
 				// Add the array of face group IDs to the object
 				mesh.userData.face_group_ids = new THREE.BufferAttribute(face_group_ids, 1);
+				mesh.userData.face_group_ids.type = "BufferAttribute";
 				
 				// Initialize a collection of face groups to add to the object
 				mesh.userData.face_groups = { };
@@ -2373,234 +2383,249 @@ class Editor
 					let intersect_object = intersects[0].object.getTopMostParent();
 					let intersect_point = intersects[0].point;
 					
-					// Check if the intersected object is a mesh and already has highlighted vertices, or if it's a set of points...
-					if ((intersect_object instanceof THREE.Mesh || intersect_object instanceof THREE.Group) && (intersect_object == this.highlighted_vertices_object || intersect_object == this.selected_vertices_object) || intersect_object instanceof THREE.Points)
+					// If the first intersected object is unlocked...
+					if (intersect_object.unlocked())
 					{
 						
-						// Check if the set of points overlaps the selected vertices object, and retrieve it instead...
-						if (intersect_object instanceof THREE.Points)
+						// Check if the intersected object is a mesh and already has highlighted vertices, or if it's a set of points...
+						if ((intersect_object instanceof THREE.Mesh || intersect_object instanceof THREE.Group) && (intersect_object == this.highlighted_vertices_object || intersect_object == this.selected_vertices_object) || intersect_object instanceof THREE.Points)
 						{
 							
-							// Check if the intersect object overlaps the selected vertices object or the highlighted vertices object, and if it does, set it to the corresponding object instead...
-							intersects.forEach(intersect => {
-								if (intersect.object == this.highlighted_vertices_object)
-								{
-									intersect_object = intersect.object;
-									intersect_point = intersect.point;
-								}
-								else if (intersect.object == this.selected_vertices_object)
-								{
-									intersect_object = intersect.object;
-									intersect_point = intersect.point;
-								}
-							});
+							// Check if the set of points overlaps the selected vertices object, and retrieve it instead...
+							if (intersect_object instanceof THREE.Points)
+							{
+								
+								// Check if the intersect object overlaps the selected vertices object or the highlighted vertices object, and if it does, set it to the corresponding object instead...
+								intersects.forEach(intersect => {
+									if (intersect.object == this.highlighted_vertices_object)
+									{
+										intersect_object = intersect.object;
+										intersect_point = intersect.point;
+									}
+									else if (intersect.object == this.selected_vertices_object)
+									{
+										intersect_object = intersect.object;
+										intersect_point = intersect.point;
+									}
+								});
+								
+							}
 							
-						}
-						
-						// If the intersect object is already highlighted, then select it...
-						if (intersect_object == this.highlighted_vertices_object)
-						{
-							
-							// Clear any previous selected vertices object
-							this.resetSelectedVertices();
-							
-							// Reset the highlighted vertices object (which is what's being intersected here, obviously) but preserve its object indices at positions because we still need them
-							this.resetHighlightedVertices(true);
-							
-							// Select the intersected object
-							this.selected_vertices_object = intersect_object;
-							
-							// Iterate through the selected object and all its children...
-							this.selected_vertices_object.traverse((child) => {
-								if (child.isMesh && child.geometry)
-								{
-									
-									// Draw the object's vertices and store them in the userData
-									child.userData.vertices = new THREE.Points(child.geometry, Shaders.pointOutlineInRadius(this.unselected_vertex_colour, this.selected_vertex_size, this.selected_vertex_outline_colour, this.selected_vertex_outline_size, this.terrain_tool, (this.spawn_tool == this.SpawnTools.Terrain ? this.terrain_tool_select_vertex_radius : this.selected_vertices_object_highlight_vertices_radius), this.selected_vertices_object_highlight_vertices_colour));
-									child.userData.vertices.userData.ignore_raycast = true;
-									child.add(child.userData.vertices);
-									
-									// Reset the selected vertex indices and selected vertices initial matrix in preparation for storing those values
-									child.userData.selected_vertex_indices = new Set();
-									child.userData.selected_vertices_initial_position = new THREE.Vector3();
-									child.userData.selected_vertices_initial_delta = new THREE.Vector3();
-									child.userData.selected_vertices_initial_matrix = new THREE.Matrix4();
-									
-								}
-							});
-							
-							
-						} // Otherwise, if the intersect object is already selected...
-						else if (intersect_object == this.selected_vertices_object)
-						{
-							
-							// Iterate through the selected object and all its children...
-							this.selected_vertices_object.traverse((child) => {
-								if (child.isMesh && child.geometry)
-								{
-									
-									// Get the object's vertex positions
-									const positions = child.geometry.getAttribute('position');
-									
-									// Get the vertex indices of the vertices within the vertex selection radius...
-									let indices = [];
-									
-									// Iterate through each of the vertices...
-									for (let i = 0; i < positions.count; i++)
+							// If the intersect object is already highlighted, then select it...
+							if (intersect_object == this.highlighted_vertices_object)
+							{
+								
+								// Clear any previous selected vertices object
+								this.resetSelectedVertices();
+								
+								// Reset the highlighted vertices object (which is what's being intersected here, obviously) but preserve its object indices at positions because we still need them
+								this.resetHighlightedVertices(true);
+								
+								// Select the intersected object
+								this.selected_vertices_object = intersect_object;
+								this.selected_vertices_object.userData.is_selected = true;
+								
+								// Iterate through the selected object and all its children...
+								this.selected_vertices_object.traverse((child) => {
+									if (child.isMesh && child.geometry)
 									{
 										
-										// Get the position of the current vertex
-										const vertex_position = new THREE.Vector3().fromBufferAttribute(positions, i);
-										const world_vertex_position = child.localToWorld(vertex_position.clone());
+										// Draw the object's vertices and store them in the userData
+										child.userData.vertices = new THREE.Points(child.geometry, Shaders.pointOutlineInRadius(this.unselected_vertex_colour, this.selected_vertex_size, this.selected_vertex_outline_colour, this.selected_vertex_outline_size, this.terrain_tool, (this.spawn_tool == this.SpawnTools.Terrain ? this.terrain_tool_select_vertex_radius : this.selected_vertices_object_highlight_vertices_radius), this.selected_vertices_object_highlight_vertices_colour));
+										child.userData.vertices.userData.ignore_raycast = true;
+										child.add(child.userData.vertices);
 										
-										// Get distance between the current vertex position and the intersect point
-										const offset = world_vertex_position.sub(intersect_point);
-										
-										// Select the vertex index based on the terrain tool shape...
-										if (this.terrain_tool == this.TerrainTools.Square)
-										{
-											if (Math.abs(offset.x) <= this.vertex_pointer_radius && Math.abs(offset.z) <= this.vertex_pointer_radius)
-											{
-												indices.push(i);
-											}
-										}
-										else if (this.terrain_tool == this.TerrainTools.Circle)
-										{
-											if ((offset.x * offset.x + offset.z * offset.z) <= (this.vertex_pointer_radius * this.vertex_pointer_radius))
-											{
-												indices.push(i);
-											}
-										}
+										// Reset the selected vertex indices and selected vertices initial matrix in preparation for storing those values
+										child.userData.selected_vertex_indices = new Set();
+										child.userData.selected_vertices_initial_position = new THREE.Vector3();
+										child.userData.selected_vertices_initial_delta = new THREE.Vector3();
+										child.userData.selected_vertices_initial_matrix = new THREE.Matrix4();
 										
 									}
-									
-									// If intersected vertex indices were found, and they're not already selected...
-									if (indices)
+								});
+								
+								
+							} // Otherwise, if the intersect object is already selected...
+							else if (intersect_object == this.selected_vertices_object)
+							{
+								
+								// Iterate through the selected object and all its children...
+								this.selected_vertices_object.traverse((child) => {
+									if (child.isMesh && child.geometry)
 									{
 										
-										// Clear any previous selected vertices if the shift key isn't being pressed...
-										if (!Game.player.controls.modifier_shift_left_pressed && !Game.player.controls.modifier_control_left_pressed)
+										// Get the object's vertex positions
+										const positions = child.geometry.getAttribute('position');
+										
+										// Get the vertex indices of the vertices within the vertex selection radius...
+										let indices = [];
+										
+										// Iterate through each of the vertices...
+										for (let i = 0; i < positions.count; i++)
 										{
+											
+											// Get the position of the current vertex
+											const vertex_position = new THREE.Vector3().fromBufferAttribute(positions, i);
+											const world_vertex_position = child.localToWorld(vertex_position.clone());
+											
+											// Get distance between the current vertex position and the intersect point
+											const offset = world_vertex_position.sub(intersect_point);
+											
+											// Select the vertex index based on the terrain tool shape...
+											if (this.terrain_tool == this.TerrainTools.Square)
+											{
+												if (Math.abs(offset.x) <= this.vertex_pointer_radius && Math.abs(offset.z) <= this.vertex_pointer_radius)
+												{
+													indices.push(i);
+												}
+											}
+											else if (this.terrain_tool == this.TerrainTools.Circle)
+											{
+												if ((offset.x * offset.x + offset.z * offset.z) <= (this.vertex_pointer_radius * this.vertex_pointer_radius))
+												{
+													indices.push(i);
+												}
+											}
+											
+										}
+										
+										// If intersected vertex indices were found, and they're not already selected...
+										if (indices)
+										{
+											
+											// Clear any previous selected vertices if the shift key isn't being pressed...
+											if (!Game.player.controls.modifier_shift_left_pressed && !Game.player.controls.modifier_control_left_pressed)
+											{
+												child.userData.selected_vertex_indices.clear();
+											}
+											
+											// Select the intersected vertices
+											indices.forEach(i => child.userData.selected_vertex_indices.add(i));
+											
+											
+										} // Otherwise, if no intersected vertex indices were found (unlikely), or they're already selected (likely)...
+										else
+										{
+											
+											// Clear any previous selected vertices
 											child.userData.selected_vertex_indices.clear();
+											
 										}
 										
-										// Select the intersected vertices
-										indices.forEach(i => child.userData.selected_vertex_indices.add(i));
-										
-										
-									} // Otherwise, if no intersected vertex indices were found (unlikely), or they're already selected (likely)...
-									else
-									{
-										
-										// Clear any previous selected vertices
-										child.userData.selected_vertex_indices.clear();
-										
-									}
-									
-									// If any vertices were actually successfully selected...
-									if (child.userData.selected_vertex_indices.size > 0)
-									{
-										
-										// Remove the selected vertex helper spheres group from the world
-										if (child.userData.selected_vertices)
+										// If any vertices were actually successfully selected...
+										if (child.userData.selected_vertex_indices.size > 0)
 										{
+											
+											// Remove the selected vertex helper spheres group from the world
+											if (child.userData.selected_vertices)
+											{
+												this.removeObject(child.userData.selected_vertices);
+											}
+											
+											// Re-initialize the group which will contain selected vertex helper spheres
+											child.userData.selected_vertices = new THREE.Group();
+											child.userData.selected_vertices.userData.ignore_raycast = true;
+											
+											// Get the helper sphere group's initial position, scale, and rotation in preparation for repositioning it over the selected vertices object
+											let selected_vertices_object_position = child.userData.selected_vertices.position.clone();
+											let selected_vertices_object_scale = child.userData.selected_vertices.scale.clone();
+											let selected_vertices_object_rotation = child.userData.selected_vertices.quaternion.clone();
+											
+											// Modify those initial position values according to the selected vertices obect's position, rotation, and scale
+											selected_vertices_object_rotation.premultiply(child.quaternion);
+											selected_vertices_object_position.applyQuaternion(child.quaternion);
+											selected_vertices_object_position.multiply(child.scale);
+											selected_vertices_object_position.add(child.position);
+											selected_vertices_object_scale.multiply(child.scale);
+											
+											// Position, rotate, and scale the helper sphere group according to those modified position values
+											child.userData.selected_vertices.position.copy(selected_vertices_object_position);
+											child.userData.selected_vertices.scale.copy(selected_vertices_object_scale);
+											child.userData.selected_vertices.quaternion.copy(selected_vertices_object_rotation);
+											
+											// Get the inverse scale of the helper sphere group so that we can make sure the helper spheres don't end up all stretched and weird if the selected vertices object's scale has been changed at all
+											const selected_vertices_object_inverse_scale = new THREE.Vector3(1 / child.userData.selected_vertices.scale.x, 1 / child.userData.selected_vertices.scale.y, 1 / child.userData.selected_vertices.scale.z);
+											
+											// Add helper spheres for each selected vertex...
+											for (let index of child.userData.selected_vertex_indices)
+											{
+												
+												// Get the position of the current selected index
+												const position = new THREE.Vector3();
+												position.fromBufferAttribute(child.geometry.getAttribute('position'), index);
+												
+												// Initialize a helper sphere
+												const sphere_geometry = new THREE.SphereGeometry(0.05, 8, 8);
+												const sphere_material = new THREE.MeshBasicMaterial({ color: this.selected_vertex_colour });
+												const sphere = new THREE.Mesh(sphere_geometry, sphere_material);
+												sphere.userData.ignore_raycast = true;
+												
+												// Position and scale the helper sphere
+												sphere.position.copy(position);
+												sphere.scale.copy(selected_vertices_object_inverse_scale);
+												
+												// Store the helper sphere's vertex index for applying transforms to the vertex later on
+												sphere.userData.vertex_index = index;
+												
+												// Add the helper sphere to the helper sphere group
+												child.userData.selected_vertices.add(sphere);
+												
+											}
+												
+											// Add the selected vertex helper spheres group to the world
+											this.addObject(child.userData.selected_vertices);
+											
+											// Get the bounds of the area of the helper spheres group
+											const selected_vertices_bounds = new THREE.Box3();
+											for (let i = 0; i < child.userData.selected_vertices.children.length; i++)
+											{
+												const sphere = child.userData.selected_vertices.children[i];
+												selected_vertices_bounds.expandByPoint(sphere.position);
+											}
+											
+											// Get center of helper spheres group
+											const selected_vertices_point = new THREE.Vector3();
+											selected_vertices_bounds.getCenter(selected_vertices_point);
+											
+											// Reposition helper spheres group
+											for (let i = 0; i < child.userData.selected_vertices.children.length; i++)
+											{
+												const sphere = child.userData.selected_vertices.children[i];
+												sphere.position.sub(selected_vertices_point);
+											}
+											selected_vertices_point.applyMatrix4(child.matrixWorld);
+											child.userData.selected_vertices.position.x = selected_vertices_point.x;
+											child.userData.selected_vertices.position.y = selected_vertices_point.y;
+											child.userData.selected_vertices.position.z = selected_vertices_point.z;
+											
+											// Attach player transform controls to helper spheres group
+											Game.player.controls.transform_controls.attach(child.userData.selected_vertices);
+											
+										}
+										else
+										{
+											
+											// Remove the selected vertex helper spheres group from the world
 											this.removeObject(child.userData.selected_vertices);
-										}
-										
-										// Re-initialize the group which will contain selected vertex helper spheres
-										child.userData.selected_vertices = new THREE.Group();
-										child.userData.selected_vertices.userData.ignore_raycast = true;
-										
-										// Get the helper sphere group's initial position, scale, and rotation in preparation for repositioning it over the selected vertices object
-										let selected_vertices_object_position = child.userData.selected_vertices.position.clone();
-										let selected_vertices_object_scale = child.userData.selected_vertices.scale.clone();
-										let selected_vertices_object_rotation = child.userData.selected_vertices.quaternion.clone();
-										
-										// Modify those initial position values according to the selected vertices obect's position, rotation, and scale
-										selected_vertices_object_rotation.premultiply(child.quaternion);
-										selected_vertices_object_position.applyQuaternion(child.quaternion);
-										selected_vertices_object_position.multiply(child.scale);
-										selected_vertices_object_position.add(child.position);
-										selected_vertices_object_scale.multiply(child.scale);
-										
-										// Position, rotate, and scale the helper sphere group according to those modified position values
-										child.userData.selected_vertices.position.copy(selected_vertices_object_position);
-										child.userData.selected_vertices.scale.copy(selected_vertices_object_scale);
-										child.userData.selected_vertices.quaternion.copy(selected_vertices_object_rotation);
-										
-										// Get the inverse scale of the helper sphere group so that we can make sure the helper spheres don't end up all stretched and weird if the selected vertices object's scale has been changed at all
-										const selected_vertices_object_inverse_scale = new THREE.Vector3(1 / child.userData.selected_vertices.scale.x, 1 / child.userData.selected_vertices.scale.y, 1 / child.userData.selected_vertices.scale.z);
-										
-										// Add helper spheres for each selected vertex...
-										for (let index of child.userData.selected_vertex_indices)
-										{
-											
-											// Get the position of the current selected index
-											const position = new THREE.Vector3();
-											position.fromBufferAttribute(child.geometry.getAttribute('position'), index);
-											
-											// Initialize a helper sphere
-											const sphere_geometry = new THREE.SphereGeometry(0.05, 8, 8);
-											const sphere_material = new THREE.MeshBasicMaterial({ color: this.selected_vertex_colour });
-											const sphere = new THREE.Mesh(sphere_geometry, sphere_material);
-											sphere.userData.ignore_raycast = true;
-											
-											// Position and scale the helper sphere
-											sphere.position.copy(position);
-											sphere.scale.copy(selected_vertices_object_inverse_scale);
-											
-											// Store the helper sphere's vertex index for applying transforms to the vertex later on
-											sphere.userData.vertex_index = index;
-											
-											// Add the helper sphere to the helper sphere group
-											child.userData.selected_vertices.add(sphere);
+											delete child.userData.selected_vertices;
 											
 										}
-											
-										// Add the selected vertex helper spheres group to the world
-										this.addObject(child.userData.selected_vertices);
-										
-										// Get the bounds of the area of the helper spheres group
-										const selected_vertices_bounds = new THREE.Box3();
-										for (let i = 0; i < child.userData.selected_vertices.children.length; i++)
-										{
-											const sphere = child.userData.selected_vertices.children[i];
-											selected_vertices_bounds.expandByPoint(sphere.position);
-										}
-										
-										// Get center of helper spheres group
-										const selected_vertices_point = new THREE.Vector3();
-										selected_vertices_bounds.getCenter(selected_vertices_point);
-										
-										// Reposition helper spheres group
-										for (let i = 0; i < child.userData.selected_vertices.children.length; i++)
-										{
-											const sphere = child.userData.selected_vertices.children[i];
-											sphere.position.sub(selected_vertices_point);
-										}
-										selected_vertices_point.applyMatrix4(child.matrixWorld);
-										child.userData.selected_vertices.position.x = selected_vertices_point.x;
-										child.userData.selected_vertices.position.y = selected_vertices_point.y;
-										child.userData.selected_vertices.position.z = selected_vertices_point.z;
-										
-										// Attach player transform controls to helper spheres group
-										Game.player.controls.transform_controls.attach(child.userData.selected_vertices);
 										
 									}
-									else
-									{
-										
-										// Remove the selected vertex helper spheres group from the world
-										this.removeObject(child.userData.selected_vertices);
-										delete child.userData.selected_vertices;
-										
-									}
-									
-								}
-							});
+								});
+								
+								
+							} // Otherwise, if the intersected object is neither highlighted nor selected...
+							else
+							{
+								
+								// Reset the selected vertices
+								this.resetSelectedVertices();
+								
+							}
 							
 							
-						} // Otherwise, if the intersected object is neither highlighted nor selected...
+						} // Otherwise, if the intersected object is a mesh but doesn't have any highlighted vertices, and it's not a set of points either...
 						else
 						{
 							
@@ -2608,14 +2633,6 @@ class Editor
 							this.resetSelectedVertices();
 							
 						}
-						
-						
-					} // Otherwise, if the intersected object is a mesh but doesn't have any highlighted vertices, and it's not a set of points either...
-					else
-					{
-						
-						// Reset the selected vertices
-						this.resetSelectedVertices();
 						
 					}
 					
@@ -2668,6 +2685,7 @@ class Editor
 					});
 					
 					// Reset the selected vertices object
+					delete this.selected_vertices_object.userData.is_selected;
 					this.selected_vertices_object = null;
 					
 				}

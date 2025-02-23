@@ -413,7 +413,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 	/**
 	 * Broadcasts the specified P2P reconnection data to all of the signaling server's client connections.
 	 *
-	 * @param {object} data The message to be broadcast to all of the signaling server's connected P2P clients in the new host's game.
+	 * @param {Object} data The message to be broadcast to all of the signaling server's connected P2P clients in the new host's game.
 	 * @param {string} game_id The ID of the game whose players will be broadcast to.
 	 * @param {string} id_skip The player ID to skip over sending a broadcast to.
 	 */

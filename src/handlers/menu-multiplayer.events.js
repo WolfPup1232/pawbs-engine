@@ -81,6 +81,19 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 				
 			}
 			
+			/**
+			 * Updates the host game button.
+			 *
+			 * @param {boolean} disabled Flag indicating whether or not to disable the button.
+			 */
+			Game.ui.menus.updateHostGameButton = function updateHostGameButton(disabled)
+			{
+				
+				// Update host game button
+				$('#multiplayer-host-game').prop('disabled', disabled);
+				
+			}
+			
 		//#endregion
 		
 		
@@ -189,7 +202,7 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 				{
 					
 					// Ping P2P signaling server
-					Multiplayer.ping(Game.settings.multiplayer_signaling_server);
+					Multiplayer.ping(Game.settings.multiplayer_signaling_server, null, true);
 					
 				}
 				
@@ -220,22 +233,22 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 						
 						// Initialize a single server listing element
 						let server_element = `
-						<div class="d-flex align-items-center border rounded hover-light-gradient text-center p-2 mb-2">
+						<div class="d-flex align-items-center border rounded hover-light-gradient text-center fw-bold p-2 mb-2 shadow">
 							<div id="multiplayer-server-name-${server_index}-container" class="col-7 border-end"
 							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<span id="multiplayer-server-name-${server_index}" class="tiny">${server_name}</span>
 							</div>
 							<div id="multiplayer-server-player-count-${server_index}-container" class="col-1 col-xl-2 border-end"
 							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<span id="multiplayer-server-player-count-${server_index}" class="tiny">0</span>
+								<span id="multiplayer-server-player-count-${server_index}" class="tiny badge bg-white-75">0</span>
 							</div>
 							<div id="multiplayer-server-ping-${server_index}-container" class="col-2 col-xl-1 border-end"
 							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<span id="multiplayer-server-ping-${server_index}" class="tiny"><i class="bi bi-wifi"></i> 0</span>
+								<span id="multiplayer-server-ping-${server_index}" class="tiny badge bg-white-75 px-1"><i class="bi bi-wifi"></i> 0</span>
 							</div>
 							<div id="multiplayer-server-join-${server_index}-container" class="w-100 my-0 ms-2 me-0"
 							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<button id="multiplayer-server-join-${server_index}" server_index="${server_index}" type="button" class="btn btn-sm btn-light border-secondary-subtle tiny text-nowrap m-0 w-100" disabled><span class="d-block d-xl-none">Join</span><span class="d-none d-xl-block">Join Game</span></button>
+								<button id="multiplayer-server-join-${server_index}" server_index="${server_index}" type="button" class="btn btn-sm btn-secondary tiny text-nowrap m-0 w-100" disabled><span class="d-block d-xl-none">Join</span><span class="d-none d-xl-block">Join Game</span></button>
 							</div>
 						</div>`;
 						

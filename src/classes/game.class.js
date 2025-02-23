@@ -1,6 +1,8 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
 import { CustomOutlineEffect } from '../libraries/threejs/modules/CustomOutlineEffect.js';
+import initializeObject3DExtension from '../libraries/threejs/modules/ExtendedObject3D.js';
+import initializeRaycasterExtension from '../libraries/threejs/modules/ExtendedRaycaster.js';
 
 // Class Imports
 import Settings from './settings.class.js';
@@ -27,6 +29,19 @@ import Editor from './editor.class.js';
 import Debug from './debug.class.js';
 import Multiplayer from './multiplayer.class.js';
 
+// fflate & MessagePack Imports
+let fflate, msgpack;
+if (typeof window !== 'undefined')
+{
+	fflate = window.fflate;
+	msgpack = window.msgpack;
+}
+else
+{
+	fflate = await import('fflate');
+	msgpack = await import('msgpack-lite');
+}
+
 /**
  * The game.
  */
@@ -49,6 +64,21 @@ class Game
 		 * The game's birthday.
 		 */
 		static start_time = Date.now();
+		
+		
+		//#region [Libraries]
+			
+			/**
+			 * fflate library.
+			 */
+			static fflate = fflate;
+			
+			/**
+			 * MessagePack library.
+			 */
+			static msgpack = msgpack;
+			
+		//#endregion
 		
 		
 		//#region [Flags]
@@ -179,6 +209,10 @@ class Game
 		 */
 		static initialize(window_interface, dom_document, connection_type = null, file_system = null, serverCallback = null)
 		{
+			
+			// Initialize three.js class extensions
+			initializeObject3DExtension();
+			initializeRaycasterExtension();
 			
 			// A multiplayer game is being initialized if a connection type has been specified...
 			if (connection_type)

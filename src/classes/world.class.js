@@ -1,6 +1,5 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
-import { CustomObjectLoader } from '../libraries/threejs/modules/CustomObjectLoader.js';
 
 // Class Imports
 import Billboard from './billboard.class.js';
@@ -95,7 +94,21 @@ class World
 	//#region [Properties]
 		
 		/**
-		 * Get array of world objects.
+		 * A simplified version of the world for storage and communication.
+		 */
+		get simplified()
+		{
+			return {
+				name: this.name,
+				player_position: this.player_position,
+				player_rotation: this.player_rotation,
+				terrain: this.terrain.filter(terrain => terrain.type != "PerspectiveCamera").map(terrain => terrain.simplified()),
+				objects: this.objects.filter(object => object.type != "PerspectiveCamera").map(object => object.simplified()),
+			};
+		}
+		
+		/**
+		 * An array of world objects.
 		 */
 		get all_objects()
 		{
@@ -115,63 +128,6 @@ class World
 	//#endregion
 	
 	
-	//#region [Serialization]
-		
-		/**
-		 * Custom JSON serialization method to add additional class variables and prevent unwanted class variables from being saved when exporting the class to JSON using JSON.stringify().
-		 *
-		 * @return {World} A simplified version of the world with some attributes added and some removed.
-		 */
-		toJSON()
-		{
-			return {
-				name: this.name,
-				player_position: this.player_position,
-				player_rotation: this.player_rotation,
-				terrain: this.terrain.map(mesh => {
-					const mesh_json = mesh.toJSON();
-					
-					mesh_json.position = mesh.position.toArray();
-					mesh_json.rotation = {
-						x: mesh.rotation.x,
-						y: mesh.rotation.y,
-						z: mesh.rotation.z,
-						order: mesh.rotation.order,
-					};
-					mesh_json.scale = mesh.scale.toArray();
-					
-					if (mesh_json.userData)
-					{
-						mesh_json.userData.ignore_raycast = mesh.userData.ignore_raycast;
-					}
-					
-					return mesh_json;
-				}),
-				objects: this.objects.map(mesh => {
-					const mesh_json = mesh.toJSON();
-					
-					mesh_json.position = mesh.position.toArray();
-					mesh_json.rotation = {
-						x: mesh.rotation.x,
-						y: mesh.rotation.y,
-						z: mesh.rotation.z,
-						order: mesh.rotation.order,
-					};
-					mesh_json.scale = mesh.scale.toArray();
-					
-					if (mesh_json.userData)
-					{
-						mesh_json.userData.ignore_raycast = mesh.userData.ignore_raycast;
-					}
-					
-					return mesh_json;
-				}),
-			};
-		}
-		
-	//#endregion
-	
-	
 	//#region [Methods]
 		
 		/**
@@ -182,87 +138,25 @@ class World
 		load(path)
 		{
 			
-			// Get a reference to this world to pass into the file load callback
-			let self = this;
-			
 			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
 			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
 			{
 				
-				// Fetch the JSON file from the specified file path
-				fetch(Game.settings.path_root + path).then(response => {
-				
-					// Error fetching world
-					if (!response.ok)
-					{
-						throw new Error('Error fetching world.');
-					}
-					
-					// World loaded successfully
-					return response.json();
-					
-				})
-				.then(json => {
-					
-					try
-					{
-						
-						// Load world from JSON object
-						self.loadFromJSON(json);
-						
-					}
-					catch (error)
-					{
-						
-						// Error loading world
-						console.error("Error loading world: ", error);
-						
-					}
-					
-				})
-				.catch(error => {
-					
-					// Error fetching world
-					console.error("Error fetching world: ", error);
-					
-				});
+				// Load world
+				fetch(Game.settings.path_root + path).then(response => { return response.arrayBuffer(); })
+				.then(buffer => { return Game.fflate.decompressSync(new Uint8Array(buffer)); })
+				.then(decoded_data => { return Game.msgpack.decode(decoded_data); })
+				.then(world_data => { this.loadFromJSON(world_data); }).catch(error => { console.error("Error fetching world:", error); });
 				
 				
 			} // Otherwise, if the game is multiplayer and a dedicated server...
 			else
 			{
 				
-				// Fetch the JSON file from the specified file path				
-				Game.file_system.promises.readFile(Game.settings.path_root + path, Game.settings.default_file_encoding).then((response) => JSON.parse(response)).then((world) => {
-					
-					// World loaded successfully
-					return world;
-					
-				})
-				.then(json => {
-					
-					try
-					{
-						
-						// Load world from JSON object
-						self.loadFromJSON(json);
-						
-					}
-					catch (error)
-					{
-						
-						// Error loading world
-						console.error("Error loading world: ", error);
-						
-					}
-					
-				})
-				.catch(error => {
-					
-					// Error fetching world
-					console.error("Error fetching world:", error);
-					
-				});
+				// Load world		
+				Game.file_system.promises.readFile(Game.settings.path_root + path, null).then((buffer) => { return Game.fflate.decompressSync(new Uint8Array(buffer)); })
+				.then((decoded_data) => { this.loadFromJSON(Game.msgpack.decode(decoded_data)); })
+				.catch((error) => { console.error("Error reading world data:", error); });
 				
 			}
 			
@@ -276,13 +170,10 @@ class World
 		loadFromJSON(json)
 		{
 			
-			// Initialize a three.js object loader to convert JSON objects to valid three.js objects
-			let loader = new CustomObjectLoader();
-			
 			// Initialize a new world
 			let world = new World();
 			
-			// Get world properties
+			// Get world properties...
 			if (json.name)
 			{
 				world.name = json.name;
@@ -296,92 +187,86 @@ class World
 				world.player_rotation = new THREE.Euler(json.player_rotation._x, json.player_rotation._y, json.player_rotation._z, json.player_rotation._order);
 			}
 			
-			// Get world terrain and apply transformations
+			// Get world terrain and apply transformations...
 			if (json.terrain)
 			{
 				world.terrain = json.terrain.map(mesh_json => {
-					let mesh = loader.parse(mesh_json);
-					
-					// Get terrain transformations
-					if (mesh_json.position)
+					let mesh = new THREE.Object3D();
+					switch (mesh_json.type)
 					{
-						mesh.position.fromArray(mesh_json.position);
+						case 'Mesh':
+							mesh = new THREE.Mesh();
+							break;
+						case 'Line':
+							mesh = new THREE.Line();
+							break;
+						case 'LineSegments':
+							mesh = new THREE.LineSegments();
+							break;
+						case 'Points':
+							mesh = new THREE.Points();
+							break;
+						case 'Group':
+							mesh = new THREE.Group();
+							break;
+						default:
+							mesh = new THREE.Object3D();
+							break;
 					}
-					if (mesh_json.rotation)
-					{
-						mesh.rotation.set(mesh_json.rotation.x, mesh_json.rotation.y, mesh_json.rotation.z, mesh_json.rotation.order);
-					}
-					if (mesh_json.scale)
-					{
-						mesh.scale.fromArray(mesh_json.scale);
-					}
-					
-					// Get terrain flags
-					if (mesh_json.userData && mesh_json.userData.ignore_raycast)
-					{
-						mesh.userData.ignore_raycast = mesh_json.userData.ignore_raycast;
-					}
-					else
-					{
-						mesh.userData.ignore_raycast = false;
-					}
-			
-					mesh.updateMatrix();
+					mesh.setSimplified(mesh_json);
+					mesh.userData.loaded_from_level = true;
 					return mesh;
 				});
 			}
 			
-			// Get world objects and apply transformations
+			// Get world objects and apply transformations...
 			if (json.objects)
 			{
 				world.objects = json.objects.map(mesh_json => {
-					let mesh = loader.parse(mesh_json);
-					
-					// Get object transformations
-					if (mesh_json.position)
+					let mesh = new THREE.Object3D();
+					switch (mesh_json.type)
 					{
-						mesh.position.fromArray(mesh_json.position);
+						case 'Mesh':
+							mesh = new THREE.Mesh();
+							break;
+						case 'Line':
+							mesh = new THREE.Line();
+							break;
+						case 'LineSegments':
+							mesh = new THREE.LineSegments();
+							break;
+						case 'Points':
+							mesh = new THREE.Points();
+							break;
+						case 'Group':
+							mesh = new THREE.Group();
+							break;
+						default:
+							mesh = new THREE.Object3D();
+							break;
 					}
-					if (mesh_json.rotation)
-					{
-						mesh.rotation.set(mesh_json.rotation.x, mesh_json.rotation.y, mesh_json.rotation.z, mesh_json.rotation.order);
-					}
-					if (mesh_json.scale)
-					{
-						mesh.scale.fromArray(mesh_json.scale);
-					}
-					
-					// Get object flags
-					if (mesh_json.userData && mesh_json.userData.ignore_raycast)
-					{
-						mesh.userData.ignore_raycast = mesh_json.userData.ignore_raycast;
-					}
-					else
-					{
-						mesh.userData.ignore_raycast = false;
-					}
-					
-					mesh.updateMatrix();
+					mesh.setSimplified(mesh_json);
+					mesh.userData.loaded_from_level = true;
 					return mesh;
 				});
-			}
-			
-			// Add all world terrain to the scene
-			for (let i = 0; i < world.terrain.length; i++)
-			{
-				world.terrain[i].updateMatrix();
-				world.scene.add(world.terrain[i]);
-			}
-			
-			// Add all world objects to the scene
-			for (let i = 0; i < world.objects.length; i++)
-			{
-				world.objects[i].updateMatrix();
-				world.scene.add(world.objects[i]);
 			}
 			
 			// Replace current world with new world
 			Object.assign(this, world);
+			
+			// Add all world terrain to the scene...
+			for (let i = 0; i < this.terrain.length; i++)
+			{
+				this.terrain[i].updateMatrix();
+				this.scene.add(this.terrain[i]);
+			}
+			
+			// Add all world objects to the scene...
+			for (let i = 0; i < this.objects.length; i++)
+			{
+				this.objects[i].updateMatrix();
+				this.scene.add(this.objects[i]);
+			}
 			
 		}
 		
@@ -390,7 +275,7 @@ class World
 		 *
 		 * @param {THREE.Object3D} object The object to be added to the world.
 		 */
-		addObject(object)
+		addObject(object, broadcast = true)
 		{
 			
 			// Add object to objects array
@@ -398,6 +283,15 @@ class World
 			
 			// Add object to scene
 			this.scene.add(object);
+			
+			// If multiplayer is enabled...
+			if (Multiplayer.enabled && broadcast)
+			{
+				
+				// Signal adding new object
+				Multiplayer.sendObjectAdd(object);
+				
+			}
 			
 		}
 		
@@ -422,7 +316,7 @@ class World
 		 *
 		 * @param {THREE.Object3D} object The object to be removed from the world.
 		 */
-		removeObject(object)
+		removeObject(object, broadcast = true)
 		{
 			
 			// Get object's index from object array
@@ -436,6 +330,15 @@ class World
 			
 			// Remove object from scene
 			this.scene.remove(object);
+			
+			// If multiplayer is enabled...
+			if (Multiplayer.enabled && broadcast)
+			{
+				
+				// Signal removing object
+				Multiplayer.sendObjectRemove(object);
+				
+			}
 			
 		}
 		

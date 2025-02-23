@@ -239,7 +239,7 @@ export default function initializeGameUIEventHandlers()
 			/**
 			 * Adds the chat message specified in the data object to the chat log.
 			 *
-			 * @param {object} data The chat message to be added to the chat log.
+			 * @param {Object} data The chat message to be added to the chat log.
 			 */
 			Game.ui.chat.addChatMessage = function addChatMessage(data)
 			{

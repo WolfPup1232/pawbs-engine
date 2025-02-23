@@ -240,9 +240,10 @@ class Settings
 			 */
 			get is_remote()
 			{
-				return (typeof location !== 'undefined' && location.hostname != "" && (Game.settings.multiplayer_remote_dedicated_server.includes(location.hostname) ||
-																					   Game.settings.multiplayer_remote_http_server.includes(location.hostname) ||
-																					   Game.settings.multiplayer_remote_signaling_server.includes(location.hostname)));
+				return ((typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("remote")) ||
+						(typeof location !== 'undefined' && location.hostname != "" && (Game.settings.multiplayer_remote_dedicated_server.includes(location.hostname) ||
+																						Game.settings.multiplayer_remote_http_server.includes(location.hostname) ||
+																						Game.settings.multiplayer_remote_signaling_server.includes(location.hostname))));
 			}
 			
 			/**
@@ -250,7 +251,7 @@ class Settings
 			 */
 			get is_containerized()
 			{
-				return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("container")); //(Game.settings.is_remote) || (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("container"));
+				return (typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("container"));
 			}
 			
 			/**
@@ -288,7 +289,7 @@ class Settings
 				{
 					
 					// If server running remotely from a container...
-					if (Game.settings.is_containerized)
+					if (Game.settings.is_remote && Game.settings.is_containerized)
 					{
 						
 						// Get default containerized server root path
@@ -334,7 +335,7 @@ class Settings
 				{
 					
 					// If game is hosted remotely from a container...
-					if (Game.settings.is_containerized)
+					if (Game.settings.is_remote && Game.settings.is_containerized)
 					{
 						
 						// Get default containerized root path

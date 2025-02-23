@@ -235,7 +235,11 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 		if (player_id != null)
 		{
 			player = Game.players[player_id];
-			player_nameplate = c_yellow + " [" + player.name + "]";
+			
+			if (player)
+			{
+				player_nameplate = c_yellow + " [" + player.name + "]";
+			}
 		}
 		
 		// If a message type was provided, handle message by type...
@@ -408,9 +412,10 @@ import Multiplayer from '../../classes/multiplayer.class.js';
 		 */
 		function is_remote()
 		{
-			return (typeof location !== 'undefined' && location.hostname != "" && (Game.settings.multiplayer_remote_dedicated_server.includes(location.hostname) ||
-																				   Game.settings.multiplayer_remote_http_server.includes(location.hostname) ||
-																				   Game.settings.multiplayer_remote_signaling_server.includes(location.hostname)));
+			return ((typeof process !== 'undefined' && process.argv.length > 2 && process.argv.includes("remote")) ||
+					(typeof location !== 'undefined' && location.hostname != "" && (Game.settings.multiplayer_remote_dedicated_server.includes(location.hostname) ||
+																					Game.settings.multiplayer_remote_http_server.includes(location.hostname) ||
+																					Game.settings.multiplayer_remote_signaling_server.includes(location.hostname))));
 		}
 		
 		/**
