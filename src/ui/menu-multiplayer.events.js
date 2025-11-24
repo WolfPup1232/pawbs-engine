@@ -98,7 +98,7 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 		
 		
 		//#region [Join Game Menu]
-		
+			
 			/**
 			 * Initializes and shows the multiplayer menu join game UI.
 			 */
@@ -147,8 +147,11 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 				// Show multiplayer menu join game UI
 				$('#menu-multiplayer-join-game').delay(256).fadeIn(256);
 				
-				// Update servers list
+				// Update server list
 				Game.ui.menus.updateGamesList();
+				
+				// Start server ping refresh timer
+				Game.ui.menus.startServerPingTimer();
 				
 			}
 			
@@ -158,13 +161,19 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 			Game.ui.menus.hideMultiplayerJoinGameMenu = function hideMultiplayerJoinGameMenu()
 			{
 				
+				// Stop periodic ping refresh
+				Game.ui.menus.stopServerPingTimer();
+				
 				// Hide multiplayer menu join game UI
 				$('#menu-multiplayer-join-game').fadeOut(256);
 				
 			}
 			
+			
+			// Game Server Listings
+			
 			/**
-			 * Updates the list of available games to join.
+			 * Updates the list of available dedicated server/P2P games to join.
 			 */
 			Game.ui.menus.updateGamesList = function updateGamesList()
 			{
@@ -173,31 +182,89 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 				$('#multiplayer-games-list').empty();
 				$('#multiplayer-server-status').html("");
 				
-				// If the dedicated server list is being updated...
+				// If the dedicated server games list is being updated...
 				if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.DedicatedClient)
 				{
 					
-					// Attempt to load remote servers list...
-					fetch(Game.settings.path_servers).then((response) => response.json()).then((servers) => Game.ui.menus.updateGamesListCallback(servers)).catch(error => {
+					// Track the current server index for both local and remote servers
+					let current_server_index = 0;
+					
+					// Load local dedicated game servers...
+					fetch(Game.settings.path_servers).then((response) => response.json()).then((local_servers) => {
 						
-						// Error loading servers
-						console.error("Error loading '" + Game.settings.path_servers + "': ", error);
-						
-						// Attempt to load local servers list...
-						fetch(Game.settings.path_servers_local).then((response) => response.json()).then((servers) => Game.ui.menus.updateGamesListCallback(servers)).catch(error => {
+						// Add local dedicated servers to games list with [Local] prefix...
+						Object.keys(local_servers).forEach((server_name) => {
 							
-							// Error loading servers
-							console.error("Error loading '" + Game.settings.path_servers_local + "': ", error);
+							const server_address = local_servers[server_name];
+							const prefixed_name = "[Local] " + server_name;
 							
-							// Update dedicated server status text
-							$('#multiplayer-server-status').html("Could not fetch server list from '" + Game.settings.path_servers + ".<br />or local copy from '" + Game.settings.path_servers_local + "'.");
+							Game.ui.menus.addDedicatedServerToList(prefixed_name, server_address, current_server_index);
+							
+							current_server_index++;
 							
 						});
 						
+					})
+					.catch((error) => {
+						console.error("Error loading local servers from '" + Game.settings.path_servers + "': ", error);
 					});
 					
+					// Check for remote servers list path...
+					if (Game.settings.path_remote_servers != "")
+					{
+						
+						// Show loading status for remote servers
+						$('#multiplayer-server-status').html("Loading remote servers...");
+						
+						// Create abort controller for remote request timeout
+						const abort_controller = new AbortController();
+						const abort_timeout = setTimeout(() => abort_controller.abort(), 5000);
+						
+						// Load remote dedicated game servers...
+						fetch(Game.settings.path_remote_servers, { signal: abort_controller.signal }).then((response) => response.json()).then((remote_servers) => {
+							
+							// Clear remote request timeout
+							clearTimeout(abort_timeout);
+							
+							// Clear loading status
+							$('#multiplayer-server-status').html("");
+							
+							// Add remote dedicated servers to games list with [Remote] prefix...
+							Object.keys(remote_servers).forEach((server_name) => {
+								
+								const server_address = remote_servers[server_name];
+								const prefixed_name = "[Remote] " + server_name;
+								
+								Game.ui.menus.addDedicatedServerToList(prefixed_name, server_address, current_server_index);
+								
+								current_server_index++;
+								
+							});
+							
+						})
+						.catch((error) => {
+							
+							// Clear remote request timeout
+							clearTimeout(abort_timeout);
+							
+							// Show error message...
+							if (error.name === 'AbortError')
+							{
+								console.error("Timeout loading remote servers from '" + Game.settings.path_remote_servers + "'");
+								$('#multiplayer-server-status').html("Remote server list timed out.");
+							}
+							else
+							{
+								console.error("Error loading remote servers from '" + Game.settings.path_remote_servers + "': ", error);
+								$('#multiplayer-server-status').html("Could not fetch remote server list.");
+							}
+							
+						});
+						
+					}
 					
-				} // Otherwise, if the P2P server list is being updated...
+					
+				} // Otherwise, if the P2P games list is being updated...
 				else if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.P2PClient)
 				{
 					
@@ -209,97 +276,42 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 			}
 			
 			/**
-			 * Finishes updating the list of available games to join.
+			 * Updates the list of available P2P games to join.
 			 *
 			 * @param {Object} servers A list of all dedicated servers or P2P games available to join.
 			 * @param {number} latency Optional latency value for the P2P signaling server.
 			 */
-			Game.ui.menus.updateGamesListCallback = function updateGamesListCallback(servers, latency = null)
+			Game.ui.menus.updateP2PGamesList = function updateP2PGamesList(servers, latency = null)
 			{
 				
-				// If the dedicated server list is being updated...
-				if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.DedicatedClient)
-				{
+				// Get next highest game index in the list
+				let game_index = $('#multiplayer-games-list').children().length;
+				
+				// List each P2P game server available from the P2P signaling server...
+				Object.keys(servers).forEach(game_id => {
 					
-					// Initialize current server index in list
-					let server_index = 0;
+					// Get game details
+					const game = servers[game_id];
+					const game_name = game.name;
 					
-					// List each server...
-					Object.keys(servers).forEach(server => {
+					// Check if this P2P game server already exists in the list...
+					const existing_element = $(`#multiplayer-games-list [data-game-id="${game_id}"]`);
+					if (existing_element.length > 0)
+					{
 						
-						// Get server name and address
-						const server_name = server;
-						const server_address = servers[server];
+						// P2P server listing already exists, just update its ping and player count
+						const existing_index = existing_element.attr('data-server-index');
+						Game.ui.menus.updateGamesListServerPlayerCount(existing_index, game.player_count);
+						Game.ui.menus.updateGamesListServerPing(existing_index, latency);
 						
-						// Initialize a single server listing element
-						let server_element = `
-						<div class="d-flex align-items-center border rounded hover-light-gradient text-center fw-bold p-2 mb-2 shadow">
-							<div id="multiplayer-server-name-${server_index}-container" class="col-7 border-end"
-							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<span id="multiplayer-server-name-${server_index}" class="tiny">${server_name}</span>
-							</div>
-							<div id="multiplayer-server-player-count-${server_index}-container" class="col-1 col-xl-2 border-end"
-							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<span id="multiplayer-server-player-count-${server_index}" class="tiny badge bg-white-75">0</span>
-							</div>
-							<div id="multiplayer-server-ping-${server_index}-container" class="col-2 col-xl-1 border-end"
-							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<span id="multiplayer-server-ping-${server_index}" class="tiny badge bg-white-75 px-1"><i class="bi bi-wifi"></i> 0</span>
-							</div>
-							<div id="multiplayer-server-join-${server_index}-container" class="w-100 my-0 ms-2 me-0"
-							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<button id="multiplayer-server-join-${server_index}" server_index="${server_index}" type="button" class="btn btn-sm btn-secondary tiny text-nowrap m-0 w-100" disabled><span class="d-block d-xl-none">Join</span><span class="d-none d-xl-block">Join Game</span></button>
-							</div>
-						</div>`;
 						
-						// Add server element to list element
-						$('#multiplayer-games-list').append(server_element);
+					} // Otherwise, if this P2P game server isn't listed yet...
+					else
+					{
 						
-						// Initialize server join button click event...
-						$('#multiplayer-server-join-' + server_index).off();
-						$('#multiplayer-server-join-' + server_index).on('click', function()
-						{
-							
-							// Hide multiplayer join game menu UI
-							Game.ui.menus.hideMultiplayerJoinGameMenu();
-							
-							// Get the game ID
-							const game_id = $(this).attr("game_id");
-							
-							// Join the selected game
-							Multiplayer.connect(server_address, Multiplayer.ConnectionTypes.DedicatedClient, function() { Multiplayer.joinGame(game_id); });
-							
-						});
-						
-						// Ping server to update its listing details
-						Multiplayer.ping(server_address, server_index);
-						
-						// Continue to the next server in the list...
-						server_index++;
-						
-					});
-					
-					// Reset dedicated server status text
-					$('#multiplayer-server-status').html("");
-					
-					
-				} // Otherwise, if the P2P server list is being updated...
-				else if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.P2PClient)
-				{
-					
-					// Initialize current game index in list
-					let game_index = 0;
-					
-					// List each P2P game...
-					Object.keys(servers).forEach(game_id => {
-						
-						// Get game
-						const game = servers[game_id];
-						const game_name = game.name;
-						
-						// Initialize a single game listing element
+						// Initialize a single game server listing HTML DOM element
 						let game_element = `
-						<div class="d-flex align-items-center border rounded hover-light-gradient text-center p-2 mb-2">
+						<div class="d-flex align-items-center border rounded hover-light-gradient text-center p-2 mb-2" data-game-id="${game_id}" data-server-index="${game_index}">
 							<div id="multiplayer-server-name-${game_index}-container" class="col-7 border-end"
 							data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<span id="multiplayer-server-name-${game_index}" class="tiny">${game_name}</span>
@@ -318,11 +330,11 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 							</div>
 						</div>`;
 						
-						// Add game element to list element
+						// Add server element to games list element
 						$('#multiplayer-games-list').append(game_element);
 						
-						// Update game listing details
-						Game.ui.menus.updateGamesListServerPlayerCount(game_index, game.player_count)
+						// Update game server listing details
+						Game.ui.menus.updateGamesListServerPlayerCount(game_index, game.player_count);
 						Game.ui.menus.updateGamesListServerPing(game_index, latency);
 						Game.ui.menus.updateGamesListServerGameID(game_index, game_id);
 						
@@ -342,17 +354,152 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 							
 						});
 						
-						// Continue to the next game in the list...
+						// Continue to the next P2P game server in the list
 						game_index++;
+						
+					}
+					
+				});
+				
+				// Reset P2P signaling server status text
+				$('#multiplayer-server-status').html("");
+				
+			}
+			
+			/**
+			 * Adds a single dedicated server to the games list.
+			 *
+			 * @param {string} server_name The display name of the server.
+			 * @param {string} server_address The WebSocket address of the server.
+			 * @param {number} server_index The index of the server in the list.
+			 */
+			Game.ui.menus.addDedicatedServerToList = function addDedicatedServerToList(server_name, server_address, server_index)
+			{
+				
+				// Initialize a single game server listing HTML DOM element
+				let server_element = `
+				<div class="d-flex align-items-center border rounded hover-light-gradient text-center fw-bold p-2 mb-2 shadow" data-server-address="${server_address}" data-server-index="${server_index}">
+					<div id="multiplayer-server-name-${server_index}-container" class="col-7 border-end"
+					data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
+						<span id="multiplayer-server-name-${server_index}" class="tiny">${server_name}</span>
+					</div>
+					<div id="multiplayer-server-player-count-${server_index}-container" class="col-1 col-xl-2 border-end"
+					data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
+						<span id="multiplayer-server-player-count-${server_index}" class="tiny badge bg-white-75">0</span>
+					</div>
+					<div id="multiplayer-server-ping-${server_index}-container" class="col-2 col-xl-1 border-end"
+					data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
+						<span id="multiplayer-server-ping-${server_index}" class="tiny badge bg-white-75 px-1"><i class="bi bi-wifi"></i> 0</span>
+					</div>
+					<div id="multiplayer-server-join-${server_index}-container" class="w-100 my-0 ms-2 me-0"
+					data-bs-title="Pinging server..." data-bs-toggle="tooltip" data-bs-placement="bottom">
+						<button id="multiplayer-server-join-${server_index}" server_index="${server_index}" type="button" class="btn btn-sm btn-secondary tiny text-nowrap m-0 w-100" disabled><span class="d-block d-xl-none">Join</span><span class="d-none d-xl-block">Join Game</span></button>
+					</div>
+				</div>`;
+				
+				// Add server element to games list element
+				$('#multiplayer-games-list').append(server_element);
+				
+				// Initialize server join button click event...
+				$('#multiplayer-server-join-' + server_index).off();
+				$('#multiplayer-server-join-' + server_index).on('click', function()
+				{
+					
+					// Hide multiplayer join game menu UI
+					Game.ui.menus.hideMultiplayerJoinGameMenu();
+					
+					// Get the game ID
+					const game_id = $(this).attr("game_id");
+					
+					// Join the selected game
+					Multiplayer.connect(server_address, Multiplayer.ConnectionTypes.DedicatedClient, function() { Multiplayer.joinGame(game_id); });
+					
+				});
+				
+				// Ping server to update its listing details
+				Multiplayer.ping(server_address, server_index);
+				
+			}
+			
+			
+			// Game Server Ping
+			
+			/**
+			 * The interval timer for updating server ping values in the server list.
+			 */
+			Game.ui.menus.server_ping_interval = null;
+			
+			/**
+			 * Starts the server list ping update timer.
+			 */
+			Game.ui.menus.startServerPingTimer = function startServerPingTimer()
+			{
+				
+				// Clear any existing interval timers...
+				if (Game.ui.menus.server_ping_interval)
+				{
+					clearInterval(Game.ui.menus.server_ping_interval);
+				}
+				
+				// Start new interval timer
+				Game.ui.menus.server_ping_interval = setInterval(() => { Game.ui.menus.refreshServerPings(); }, 2000);
+				
+			}
+			
+			/**
+			 * Stops the server list ping update timer.
+			 */
+			Game.ui.menus.stopServerPingTimer = function stopServerPingTimer()
+			{
+				
+				// Clear any existing interval timers...
+				if (Game.ui.menus.server_ping_interval)
+				{
+					clearInterval(Game.ui.menus.server_ping_interval);
+					Game.ui.menus.server_ping_interval = null;
+				}
+				
+			}
+			
+			/**
+			 * Refreshes the ping for all servers currently in the games list.
+			 */
+			Game.ui.menus.refreshServerPings = function refreshServerPings()
+			{
+				
+				// If the dedicated server games list is being updated...
+				if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.DedicatedClient)
+				{
+					
+					// Iterate through each game server listing...
+					$('#multiplayer-games-list').children().each(function()
+					{
+						
+						// Get server address and index from HTML DOM element data attributes
+						const server_address = $(this).attr('data-server-address');
+						const server_index = parseInt($(this).attr('data-server-index'));
+						
+						// Re-ping the server...
+						if (server_address && !isNaN(server_index))
+						{
+							Multiplayer.ping(server_address, server_index);
+						}
 						
 					});
 					
-					// Reset signaling server status text
-					$('#multiplayer-server-status').html("");
+				} // Otherwise, if the P2P server list is being updated...
+				else if (Game.settings.multiplayer_default_connection_type == Multiplayer.ConnectionTypes.P2PClient)
+				{
+					
+					// Ping P2P signaling server
+					Multiplayer.ping(Game.settings.multiplayer_signaling_server, null, true);
 					
 				}
 				
 			}
+			
+			
+			// Game Server Listing Updates
 			
 			/**
 			 * Updates the name of the specified server in the games list.
@@ -464,8 +611,9 @@ export default function initializeMultiplayerMenuUIEventHandlers()
 					
 				}
 				
-				// Re-initialize tooltips
-				Game.ui.utilities.initializeTooltips();
+				// Refresh all UI tooltips
+				Game.ui.refreshTooltips();
+				
 			}
 			
 			/**

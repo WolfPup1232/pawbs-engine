@@ -139,6 +139,11 @@ class Settings
 				 */
 				this.multiplayer_default_connection_type = Multiplayer.ConnectionTypes.None;
 				
+				/**
+				 * The default multiplayer server tick rate.
+				 */
+				this.multiplayer_default_tick_hz = 50;
+				
 				
 				//#region [Dedicated Server]
 					
@@ -407,32 +412,9 @@ class Settings
 			}
 			
 			/**
-			 * The default dedicated servers list JSON file path.
-			 */
-			get path_servers()
-			{
-				
-				// Get the default local root path
-				let path = Game.settings.path_root + Game.settings.path_local_servers;
-				
-				// If remote path has been defined...
-				if (Game.settings.path_remote_servers != "")
-				{
-					
-					// Get the default remote root path
-					path = Game.settings.path_remote_servers;
-					
-				}
-				
-				// Return file path
-				return path;
-				
-			}
-			
-			/**
 			 * The default local dedicated servers list JSON file path.
 			 */
-			get path_servers_local()
+			get path_servers()
 			{
 				
 				// Return the default local root path

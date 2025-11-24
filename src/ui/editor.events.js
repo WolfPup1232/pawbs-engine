@@ -6,6 +6,9 @@ import Game from '../classes/game.class.js';
 import Assets from '../classes/assets.class.js';
 import Editor from '../classes/editor.class.js';
 
+// Class Imports
+import Billboard from '../classes/billboard.class.js';
+
 /**
  * Initializes the in-game editor UI event handlers.
  */
@@ -71,6 +74,9 @@ export default function initializeEditorUIEventHandlers()
 				// Update editor main menu
 				Game.ui.editor.updateEditorMenu();
 				
+				// Update scene graph UI
+				Game.ui.editor.updateSceneGraphWindow();
+				
 				// Update selected object material textures UI
 				Game.ui.editor.updateAssetPickerFolders(Assets.textures, "#editor-selected-objects-materials-texture-select", "#editor-selected-objects-materials-texture-grid");
 				
@@ -89,9 +95,77 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// Set selected objects window maximum height
-				$('#editor-selected-objects-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-menu').height()) + 'px - 2rem)'});
+				$('#editor-selected-objects-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
+				
+				// Set scene graph window maximum height
+				$('#editor-scene-graph-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
 				
 			}
+			
+		//#endregion
+		
+		
+		//#region [Scene Graph]
+			
+			/**
+			 * Updates the scene graph window UI elements.
+			 */
+			Game.ui.editor.updateSceneGraphWindow = function updateSceneGraphWindow()
+			{
+				
+				// De-initialize any existing event handlers on the scene graph container and its controls
+				Game.ui.utilities.removeAllEventHandlers("#editor-scene-graph-list");
+				Game.ui.utilities.removeAllEventHandlers("#editor-scene-graph-sort");
+				
+				// Get scene graph container
+				const container = $("#editor-scene-graph-list");
+				
+				// Get the current sort mode
+				const sort_mode = ($("#editor-scene-graph-sort").val() || "none");
+				const sort_by_type = (sort_mode === "type");
+				
+				// Re-initialize the scene graph root list
+				container.empty();
+				const root_list = $('<ul class="editor-scene-graph"></ul>');
+				container.append(root_list);
+				
+				// Get root objects
+				let roots = Game.world && Game.world.objects ? Array.from(Game.world.objects) : [];
+				
+				// Render root objects and their children
+				Game.ui.utilities.renderChildren(root_list, roots, 0, sort_by_type);
+				
+				// Toggle expand/collapse handler...
+				container.on('click', '.editor-scene-graph-toggle:not(.disabled)', function()
+				{
+					
+					// Get the current list item and its children
+					const li = $(this).closest('li');
+					const children = li.children('ul.editor-scene-graph-children');
+					
+					// Toggle visibility and update the caret icon accordingly...
+					if (children.is(':visible'))
+					{
+						children.hide();
+						$(this).html('<i class="bi bi-caret-right-fill"></i>');
+					}
+					else
+					{
+						children.show();
+						$(this).html('<i class="bi bi-caret-down-fill"></i>');
+					}
+					
+				});
+				
+				// When sort dropdown changes, re-render scene graph to apply new sort mode...
+				$('#editor-scene-graph-sort').on('change', () => {
+					Game.ui.editor.updateSceneGraphWindow();
+				});
+				
+				// Refresh all UI tooltips
+				Game.ui.refreshTooltips();
+				
+			};
 			
 		//#endregion
 		
@@ -129,6 +203,8 @@ export default function initializeEditorUIEventHandlers()
 					
 					// Show selected object UI
 					$('#editor-selected-objects').show();
+					$('#editor-tool-selected').prop('checked', true);
+					$('#editor-tool-selected').prop('disabled', false);
 					
 					// Update grid snaps
 					if ($('#editor-selected-objects-transform-position-snap-checkbox').is(':checked'))
@@ -213,6 +289,8 @@ export default function initializeEditorUIEventHandlers()
 					
 					// Hide selected object UI
 					$('#editor-selected-objects').hide();
+					$('#editor-tool-selected').prop('checked', false);
+					$('#editor-tool-selected').prop('disabled', true);
 					
 				}
 				
@@ -246,7 +324,7 @@ export default function initializeEditorUIEventHandlers()
 			 * @param {string} dropdown_element The ID of the HTML DOM select element to list the assets folder structure in.
 			 * @param {string} grid_element The ID of the HTML DOM grid element to fill with asset thumbnails.
 			 */
-			Game.ui.editor.updateAssetPickerFolders = function updateAssetPickerFolders(assets, dropdown_element, grid_element)
+			Game.ui.editor.updateAssetPickerFolders = function updateAssetPickerFolders(assets, dropdown_element, grid_element, show_add_button = false)
 			{
 				
 				// Remove any existing event handlers
@@ -335,7 +413,7 @@ export default function initializeEditorUIEventHandlers()
 					$(dropdown_element).on('change', () => {
 						
 						// Update the list of textures in the texture picker
-						Game.ui.editor.updateAssetPicker(Assets.textures, dropdown_element, grid_element);
+						Game.ui.editor.updateAssetPicker(Assets.textures, dropdown_element, grid_element, show_add_button);
 						
 					});
 					
@@ -350,11 +428,11 @@ export default function initializeEditorUIEventHandlers()
 						Assets.objectThumbnailsStopAnimating().then(() => {
 							
 							// If object spawn tool is enabled...
-							if (Editor.tool_mode == Editor.ToolMode.Spawn && Editor.spawn_tool == Editor.SpawnTools.Objects)
+							if (Editor.spawn_tool == Editor.SpawnTools.Objects)
 							{
 								
 								// Update the list of prefab objects in the spawn tool
-								Game.ui.editor.updateAssetPicker(Assets.objects, dropdown_element, grid_element);
+								Game.ui.editor.updateAssetPicker(Assets.objects, dropdown_element, grid_element, show_add_button);
 								
 							}
 							
@@ -365,7 +443,7 @@ export default function initializeEditorUIEventHandlers()
 				}
 				
 				// Update the list of assets in the asset picker
-				Game.ui.editor.updateAssetPicker(assets, dropdown_element, grid_element);
+				Game.ui.editor.updateAssetPicker(assets, dropdown_element, grid_element, show_add_button);
 				
 			}
 			
@@ -376,7 +454,7 @@ export default function initializeEditorUIEventHandlers()
 			 * @param {string} dropdown_element The ID of the HTML DOM select element to list the assets folder structure in.
 			 * @param {string} grid_element The ID of the HTML DOM spawn grid element to fill with asset thumbnails.
 			 */
-			Game.ui.editor.updateAssetPicker = function updateAssetPicker(assets, dropdown_element, grid_element)
+			Game.ui.editor.updateAssetPicker = function updateAssetPicker(assets, dropdown_element, grid_element, show_add_button = false)
 			{
 				
 				// Hide anything that could be obscuring the spawn grid
@@ -390,11 +468,38 @@ export default function initializeEditorUIEventHandlers()
 				// Empty the asset picker of any previous assets
 				$(grid_element).empty();
 				
-				// Generate asset list by iterating through every asset file path
+				// If an "Add" button should be displayed in the asset picker...
+				if (show_add_button)
+				{
+					
+					// Add Texture button...
+					if (assets == Assets.textures)
+					{
+						
+						// Initialize a new Add Texture button element for the texture picker UI
+						$(grid_element).append('<div class="editor-selected-objects-materials-texture-cell d-flex"><span class="m-auto fs-1" data-bs-title="Import Texture..." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-plus-lg"></i></span></div>');
+						
+						// Texture element click event
+						$('.editor-selected-objects-materials-texture-image').on('click', function()
+						{
+							
+							// Import a texture from an image file
+							Editor.importTexture();
+							
+							// Update the list of assets in the asset picker
+							Game.ui.editor.updateAssetPicker(assets, dropdown_element, grid_element, show_add_button);
+							
+						});
+						
+					}
+					
+				}
+				
+				// Generate asset list by iterating through every asset file path...
 				for (let [key, asset] of Object.entries(assets))
 				{
 					
-					// Skip if asset file path is empty
+					// Skip if asset file path is empty...
 					if (asset.path == "")
 					{
 						continue;
@@ -410,19 +515,16 @@ export default function initializeEditorUIEventHandlers()
 						value += parts[i] + "/";
 					}
 					
-					// Check if the current asset belongs to the selected asset folder
+					// Check if the current asset belongs to the selected asset folder...
 					if ($(dropdown_element).find(':selected').val() == value)
 					{
 						
-						// Initialize texture picker...
+						// Initialize texture picker elements...
 						if (assets == Assets.textures)
 						{
 							
 							// Initialize a new texture element for the texture picker UI
-							const cell = $('<div class="editor-selected-objects-materials-texture-cell"><img src="' + asset.path + '" class="editor-selected-objects-materials-texture-image img-fluid" alt="' + key + '" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
-							
-							// Add the new texture element to the texture picker UI
-							$(grid_element).append(cell);
+							$(grid_element).append('<div class="editor-selected-objects-materials-texture-cell"><img src="' + asset.path + '" class="editor-selected-objects-materials-texture-image img-fluid" alt="' + key + '" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>');
 							
 							// Texture element click event
 							$('.editor-selected-objects-materials-texture-image').on('click', function()
@@ -450,7 +552,7 @@ export default function initializeEditorUIEventHandlers()
 							});
 							
 							
-						} // Initialize object picker...
+						} // Initialize object picker elements...
 						else if (assets == Assets.objects)
 						{
 							
@@ -458,7 +560,7 @@ export default function initializeEditorUIEventHandlers()
 							$(grid_element).append($('<div id="editor-spawn-cell-' + key + '" class="editor-spawn-cell" data-bs-title="' + key + '" data-bs-toggle="tooltip" data-bs-placement="bottom"></div>'));
 							Assets.createObjectThumbnail(Assets.objects[key].deepClone(), $('#editor-spawn-cell-' + key));
 							
-							// Thumbnail element click event
+							// Prefab object thumbnail element click event
 							$('#editor-spawn-cell-' + key).on('click', () => {
 								
 								// If a primitive object's thumbnail was clicked...
@@ -513,8 +615,8 @@ export default function initializeEditorUIEventHandlers()
 									
 								}
 								
-								// Re-initialize tooltips
-								Game.ui.utilities.initializeTooltips();
+								// Refresh all UI tooltips
+								Game.ui.refreshTooltips();
 								
 							});
 							
@@ -527,8 +629,8 @@ export default function initializeEditorUIEventHandlers()
 				// Show the spawn objects panel
 				$('#editor-spawn-panel-objects').show();
 				
-				// Re-initialize tooltips
-				Game.ui.utilities.initializeTooltips();
+				// Refresh all UI tooltips
+				Game.ui.refreshTooltips();
 				
 			}
 			
@@ -709,38 +811,40 @@ export default function initializeEditorUIEventHandlers()
 			//#region [Tools]
 				
 				/**
-				 * Editor tool type selected checkbox change event.
-				 */
-				$('input[type="checkbox"][name="editor-tool-types"]').on('change', function()
+				* 
+				*/
+				$('#editor-tool-selected').on('change', function()
 				{
-						
-					// Get editor tool type selected checkbox value
+					
+					// 
 					if ($(this).prop('checked'))
 					{
-						Editor.tool_mode = parseInt($(this).val());
+						
+						// 
+						$('#editor-selected-objects').show();
+						
 					}
 					else
 					{
-						Editor.tool_mode = Editor.ToolMode.None;
+						
+						// 
+						$('#editor-selected-objects').hide();
+						
 					}
 					
-					// Hide all editor tools
-					$('#editor-spawn-tool').hide();
-					//$('#editor-npcs-tool').hide();
-					//$('#editor-cinematics-tool').hide();
+				});
+				
+				/**
+				* 
+				*/
+				$('#editor-tool-spawn').on('change', function()
+				{
 					
-					// Stop object thumbnails from animating
-					Assets.objectThumbnailsStopAnimating();
-					
-					// Spawn Tool
-					if (Editor.tool_mode == Editor.ToolMode.Spawn)
+					// 
+					if ($(this).prop('checked'))
 					{
 						
-						// Uncheck other tools
-						$('#editor-tool-npcs').prop('checked', false);
-						$('#editor-tool-cinematics').prop('checked', false);
-							
-						// Show spawn tool
+						// 
 						$('#editor-spawn-tool').show();
 						
 						if (Editor.spawn_tool == Editor.SpawnTools.Objects)
@@ -768,29 +872,12 @@ export default function initializeEditorUIEventHandlers()
 							
 						}
 						
-						
-					} // NPCs Tool
-					else if (Editor.tool_mode == Editor.ToolMode.NPC)
+					}
+					else
 					{
 						
-						// Uncheck other tools
-						$('#editor-tool-spawn').prop('checked', false);
-						$('#editor-tool-cinematics').prop('checked', false);
-						
-						// Show NPCs tool
-						//$('#editor-spawn-npcs').show();
-						
-						
-					} // Cinematics Tool
-					else if (Editor.tool_mode == Editor.ToolMode.Cinematics)
-					{
-						
-						// Uncheck other tools
-						$('#editor-tool-spawn').prop('checked', false);
-						$('#editor-tool-npcs').prop('checked', false);
-												
-						// Show cinematics tool
-						//$('#editor-cinematics-tool').show();
+						// 
+						$('#editor-spawn-tool').hide();
 						
 					}
 					
@@ -1154,14 +1241,48 @@ export default function initializeEditorUIEventHandlers()
 					$('#editor-selected-objects-transform-position-snap').on('change', function()
 					{
 						
-						// Check if position grid snap is enabled
-						if ($('#editor-selected-objects-transform-position-snap-checkbox').prop('checked'))
+						const snap_amount = parseFloat(this.value);
+						
+						if (!$('#editor-selected-objects-transform-position-snap-checkbox').prop('checked') || !snap_amount)
+						{
+							Game.player.controls.transform_controls.translationSnap = Game.player.controls.transform_controls.scaleSnap = null;
+							$('#editor-selected-objects-transform-scale-snap').val('');
+							
+							return;
+						}
+						
+						Game.player.controls.transform_controls.translationSnap = snap_amount;
+						
+						let scale_snap = 0.01;
+						const object = Game.player.controls.transform_controls.object;
+						
+						if (object)
 						{
 							
-							// Set position grid snap
-							Game.player.controls.transform_controls.translationSnap = $('#editor-selected-objects-transform-position-snap').val();
+							const box   = new THREE.Box3().setFromObject(object);
+							const size  = new THREE.Vector3();
+							box.getSize(size);
+							const half  = size.multiplyScalar(0.5);
+							
+							switch (Game.player.controls.transform_controls.axis?.charAt(0))
+							{
+								case 'X':
+									scale_snap = snap_amount / half.x;
+									break;
+								case 'Y':
+									scale_snap = snap_amount / half.y;
+									break;
+								case 'Z':
+									scale_snap = snap_amount / half.z;
+									break;
+								default:
+									scale_snap = snap_amount / Math.max(half.x, half.y, half.z);
+							}
 							
 						}
+						
+						Game.player.controls.transform_controls.scaleSnap = scale_snap;
+						$('#editor-selected-objects-transform-scale-snap').val(scale_snap.toFixed(4));
 						
 					});
 					
@@ -1233,14 +1354,48 @@ export default function initializeEditorUIEventHandlers()
 					$('#editor-selected-objects-transform-scale-snap').on('change', function()
 					{
 						
-						// Check if scale grid snap is enabled
-						if ($('#editor-selected-objects-transform-scale-snap-checkbox').prop('checked'))
+						const snap_amount = parseFloat(this.value);
+						
+						if (!$('#editor-selected-objects-transform-scale-snap-checkbox').prop('checked') || !snap_amount)
+						{
+							Game.player.controls.transform_controls.scaleSnap = Game.player.controls.transform_controls.translationSnap = null;
+							$('#editor-selected-objects-transform-position-snap').val('');
+							
+							return;
+						}
+						
+						Game.player.controls.transform_controls.scaleSnap = snap_amount;
+						
+						let translation_snap = 0.01;
+						const object = Game.player.controls.transform_controls.object;
+						
+						if (object)
 						{
 							
-							// Set scale grid snap
-							Game.player.controls.transform_controls.scaleSnap = $('#editor-selected-objects-transform-scale-snap').val();
+							const size = new THREE.Vector3();
+							new THREE.Box3().setFromObject(object).getSize(size);
+							size.multiplyScalar(0.5);
+							
+							const axis = (Game.player.controls.transform_controls.axis || '').charAt(0);
+							switch (axis)
+							{
+								case 'X':
+									translation_snap = snap_amount * size.x;
+									break;
+								case 'Y':
+									translation_snap = snap_amount * size.y;
+									break;
+								case 'Z':
+									translation_snap = snap_amount * size.z;
+									break;
+								default:
+									translation_snap = snap_amount * Math.max(size.x, size.y, size.z);
+							}
 							
 						}
+						
+						Game.player.controls.transform_controls.translationSnap = translation_snap;
+						$('#editor-selected-objects-transform-position-snap').val(translation_snap.toFixed(4));
 						
 					});
 					

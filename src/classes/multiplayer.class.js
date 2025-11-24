@@ -185,6 +185,26 @@ class Multiplayer
 		//#endregion
 		
 		
+		//#region [Ping]
+			
+			/**
+			 * The interval timer for sending ping messages to measure latency.
+			 */
+			static ping_interval = null;
+			
+			/**
+			 * The timestamp of the last sent ping message, used to calculate RTT (Round-Trip Time).
+			 */
+			static ping_timestamp = 0;
+			
+			/**
+			 * The number of milliseconds between ping messages.
+			 */
+			static ping_rate = 5000;
+			
+		//#endregion
+		
+		
 	//#endregion
 	
 	
@@ -194,6 +214,43 @@ class Multiplayer
 		 * Static class constructor.
 		 */
 		static { }
+		
+	//#endregion
+	
+	
+	//#region [Properties]
+		
+		/**
+		 * Flag indicating whether or not the current game instance is being run by a dedicated server.
+		 */
+		static get is_dedicated_server()
+		{
+			return (this.enabled && this.connection_type == this.ConnectionTypes.DedicatedServer);
+		}
+		
+		/**
+		 * Flag indicating whether or not the current game instance is being run by a P2P signaling server.
+		 */
+		static get is_signaling_server()
+		{
+			return (this.enabled && this.connection_type == this.ConnectionTypes.SignalingServer);
+		}
+		
+		/**
+		 * Flag indicating whether or not the current game instance is being run by an HTTP server.
+		 */
+		static get is_http_server()
+		{
+			return (this.enabled && this.connection_type == this.ConnectionTypes.HTTPServer);
+		}
+		
+		/**
+		 * Flag indicating whether or not the current user-controlled player is a P2P connection client.
+		 */
+		static get is_p2p_client()
+		{
+			return (this.enabled && this.connection_type == this.ConnectionTypes.P2PClient && !this.p2p_is_host);
+		}
 		
 	//#endregion
 	
@@ -436,22 +493,33 @@ class Multiplayer
 							
 							// Get message data
 							const player = data.player;
+							const player_id = data.player_id;
 							
 							// If a new player has joined the game...
 							if (player.id != Game.player.id)
 							{
 								
-								// Add new player to game
-								this.addPlayer(player);
+								// Add new player to game (trust the player ID from the server)
+								this.addPlayer(player, null, true);
 								
 								// Add player joined message to chat log
 								Game.ui.chat.addChatMessage(data);
+								
+								// Refresh player list
+								Game.ui.player_list.refresh();
 								
 							}
 							
 							// If the multiplayer connection is via P2P and the current player is the host...
 							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
 							{
+								
+								// Validate that the claimed player ID matches the authenticated sender
+								if (player.id !== player_id)
+								{
+									console.error("Player ID mismatch: claimed " + player.id + " but authenticated as " + player_id);
+									return;
+								}
 								
 								// Send a JOINED_GAME event back to the player who joined the game
 								this.send(this.p2p_connections[player.id].p2p_data_channel, {
@@ -461,7 +529,7 @@ class Multiplayer
 									editor:		Editor.simplified,
 								});
 								
-								// Broadcast a PLAYER_JOINED event to all players except for the player which was just sent that JOINED_GAME event right above this
+								// Broadcast a PLAYER_JOINED event to all players except for the player which was just sent that JOINED_GAME event right above this block
 								this.broadcastP2P({
 									type: 		 Multiplayer.MessageTypes.PLAYER_JOINED,
 									player: 	 player,
@@ -500,6 +568,9 @@ class Multiplayer
 							// Remove the player from the game
 							delete Game.players[player_id];
 							
+							// Refresh player list
+							Game.ui.player_list.refresh();
+							
 							break;
 						}
 						
@@ -512,14 +583,14 @@ class Multiplayer
 							const position = data.position;
 							const rotation = data.rotation;
 							
-							// Only update players who aren't the current player...
+							// Only update players who aren't the current player
 							if (Game.player.id != player_id)
 							{
 								
 								// Get player to be updated
 								let player = Game.players[player_id];
 								
-								// Update player
+								// Update player position and rotation
 								player.position.set(parseFloat(position.x), parseFloat(position.y), parseFloat(position.z));
 								player.rotation.set(parseFloat(rotation.x), parseFloat(rotation.y), parseFloat(rotation.z));
 								
@@ -529,8 +600,13 @@ class Multiplayer
 							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
 							{
 								
-								// Broadcast a PLAYER_UPDATED event to all players except for the current player
-								this.broadcastP2P(data, Game.player.id);
+								// Broadcast player update to all other clients
+								this.broadcastP2P({
+									type: 		Multiplayer.MessageTypes.PLAYER_UPDATED,
+									player_id: 	player_id,
+									position: 	position,
+									rotation:	rotation,
+								}, player_id);
 								
 							}
 							
@@ -654,6 +730,87 @@ class Multiplayer
 					
 					//#region [Actions]
 						
+						// PING
+						case this.MessageTypes.PING:
+						{
+							
+							// Get message data
+							const player_id = data.player_id;
+							const ping = data.ping;
+							const client_ping = data.client_ping;
+							const timestamp = data.timestamp;
+							
+							// If this is a ping response (timestamp has been echoed back)...
+							if (timestamp)
+							{
+								
+								// Calculate RTT (Rount-Trip Time)
+								const rtt = performance.now() - timestamp;
+								
+								// Update the current player's ping history for calculating rolling average
+								Game.player.ping_history.push(rtt);
+								if (Game.player.ping_history.length > 5)
+								{
+									Game.player.ping_history.shift();
+								}
+								
+								// Calculate the current player's average ping
+								let total = 0;
+								for (let i = 0; i < Game.player.ping_history.length; i++)
+								{
+									total += Game.player.ping_history[i];
+								}
+								Game.player.ping = Math.round(total / Game.player.ping_history.length);
+								
+							}
+							
+							// If ping data for another player was included...
+							if (ping !== undefined && player_id && player_id !== Game.player.id)
+							{
+								
+								// Update other players' ping...
+								const player = Game.players[player_id];
+								if (player)
+								{
+									player.ping = ping;
+								}
+								
+							}
+							
+							// If the multiplayer connection is via P2P and the current player is the host...
+							if (this.connection_type == this.ConnectionTypes.P2PClient && this.p2p_is_host)
+							{
+								
+								// Validate sender's player ID...
+								if (player_id && Game.players[player_id])
+								{
+									
+									// Update sender's ping
+									Game.players[player_id].ping = client_ping || 0;
+									
+									// Echo the timestamp back to the sender for their RTT calculation...
+									const sender_connection = this.p2p_connections[player_id];
+									if (sender_connection && sender_connection.p2p_data_channel && sender_connection.p2p_data_channel.readyState === 'open')
+									{
+										this.send(sender_connection.p2p_data_channel, {
+											type: 		Multiplayer.MessageTypes.PING,
+											timestamp: 	timestamp,
+										});
+									}
+									
+									// Broadcast the sender's ping to all other clients...
+									this.broadcastP2P({
+										type: 		Multiplayer.MessageTypes.PING,
+										player_id: 	player_id,
+										ping:		Game.players[player_id].ping,
+									}, player_id);
+								}
+								
+							}
+							
+							break;
+						}
+						
 						// JOINED_GAME
 						case this.MessageTypes.JOINED_GAME:
 						{
@@ -663,10 +820,11 @@ class Multiplayer
 							const player = data.player;
 							const editor = data.editor;
 							
-							// Set game ID
+							// Set game ID and update player list title
 							Game.id = game.id;
+							Game.ui.player_list.setTitle(game.name);
 							
-							// Replace player ID with the player ID generated server-side
+							// Replace player ID with the player ID generated server-side...
 							if (Game.player.id != player.id)
 							{
 								Game.players[player.id] = Game.players[Game.player.id];
@@ -676,13 +834,16 @@ class Multiplayer
 							
 							// Add each player from the server's provided list of players to the game...
 							game.players.forEach((player) => {
+								
+								// Make sure the player being added doesn't share the same ID as the current user-controlled player...
 								if (player.id != Game.player.id)
 								{
 									
-									// Add player to game
-									this.addPlayer(player);
+									// Add player to game (trust the player ID from the server)
+									this.addPlayer(player, null, true);
 									
 								}
+								
 							});
 							
 							// Set editor state
@@ -690,6 +851,16 @@ class Multiplayer
 							
 							// Add player joined message to chat log
 							Game.ui.chat.addChatMessage(data);
+							
+							// Refresh player list and (re)start ping update interval
+							Game.ui.player_list.refresh();
+							Game.ui.player_list.startPingTimer();
+							
+							// (Re)Start ping measurement interval (for all non-hosts)...
+							if (!this.p2p_is_host)
+							{
+								this.startPingTimer();
+							}
 							
 							break;
 						}
@@ -715,7 +886,7 @@ class Multiplayer
 			//#region [Connectivity]
 				
 				/**
-				 * Pings the specified server and attempts to update its server listing.
+				 * Pings the specified server and attempts to update its game server listing.
 				 * @param {string} server_address The address of the server to ping.
 				 * @param {number} server_index Optional index of the server in its list.
 				 * @param {boolean} skip_compression Flag indicating whether or not to skip encoding and compressing message data.
@@ -738,17 +909,15 @@ class Multiplayer
 					// Record ping start time
 					let start = Date.now();
 					
-					// Server connection open event
+					// Server connection open event...
 					server.onopen = () => {
 						
 						// PING the server
-						this.send(server, {
-							type: 	Multiplayer.MessageTypes.PING,
-						}, skip_compression);
+						this.send(server, { type: 	Multiplayer.MessageTypes.PING, }, skip_compression);
 						
 					};
 					
-					// Server message event
+					// Server message event...
 					server.onmessage = (event) => {
 						
 						// Get message data and parse it according to its source...
@@ -781,7 +950,7 @@ class Multiplayer
 									const game_id = data.game_id;
 									const player_count = data.player_count;
 									
-									// Update server listing
+									// Update current dedicated server listing
 									Game.ui.menus.updateGamesListServerPlayerCount(server_index, player_count)
 									Game.ui.menus.updateGamesListServerPing(server_index, latency);
 									Game.ui.menus.updateGamesListServerGameID(server_index, game_id);
@@ -794,8 +963,8 @@ class Multiplayer
 									// Get message data
 									const games = data.games;
 									
-									// Update server listing
-									Game.ui.menus.updateGamesListCallback(games, latency);
+									// Update all P2P server listings from signaling server
+									Game.ui.menus.updateP2PGamesList(games, latency);
 									
 								}
 								
@@ -809,7 +978,7 @@ class Multiplayer
 						
 					};
 					
-					// Server connection error event
+					// Server connection error event...
 					server.onerror = () => {
 						
 						// Server is offline, update server listing
@@ -855,14 +1024,14 @@ class Multiplayer
 						// Connect to the P2P signaling server
 						this.server_signaling = new WebSocket(server_address);
 						
-						// Signaling server connection open event
+						// Signaling server connection open event...
 						this.server_signaling.onopen = () => {
 							
 							// Server is online
 							Game.ui.menus.updateHostGameButton(false);
 							Game.ui.menus.updateHostGameServerStatus("");
 							
-							// Signaling server connection opened
+							// Signaling server connection opened...
 							if (callback)
 							{
 								callback();
@@ -870,7 +1039,7 @@ class Multiplayer
 							
 						}
 						
-						// Signaling server message event
+						// Signaling server message event...
 						this.server_signaling.onmessage = (event) => {
 							
 							// Get message data
@@ -881,7 +1050,7 @@ class Multiplayer
 							
 						};
 						
-						// Signaling server connection error event
+						// Signaling server connection error event...
 						this.server_signaling.onerror = () => {
 							
 							// Server is offline
@@ -890,7 +1059,7 @@ class Multiplayer
 							
 						};
 						
-						// Signaling server connection close event
+						// Signaling server connection close event...
 						this.server_signaling.onclose = () => {
 							
 							// Signaling server connection closed
@@ -906,10 +1075,10 @@ class Multiplayer
 						this.server_dedicated = new WebSocket(server_address);
 						this.server_dedicated.binaryType = "arraybuffer";
 						
-						// Dedicated server connection open event
+						// Dedicated server connection open event...
 						this.server_dedicated.onopen = () => {
 							
-							// Dedicated server connection opened
+							// Dedicated server connection opened...
 							if (callback)
 							{
 								callback();
@@ -917,7 +1086,7 @@ class Multiplayer
 							
 						};
 						
-						// Dedicated server message event
+						// Dedicated server message event...
 						this.server_dedicated.onmessage = (event) => {
 							
 							// Get message data
@@ -928,7 +1097,7 @@ class Multiplayer
 							
 						};
 						
-						// Dedicated server connection close event
+						// Dedicated server connection close event...
 						this.server_dedicated.onclose = () => {
 							
 							// Dedicated server connection closed
@@ -944,6 +1113,10 @@ class Multiplayer
 				 */
 				static disconnect()
 				{
+					
+					// Stop ping intervals
+					this.ui.player_list.stopPingTimer();
+					Multiplayer.stopPingTimer();
 					
 					// Disable multiplayer
 					this.enabled = false;
@@ -993,6 +1166,11 @@ class Multiplayer
 						}, true);
 						
 					}
+					
+					// Update player list title and refresh player list
+					Game.ui.player_list.setTitle(Game.name);
+					Game.ui.player_list.refresh();
+					Game.ui.player_list.startPingTimer();
 					
 				}
 				
@@ -1090,7 +1268,7 @@ class Multiplayer
 						} // Otherwise, if the current user-controller player is the P2P client...
 						else
 						{
-							// Offer received from P2P connection with host/Data channel opened event
+							// Offer received from P2P connection with host/Data channel opened event...
 							this.p2p_connections[player_id].p2p_connection.ondatachannel = (event) => {
 								
 								// Receive the data channel from the P2P connection host's offer
@@ -1102,7 +1280,7 @@ class Multiplayer
 							};
 						}
 						
-						// New ICE candidate available event
+						// New ICE candidate available event...
 						this.p2p_connections[player_id].p2p_connection.onicecandidate = (event) => {
 							
 							// Check for candidate info...
@@ -1124,6 +1302,7 @@ class Multiplayer
 							}
 							
 						};
+						
 					}
 					
 					/**
@@ -1134,11 +1313,31 @@ class Multiplayer
 					static initializeDataChannel(player_id)
 					{
 						
+						/**
+						 * Helper to resolve the player ID for a given data channel.
+						 * This handles the "peer" → real player_id re-mapping on the host.
+						 */
+						const getPlayerIdForChannel = (channel) => {
+							const player_ids = Object.keys(this.p2p_connections);
+							for (let i = 0; i < player_ids.length; i++)
+							{
+								const id = player_ids[i];
+								const conn = this.p2p_connections[id];
+								
+								if (conn && conn.p2p_data_channel === channel)
+								{
+									return id;
+								}
+							}
+							
+							return null;
+						};
+						
 						// Initialize P2P data channel
 						const data_channel = this.p2p_connections[player_id].p2p_data_channel;
 						data_channel.binaryType = "arraybuffer";
 						
-						// Data channel connection open event
+						// Data channel connection open event...
 						data_channel.onopen = () => {
 							
 							// If the current user-controlled player is the P2P host...
@@ -1169,18 +1368,31 @@ class Multiplayer
 							
 						};
 						
-						// Data channel message event
+						// Data channel message event...
 						data_channel.onmessage = (event) => {
 							
 							// Get message data
 							const data = Game.msgpack.decode(Game.fflate.decompressSync(new Uint8Array(event.data)));
+							
+							// If the current user-controlled player is the P2P host...
+							if (this.p2p_is_host)
+							{
+								
+								// Authoritatively override player ID...
+								const sender_id = getPlayerIdForChannel(data_channel);
+								if (sender_id)
+								{
+									data.player_id = sender_id;
+								}
+								
+							}
 							
 							// Handle message by type
 							this.handleMessage(data);
 							
 						};
 						
-						// Data channel connection close event
+						// Data channel connection close event...
 						data_channel.onclose = () => {
 							
 							// Data channel successfully closed, do nothing
@@ -1206,7 +1418,7 @@ class Multiplayer
 						this.p2p_connections[player_id] = this.p2p_connections["peer"];
 						delete this.p2p_connections["peer"];
 						
-						// Re-initialize new ICE candidate available event
+						// Re-initialize new ICE candidate available event...
 						this.p2p_connections[player_id].p2p_connection.onicecandidate = (event) => {
 							
 							// Check for candidate info...
@@ -1484,6 +1696,93 @@ class Multiplayer
 					
 				}
 				
+			//#endregion
+			
+			
+			//#region [Ping]
+				
+				/**
+				 * Sends a PING message to measure latency.
+				 */
+				static sendPing()
+				{
+					
+					// Get timestamp for RTT (Rount-Trip Time) calculation
+					this.ping_timestamp = performance.now();
+					
+					// Initialize message data
+					const data = {
+						type: 			Multiplayer.MessageTypes.PING,
+						timestamp: 		this.ping_timestamp,
+						client_ping: 	Game.player.ping,
+					};
+					
+					// If the player is connected to a dedicated server...
+					if (this.connection_type == this.ConnectionTypes.DedicatedClient)
+					{
+						
+						// Send ping to dedicated server...
+						if (this.server_dedicated && this.server_dedicated.readyState === WebSocket.OPEN)
+						{
+							this.send(this.server_dedicated, data);
+						}
+						
+						
+					} // Otherwise, if the player is a P2P client connected to a P2P host...
+					else if (this.connection_type == this.ConnectionTypes.P2PClient && !this.p2p_is_host)
+					{
+						
+						// Send ping to P2P host...
+						const p2p_data_channel = this.p2p_connections[this.p2p_host_id].p2p_data_channel;
+						if (p2p_data_channel && p2p_data_channel.readyState === 'open')
+						{
+							this.send(p2p_data_channel, data);
+						}
+						
+					}
+					
+				}
+				
+				/**
+				 * Starts the in-game ping update timer for periodic latency measurement.
+				 */
+				static startPingTimer()
+				{
+					
+					// Clear any existing interval timers...
+					if (this.ping_interval)
+					{
+						clearInterval(this.ping_interval);
+					}
+					
+					// Start new interval timer
+					this.ping_interval = setInterval(() => { this.sendPing(); }, this.ping_rate);
+					
+					// Send initial ping immediately
+					this.sendPing();
+					
+				}
+				
+				/**
+				 * Stops the in-game ping update timer.
+				 */
+				static stopPingTimer()
+				{
+					
+					// Clear any existing interval timers...
+					if (this.ping_interval)
+					{
+						clearInterval(this.ping_interval);
+						this.ping_interval = null;
+					}
+					
+				}
+				
+			//#endregion
+			
+			
+			//#region [Objects]
+				
 				/**
 				 * Broadcasts an update to add the specified object to the world.
 				 *
@@ -1727,19 +2026,25 @@ class Multiplayer
 				 * Adds a new player to the game.
 				 *
 				 * @param {Player} player The player to be added to the game.
-				 * @param {WebSocket} connection An optional WebSocketServer connection to the player.
+				 * @param {WebSocket|RTCDataChannel} connection An optional WebSocketServer connection to the player.
+				 * @param {boolean} trust_player_id Flag indicating whether or not to trust the player ID as it's been received from over the network.
 				 * @returns Returns the player's simplified object after they've been added to the game.
 				 */
-				static addPlayer(player, connection)
+				static addPlayer(player, connection, use_existing_id)
 				{
 					
 					// Initialize new player
 					let new_player = new Player();
-					new_player.id = player.id;
 					new_player.name = player.name;
 					new_player.colour = new THREE.Color(player.colour.r, player.colour.g, player.colour.b)
 					new_player.position.set(player.position.x, player.position.y, player.position.z);
 					new_player.rotation.set(player.rotation.x, player.rotation.y, player.rotation.z);
+					
+					// If the player's ID is to be trusted (meaning a non-authorative client is adding the player to their game)...
+					if (use_existing_id)
+					{
+						new_player.id = player.id;
+					}
 					
 					// Initialize optional WebSocketServer connection...
 					if (connection)

@@ -23,7 +23,7 @@ class Controls
 			
 			// Class Declarations/Initialization
 			
-			// Flag indicating whether or not a control triggered a game pause event (canvas pointer unlock workaround)
+			// Flag indicating whether or not a control triggered a game pause event
 			this.trigger_pause_game = true;
 			
 			
@@ -42,9 +42,9 @@ class Controls
 			// three.js transform controls
 			this.transform_controls = new CustomTransformControls(Game.player.camera, (Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer ? Game.renderer.domElement : null));
 			this.transform_controls.setMode('translate');
-			this.transform_controls.translationSnap = 0.1;
-			this.transform_controls.scaleSnap = 0.25;
-			this.transform_controls.rotationSnap = 0.5;
+			this.transform_controls.translation_snap = 0.25;
+			this.transform_controls.scale_snap = 0.1;
+			this.transform_controls.rotation_snap = 0.25;
 			Game.world.scene.add(this.transform_controls);
 			
 			
@@ -73,655 +73,779 @@ class Controls
 	//#endregion
 	
 	
-	//#region [Mouse Event Handlers]
+	//#region [Methods]
 		
 		/**
-		 * Mouse button click event.
-		 *
-		 * @param {Event} event The event object passed by the event handler.
+		 * Initializes the player's mouse/keyboard input event listeners.
 		 */
-		onMouseDown(event)
+		initializeMouseAndKeyboardControls()
 		{
 			
-			// Handle mouse button click event...
-			switch (event.button)
-			{
-				case 0:
-					// Left-Click
-					
-					// Left mouse button is down
-					this.mouse_left_down = true;
-					
-					// Check if chat window is focused...
-					if (Game.ui.chat.isChatFocused())
-					{
-						
-						// Hide chat window
-						Game.ui.chat.hideChat();
-						
-					}
-					
-					// Handle player left mouse down
-					Game.player.handleLeftMouseDown(event);
-					
-					// Check if editor is enabled...
-					if (Editor.enabled)
-					{
-						
-						// Handle editor left mouse down
-						Editor.handleLeftMouseDown(event);
-						
-					}
-					
-					break;
-				case 2:
-					// Right-Click
-					
-					// Right mouse button is down
-					this.mouse_right_down = true;
-					
-					// Check if chat window is focused...
-					if (Game.ui.chat.isChatFocused())
-					{
-						
-						// Hide chat window
-						Game.ui.chat.hideChat();
-						
-					}
-					
-					// Handle player right mouse down
-					Game.player.handleRightMouseDown(event);
-					
-					// Check if editor is enabled...
-					if (Editor.enabled)
-					{
-						
-						// Handle editor right mouse down
-						Editor.handleRightMouseDown(event);
-						
-					}
-					
-					break;
-			}
-		}
-		
-		/**
-		 * Mouse button release event.
-		 *
-		 * @param {Event} event The event object passed by the event handler.
-		 */
-		onMouseUp(event)
-		{
-			
-			// Handle mouse button release event...
-			switch (event.button)
-			{
-				case 0:
-					// Left-Click
-					
-					// Left mouse button is no longer down
-					this.mouse_left_down = false;
-					
-					// Handle player left mouse up
-					Game.player.handleLeftMouseUp(event);
-					
-					// Check if editor is enabled...
-					if (Editor.enabled)
-					{
-						
-						// Handle editor left mouse up
-						Editor.handleLeftMouseUp(event);
-						
-					}
-					
-					break;
-				case 2:
-					// Right-Click
-					
-					// Right mouse button is no longer down
-					this.mouse_right_down = false;
-					
-					// Handle player right mouse up
-					Game.player.handleRightMouseUp(event);
-					
-					// Check if editor is enabled...
-					if (Editor.enabled)
-					{
-						
-						// Handle editor right mouse up
-						Editor.handleRightMouseUp(event);
-						
-					}
-					
-					break;
-			}
-			
-		}
-		
-		/**
-		 * Mouse scroll wheel event.
-		 *
-		 * @param {Event} event The event object passed by the event handler.
-		 */
-		onMouseWheel(event)
-		{
-			
-			// Check if chat window is focused...
-			if (Game.ui.chat.isChatFocused())
+			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+			if (this.is_singleplayer || !Multiplayer.is_dedicated_server)
 			{
 				
-				// Attempt to scroll chat
-				Game.ui.chat.scrollChat(event);
+				// Mouse event listeners
+				$(Game.dom_document).on('mousedown', (event) =>	Game.player.controls.onMouseDown(event));
+				$(Game.dom_document).on('mouseup', (event) => Game.player.controls.onMouseUp(event));
+				$(Game.dom_document).on('mousemove', (event) =>	Game.player.controls.onMouseMove(event));
+				$(Game.dom_document).on('wheel', (event) => Game.player.controls.onMouseWheel(event));
+				
+				// Keyboard event listeners
+				$(Game.dom_document).on('keydown', (event) => Game.player.controls.onKeyDown(event));
+				$(Game.dom_document).on('keyup', (event) => Game.player.controls.onKeyUp(event));
+				
+				// Pointer lock controls event listeners
+				$(Game.renderer.domElement).on('click', () => Game.player.controls.lockPointerLockControls());
+				
+				$('#player-list').on('click', (event) => Game.ui.utilities.lockPointerOnWhitespaceClick(event, $('#player-list'), "#player-list-container"));
+				
+				$('#editor').on('click', (event) => Game.ui.utilities.lockPointerOnWhitespaceClick(event, $('#editor'), ".editor-window"));
+				$('#debug').on('click', (event) => Game.ui.utilities.lockPointerOnWhitespaceClick(event, $('#debug'), ".debug-window"));
+				
+				Game.player.controls.pointer_lock_controls.addEventListener('lock', (event) => Game.player.controls.onPointerLockControlsLock(event));
+				Game.player.controls.pointer_lock_controls.addEventListener('unlock',(event) => Game.player.controls.onPointerLockControlsUnlock(event));
+				
+				// Transform controls event listeners
+				Game.player.controls.transform_controls.addEventListener('draggingChanged', (event) => Game.player.controls.onTransformControlsDraggingChanged(event));
+				Game.player.controls.transform_controls.addEventListener('objectChange', (event) => Game.player.controls.onTransformControlsObjectChanged(event));
 				
 			}
 			
 		}
-		
+			
 		/**
-		 * Mouse move event.
-		 *
-		 * @param {Event} event The event object passed by the event handler.
+		 * De-initializes the player's mouse/keyboard input event listeners.
 		 */
-		onMouseMove(event)
+		deinitializeMouseAndKeyboardControls()
 		{
 			
-			// If mouse locked to canvas...
-			if (this.mouse_locked)
+			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+			if (this.is_singleplayer || !Multiplayer.is_dedicated_server)
 			{
 				
-				// If multiplayer is enabled...
-				if (Multiplayer.enabled)
-				{
-					
-					// Attempt to send a player mouselook update
-					Multiplayer.sendPlayerUpdate();
-					
-				}
+				// Remove mouse event listeners
+				$(Game.dom_document).off('mousedown');
+				$(Game.dom_document).off('mouseup');
+				$(Game.dom_document).off('mousemove');
+				$(Game.dom_document).off('wheel');
+				
+				// Remove keyboard event listeners
+				$(Game.dom_document).off('keydown');
+				$(Game.dom_document).off('keyup');
+				
+				// Remove pointer lock controls event listeners
+				$(Game.renderer.domElement).off('click');
+				$('#editor').off('click');
+				$('#debug').off('click');
+				
+				// Remove pointer lock controls event listeners
+				Game.player.controls.pointer_lock_controls.removeEventListener('lock');
+				Game.player.controls.pointer_lock_controls.removeEventListener('unlock');
+				Game.player.controls.pointer_lock_controls.disconnect();
+				
+				// Remove transform controls event listeners
+				Game.player.controls.transform_controls.removeEventListener('draggingChanged');
+				Game.player.controls.transform_controls.removeEventListener('objectChange');
 				
 			}
 			
 		}
 		
 		
-		//#region [Pointer Lock Controls Event Handlers]
+		//#region [Mouse Event Handlers]
 			
 			/**
-			 * Locks the mouse pointer to the renderer.
-			 */
-			lockPointerLockControls()
-			{
-				
-				// Mouse is now locked to the renderer
-				this.mouse_locked = true;
-				
-				// Lock the pointer lock controls
-				this.pointer_lock_controls.lock();
-				
-			}
-			
-			/**
-			 * Unlocks the mouse pointer from the renderer.
-			 */
-			unlockPointerLockControls()
-			{
-				
-				// Mouse is no longer locked to the renderer
-				this.mouse_locked = false;
-				
-				// Disable pause game flag
-				this.trigger_pause_game = false;
-				
-				// Unlock the pointer lock controls
-				this.pointer_lock_controls.unlock();
-				
-			}
-			
-			/**
-			 * PointerLockControls mouse lock event.
-			 */
-			onPointerLockControlsLock()
-			{
-				
-				// Mouse is now locked to the renderer
-				this.mouse_locked = true;
-				
-			}
-			
-			/**
-			 * PointerLockControls mouse unlock event.
-			 */
-			onPointerLockControlsUnlock()
-			{
-				
-				// Mouse is no longer locked to the renderer
-				this.mouse_locked = false;
-				
-				// Check if pause game flag is enabled...
-				if (this.trigger_pause_game)
-				{
-					
-					// Pause game
-					Game.pause();
-					
-					
-				} // Otherwise, if pause game flag is disabled...
-				else
-				{
-					
-					// Enable pause game flag
-					this.trigger_pause_game = true;
-					
-				}
-				
-			}
-			
-		//#endregion
-		
-		
-		//#region [Pointer Lock Controls Event Handlers]
-			
-			/**
-			 * CustomTransformControls mouse dragging changed event, used by three.js CustomTransformControls when the mouse is beginning or ending dragging the gizmo.
+			 * Mouse button click event.
 			 *
 			 * @param {Event} event The event object passed by the event handler.
 			 */
-			onTransformControlsDraggingChanged(event)
+			onMouseDown(event)
 			{
 				
-				// Determine whether or not the mouse is dragging the gizmo
-				this.mouse_dragging = event.value;
-				
-				// If the mouse is starting to drag the gizmo...
-				if (this.mouse_dragging)
+				// Handle mouse button click event...
+				switch (event.button)
 				{
-					
-					// Check if editor is enabled...
-					if (Editor.enabled)
-					{
+					case 0:
+						// Left-Click
 						
-						// Update editor selected vertex initial positions
-						Editor.updateSelectedVertexInitialPositions();
+						// Left mouse button is down
+						this.mouse_left_down = true;
 						
-					}
-					
+						// Check if chat window is focused...
+						if (Game.ui.chat.isChatFocused())
+						{
+							
+							// Hide chat window
+							Game.ui.chat.hideChat();
+							
+						}
+						
+						// Handle player left mouse down
+						Game.player.handleLeftMouseDown(event);
+						
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Handle editor left mouse down
+							Editor.handleLeftMouseDown(event);
+							
+						}
+						
+						break;
+					case 2:
+						// Right-Click
+						
+						// Right mouse button is down
+						this.mouse_right_down = true;
+						
+						// Check if chat window is focused...
+						if (Game.ui.chat.isChatFocused())
+						{
+							
+							// Hide chat window
+							Game.ui.chat.hideChat();
+							
+						}
+						
+						// Handle player right mouse down
+						Game.player.handleRightMouseDown(event);
+						
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Handle editor right mouse down
+							Editor.handleRightMouseDown(event);
+							
+						}
+						
+						break;
 				}
-				
 			}
 			
 			/**
-			 * CustomTransformControls object changed event, used by three.js CustomTransformControls when the gizmo has modified the object its attached to.
+			 * Mouse button release event.
 			 *
 			 * @param {Event} event The event object passed by the event handler.
 			 */
-			onTransformControlsObjectChanged(event)
+			onMouseUp(event)
 			{
 				
-				// Check if editor is enabled...
-				if (Editor.enabled)
+				// Handle mouse button release event...
+				switch (event.button)
 				{
-					
-					// Updates editor selected vertex positions
-					Editor.updateSelectedVertexPositions();
-					
-				}
-				
-			}
-		
-		//#endregion
-		
-		
-	//#endregion
-	
-	
-	//#region [Keyboard Event Handlers]
-		
-		/**
-		 * Keyboard key press event.
-		 *
-		 * @param {Event} event The event object passed by the event handler.
-		 */
-		onKeyDown(event)
-		{
-			
-			// If a text box or text area is being edited...
-			if (Game.ui.utilities.isInputFocused())
-			{
-				
-				// Handle specific text box key release event...
-				switch (event.code)
-				{
-					case 'Enter':
-						// Enter
+					case 0:
+						// Left-Click
 						
-						// Attempt to send multiplayer chat message
-						Game.ui.chat.sendChatMessage();
+						// Left mouse button is no longer down
+						this.mouse_left_down = false;
+						
+						// Handle player left mouse up
+						Game.player.handleLeftMouseUp(event);
+						
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Handle editor left mouse up
+							Editor.handleLeftMouseUp(event);
+							
+						}
+						
+						break;
+					case 2:
+						// Right-Click
+						
+						// Right mouse button is no longer down
+						this.mouse_right_down = false;
+						
+						// Check if player list window is visible...
+						if (Game.ui.player_list.isPlayerListVisible())
+						{
+							
+							// If the mouse is locked to the renderer...
+							if (Game.player.controls.mouse_locked)
+							{
+								
+								// Unlock the mouse from the renderer
+								Game.player.controls.unlockPointerLockControls();
+								Game.player.controls.transform_controls.dragging = false;
+								
+								// Prevent the right-click context menu from appearing
+								Game.ui.utilities.preventContextMenu();
+								
+							}
+							
+							
+						} // Otherwise, if player list window is not yet visible...
+						else
+						{
+							
+							// Handle player right mouse up
+							Game.player.handleRightMouseUp(event);
+							
+							// Check if editor is enabled...
+							if (Editor.enabled)
+							{
+								
+								// Handle editor right mouse up
+								Editor.handleRightMouseUp(event);
+								
+							}
+							
+						}
 						
 						break;
 				}
 				
-				// Don't handle any other key release events
-				return;
+			}
+			
+			/**
+			 * Mouse scroll wheel event.
+			 *
+			 * @param {Event} event The event object passed by the event handler.
+			 */
+			onMouseWheel(event)
+			{
+				
+				// Check if chat window is focused...
+				if (Game.ui.chat.isChatFocused())
+				{
+					
+					// Attempt to scroll chat
+					Game.ui.chat.scrollChat(event);
+					
+				}
 				
 			}
 			
-			// Prevent (most) Ctrl-key browser events when the mouse is locked...
-			if (this.mouse_locked)
+			/**
+			 * Mouse move event.
+			 *
+			 * @param {Event} event The event object passed by the event handler.
+			 */
+			onMouseMove(event)
 			{
-				event.preventDefault();
+				
+				// If mouse locked to canvas...
+				if (this.mouse_locked)
+				{
+					
+					// If game is multiplayer...
+					if (Multiplayer.enabled)
+					{
+						
+						// Attempt to send a player mouselook update
+						Multiplayer.sendPlayerUpdate();
+						
+					}
+					
+				}
+				
 			}
 			
-			// Handle key press event...
-			switch (event.code)
-			{
-				case 'KeyW':
-					// KeyW
-					
-					// If mouse is locked to canvas...
-					if (this.mouse_locked)
-					{
-						
-						// Player moving forward
-						this.player_moving_forward = true;
-						
-					}
-					
-					break;
-				case 'KeyA':
-					// KeyA
-					
-					// If mouse locked to canvas...
-					if (this.mouse_locked)
-					{
-						
-						// Player is moving left
-						this.player_moving_left = true;
-						
-					}
-					
-					break;
-				case 'KeyS':
-					// KeyS
-					
-					// If mouse locked to canvas...
-					if (this.mouse_locked)
-					{
-						
-						// Player is moving backward
-						this.player_moving_backward = true;
-						
-					}
-					
-					break;
-				case 'KeyD':
-					// KeyD
-					
-					// If mouse locked to canvas...
-					if (this.mouse_locked)
-					{
-						
-						// Player is moving right
-						this.player_moving_right = true;
-						
-					}
-					
-					break;
-				case 'Space':
-					// Space
-					
-					// If mouse locked to canvas...
-					if (this.mouse_locked)
-					{
-						
-						// Player is jumping
-						this.player_jumping = true;
-						
-					}
-					
-					break;
-				case 'ShiftLeft':
-					// Left Shift
-					
-					// Enable left shift modifier key
-					this.modifier_shift_left_pressed = true;
-					
-					break;
-				case 'ControlLeft':
-					// Left Control
-					
-					// Enable left control modifier key
-					this.modifier_control_left_pressed = true;
-					
-					break;
-			}
 			
-		}
+			//#region [Pointer Lock Controls Event Handlers]
+				
+				/**
+				 * Locks the mouse pointer to the renderer.
+				 */
+				lockPointerLockControls()
+				{
+					
+					// Mouse is now locked to the renderer
+					this.mouse_locked = true;
+					
+					// Lock the pointer lock controls
+					this.pointer_lock_controls.lock();
+					
+				}
+				
+				/**
+				 * Unlocks the mouse pointer from the renderer.
+				 */
+				unlockPointerLockControls()
+				{
+					
+					// Mouse is no longer locked to the renderer
+					this.mouse_locked = false;
+					
+					// Disable pause game flag
+					this.trigger_pause_game = false;
+					
+					// Unlock the pointer lock controls
+					this.pointer_lock_controls.unlock();
+					
+				}
+				
+				/**
+				 * PointerLockControls mouse lock event.
+				 */
+				onPointerLockControlsLock()
+				{
+					
+					// Mouse is now locked to the renderer
+					this.mouse_locked = true;
+					
+				}
+				
+				/**
+				 * PointerLockControls mouse unlock event.
+				 */
+				onPointerLockControlsUnlock()
+				{
+					
+					// Mouse is no longer locked to the renderer
+					this.mouse_locked = false;
+					
+					// Check if pause game flag is enabled...
+					if (this.trigger_pause_game)
+					{
+						
+						// Pause game
+						Game.pause();
+						
+						
+					} // Otherwise, if pause game flag is disabled...
+					else
+					{
+						
+						// Enable pause game flag
+						this.trigger_pause_game = true;
+						
+					}
+					
+				}
+				
+			//#endregion
+			
+			
+			//#region [Transform Controls Event Handlers]
+				
+				/**
+				 * CustomTransformControls mouse dragging changed event, used by three.js CustomTransformControls when the mouse is beginning or ending dragging the gizmo.
+				 *
+				 * @param {Event} event The event object passed by the event handler.
+				 */
+				onTransformControlsDraggingChanged(event)
+				{
+					
+					// Determine whether or not the mouse is dragging the gizmo
+					this.mouse_dragging = event.value;
+					
+					// If the mouse is starting to drag the gizmo...
+					if (this.mouse_dragging)
+					{
+						
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Update editor selected vertex initial positions
+							Editor.updateSelectedVertexInitialPositions();
+							
+						}
+						
+					}
+					
+				}
+				
+				/**
+				 * CustomTransformControls object changed event, used by three.js CustomTransformControls when the gizmo has modified the object its attached to.
+				 *
+				 * @param {Event} event The event object passed by the event handler.
+				 */
+				onTransformControlsObjectChanged(event)
+				{
+					
+					// Check if editor is enabled...
+					if (Editor.enabled)
+					{
+						
+						// Updates editor selected vertex positions
+						Editor.updateSelectedVertexPositions();
+						
+					}
+					
+				}
+				
+			//#endregion
+			
+			
+		//#endregion
 		
-		/**
-		 * Keyboard key release event.
-		 *
-		 * @param {Event} event The event object passed by the event handler.
-		 */
-		onKeyUp(event)
-		{
+		
+		//#region [Keyboard Event Handlers]
 			
-			// If a text box or text area is being edited...
-			if (Game.ui.utilities.isInputFocused())
+			/**
+			 * Keyboard key press event.
+			 *
+			 * @param {Event} event The event object passed by the event handler.
+			 */
+			onKeyDown(event)
 			{
 				
-				// Handle specific text box key release event...
+				// If a text box or text area is being edited...
+				if (Game.ui.utilities.isInputFocused())
+				{
+					
+					// Handle specific text box key release event...
+					switch (event.code)
+					{
+						case 'Enter':
+							// Enter
+							
+							// Attempt to send multiplayer chat message
+							Game.ui.chat.sendChatMessage();
+							
+							break;
+						case 'Tab':
+							// Tab
+							
+							// Check if chat window is focused...
+							if (Game.ui.chat.isChatFocused())
+							{
+								
+								// Prevent tabbing through elements in the chat window
+								event.preventDefault();
+								
+							}
+							
+							break;
+					}
+					
+					// Don't handle any other key release events
+					return;
+					
+				}
+				
+				// Prevent (most) Ctrl-key browser events when the mouse is locked...
+				if (this.mouse_locked)
+				{
+					event.preventDefault();
+				}
+				
+				// Handle key press event...
 				switch (event.code)
 				{
-					case 'Enter':
-						// Enter
+					case 'KeyW':
+						// KeyW
 						
-						// Hide chat window
-						Game.ui.chat.hideChat();
+						// If mouse is locked to canvas...
+						if (this.mouse_locked)
+						{
+							
+							// Player moving forward
+							this.player_moving_forward = true;
+							
+						}
+						
+						break;
+					case 'KeyA':
+						// KeyA
+						
+						// If mouse locked to canvas...
+						if (this.mouse_locked)
+						{
+							
+							// Player is moving left
+							this.player_moving_left = true;
+							
+						}
+						
+						break;
+					case 'KeyS':
+						// KeyS
+						
+						// If mouse locked to canvas...
+						if (this.mouse_locked)
+						{
+							
+							// Player is moving backward
+							this.player_moving_backward = true;
+							
+						}
+						
+						break;
+					case 'KeyD':
+						// KeyD
+						
+						// If mouse locked to canvas...
+						if (this.mouse_locked)
+						{
+							
+							// Player is moving right
+							this.player_moving_right = true;
+							
+						}
+						
+						break;
+					case 'Space':
+						// Space
+						
+						// If mouse locked to canvas...
+						if (this.mouse_locked)
+						{
+							
+							// Player is jumping
+							this.player_jumping = true;
+							
+						}
+						
+						break;
+					case 'Tab':
+						// Tab
+						
+						// Check if game is not yet paused...
+						if (!Game.paused)
+						{
+							
+							// Check if player list window is not yet visible...
+							if (!Game.ui.player_list.isPlayerListVisible())
+							{
+								
+								// Show player list window
+								Game.ui.player_list.showPlayerList();
+								
+							}
+							
+						}
+						
+						break;
+					case 'ShiftLeft':
+						// Left Shift
+						
+						// Enable left shift modifier key
+						this.modifier_shift_left_pressed = true;
+						
+						break;
+					case 'ControlLeft':
+						// Left Control
+						
+						// Enable left control modifier key
+						this.modifier_control_left_pressed = true;
 						
 						break;
 				}
 				
-				// Don't handle any other key release events
-				return;
-				
 			}
 			
-			// Handle key release event...
-			switch (event.code)
+			/**
+			 * Keyboard key release event.
+			 *
+			 * @param {Event} event The event object passed by the event handler.
+			 */
+			onKeyUp(event)
 			{
-				case 'KeyW':
-					// KeyW
+				
+				// If a text box or text area is being edited...
+				if (Game.ui.utilities.isInputFocused())
+				{
 					
-					// Player is no longer moving forward
-					this.player_moving_forward = false;
-					
-					break;
-				case 'KeyA':
-					// KeyA
-					
-					// Player is no longer moving left
-					this.player_moving_left = false;
-					
-					break;
-				case 'KeyS':
-					// KeyS
-					
-					// Player is no longer moving backward
-					this.player_moving_backward = false;
-					
-					break;
-				case 'KeyD':
-					// KeyD
-					
-					// Player is no longer moving right
-					this.player_moving_right = false;
-					
-					break;
-				case 'KeyE':
-					
-					if (this.modifier_shift_left_pressed)
+					// Handle specific text box key release event...
+					switch (event.code)
 					{
-						// ShiftLeft + KeyE
-						
-						// Toggle editor on/off
-						Editor.toggle();
-						
-					}
-					else
-					{
-						// KeyE
-						
-						// Do nothing.
-						
-					}
-					
-					break;
-				case 'KeyC':
-					
-					if (this.modifier_control_left_pressed)
-					{
-						// CtrlLeft + KeyC
-						
-						// Check if editor is enabled...
-						if (Editor.enabled)
-						{
+						case 'Enter':
+							// Enter
 							
-							// Copy editor selected objects to clipboard
-							Editor.copySelectedObjects()
+							// Hide chat window
+							Game.ui.chat.hideChat();
+							
+							break;
+					}
+					
+					// Don't handle any other key release events
+					return;
+					
+				}
+				
+				// Handle key release event...
+				switch (event.code)
+				{
+					case 'KeyW':
+						// KeyW
+						
+						// Player is no longer moving forward
+						this.player_moving_forward = false;
+						
+						break;
+					case 'KeyA':
+						// KeyA
+						
+						// Player is no longer moving left
+						this.player_moving_left = false;
+						
+						break;
+					case 'KeyS':
+						// KeyS
+						
+						// Player is no longer moving backward
+						this.player_moving_backward = false;
+						
+						break;
+					case 'KeyD':
+						// KeyD
+						
+						// Player is no longer moving right
+						this.player_moving_right = false;
+						
+						break;
+					case 'KeyE':
+						
+						if (this.modifier_shift_left_pressed)
+						{
+							// ShiftLeft + KeyE
+							
+							// Toggle editor on/off
+							Editor.toggle();
+							
+						}
+						else
+						{
+							// KeyE
+							
+							// Do nothing.
 							
 						}
 						
-					}
-					else
-					{
-						// KeyC
+						break;
+					case 'KeyC':
 						
-						// Do nothing.
-						
-					}
-					
-					break;
-				case 'KeyX':
-					
-					if (this.modifier_control_left_pressed)
-					{
-						// CtrlLeft + KeyX
-						
-						// Check if editor is enabled...
-						if (Editor.enabled)
+						if (this.modifier_control_left_pressed)
 						{
+							// CtrlLeft + KeyC
 							
-							// Cut editor selected objects to clipboard
-							Editor.cutSelectedObjects()
+							// Check if editor is enabled...
+							if (Editor.enabled)
+							{
+								
+								// Copy editor selected objects to clipboard
+								Editor.copySelectedObjects()
+								
+							}
+							
+						}
+						else
+						{
+							// KeyC
+							
+							// Do nothing.
 							
 						}
 						
-					}
-					else
-					{
-						// KeyX
+						break;
+					case 'KeyX':
 						
-						// Do nothing.
-						
-					}
-					
-					break;
-				case 'KeyV':
-					
-					if (this.modifier_control_left_pressed)
-					{
-						// CtrlLeft + KeyV
-						
-						// Check if editor is enabled...
-						if (Editor.enabled)
+						if (this.modifier_control_left_pressed)
 						{
+							// CtrlLeft + KeyX
 							
-							// Paste editor clipboard objects
-							Editor.pasteClipboardObjects()
+							// Check if editor is enabled...
+							if (Editor.enabled)
+							{
+								
+								// Cut editor selected objects to clipboard
+								Editor.cutSelectedObjects()
+								
+							}
+							
+						}
+						else
+						{
+							// KeyX
+							
+							// Do nothing.
 							
 						}
 						
-					}
-					else
-					{
-						// KeyV
+						break;
+					case 'KeyV':
 						
-						// Do nothing.
-						
-					}
-					
-					break;
-				case 'KeyZ':
-					
-					if (this.modifier_control_left_pressed)
-					{
-						// CtrlLeft + KeyZ
-						
-						// Check if editor is enabled...
-						if (Editor.enabled)
+						if (this.modifier_control_left_pressed)
 						{
+							// CtrlLeft + KeyV
 							
-							// Toggle editor undo
-							//Editor.undo();
+							// Check if editor is enabled...
+							if (Editor.enabled)
+							{
+								
+								// Paste editor clipboard objects
+								Editor.pasteClipboardObjects()
+								
+							}
+							
+						}
+						else
+						{
+							// KeyV
+							
+							// Do nothing.
 							
 						}
 						
-					}
-					else
-					{
-						// KeyZ
+						break;
+					case 'KeyZ':
 						
-						// Do nothing.
+						if (this.modifier_control_left_pressed)
+						{
+							// CtrlLeft + KeyZ
+							
+							// Check if editor is enabled...
+							if (Editor.enabled)
+							{
+								
+								// Toggle editor undo
+								//Editor.undo();
+								
+							}
+							
+						}
+						else
+						{
+							// KeyZ
+							
+							// Do nothing.
+							
+						}
 						
-					}
-					
-					break;
-				case 'Escape':
-					// Escape
-					
-					// Check if game is paused...
-					if (Game.paused)
-					{
+						break;
+					case 'Escape':
+						// Escape
 						
-						// Unpause game
-						Game.unpause();
+						// Check if game is paused...
+						if (Game.paused)
+						{
+							
+							// Unpause game
+							Game.unpause();
+							
+						}
 						
-					}
-					
-					break;
-				case 'Enter':
-					// Enter
-					
-					// Check if chat window is not yet focused...
-					if (!Game.ui.chat.isChatFocused())
-					{
+						break;
+					case 'Enter':
+						// Enter
 						
-						// Show chat window
-						Game.ui.chat.showChat();
+						// Check if chat window is not yet focused...
+						if (!Game.ui.chat.isChatFocused())
+						{
+							
+							// Show chat window
+							Game.ui.chat.showChat();
+							
+						}
 						
-					}
-					
-					break;
-				case 'Space':
-					// Space
-					
-					// Player is no longer jumping
-					this.player_jumping = false;
-					
-					break;
-				case 'Tab':
-					// Tab
-					
-					// Check if chat window is focused...
-					if (Game.ui.chat.isChatFocused())
-					{
+						break;
+					case 'Space':
+						// Space
 						
-						// Hide chat window
-						Game.ui.chat.hideChat();
+						// Player is no longer jumping
+						this.player_jumping = false;
 						
-						
-					} // Otherwise, if chat window is not focused...
-					else
-					{
+						break;
+					case 'Tab':
+						// Tab
 						
 						// Check if editor is enabled...
 						if (Editor.enabled)
@@ -733,42 +857,58 @@ class Controls
 							
 						}
 						
-					}
-					
-					break;
-				case 'Delete':
-					// Delete
-					
-					// Check if editor is enabled...
-					if (Editor.enabled)
-					{
+						// Check if player list window is visible...
+						if (Game.ui.player_list.isPlayerListVisible())
+						{
+							
+							// If the mouse is locked to the renderer...
+							if (Game.player.controls.mouse_locked)
+							{
+								
+								// Hide player list window
+								Game.ui.player_list.hidePlayerList();
+								
+							}
+							
+						}
 						
-						// Delete editor selected object
-						Editor.deleteSelectedObjects();
+						break;
+					case 'Delete':
+						// Delete
 						
-						// Delete editor selected face
-						Editor.deleteSelectedFaces();
+						// Check if editor is enabled...
+						if (Editor.enabled)
+						{
+							
+							// Delete editor selected object
+							Editor.deleteSelectedObjects();
+							
+							// Delete editor selected face
+							Editor.deleteSelectedFaces();
+							
+						}
 						
-					}
-					
-					break;
-				case 'ShiftLeft':
-					// Left Shift
-					
-					// Disable left shift modifier key
-					this.modifier_shift_left_pressed = false;
-					
-					break;
-				case 'ControlLeft':
-					// Left Control
-					
-					// Disable left control modifier key
-					this.modifier_control_left_pressed = false;
-					
-					break;
+						break;
+					case 'ShiftLeft':
+						// Left Shift
+						
+						// Disable left shift modifier key
+						this.modifier_shift_left_pressed = false;
+						
+						break;
+					case 'ControlLeft':
+						// Left Control
+						
+						// Disable left control modifier key
+						this.modifier_control_left_pressed = false;
+						
+						break;
+				}
+				
 			}
 			
-		}
+		//#endregion
+		
 		
 	//#endregion
 	

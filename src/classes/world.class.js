@@ -7,6 +7,7 @@ import Billboard from './billboard.class.js';
 // Static Class Imports
 import Game from './game.class.js';
 import Multiplayer from './multiplayer.class.js';
+import Shaders from './shaders.class.js';
 
 /**
  * A game world containing a scene which can be rendered, in which objects can be placed and the player can navigate.
@@ -139,7 +140,7 @@ class World
 		{
 			
 			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
-			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
+			if (this.is_singleplayer || !Multiplayer.is_dedicated_server)
 			{
 				
 				// Load world
@@ -191,6 +192,7 @@ class World
 			if (json.terrain)
 			{
 				world.terrain = json.terrain.map(mesh_json => {
+				
 					let mesh = new THREE.Object3D();
 					switch (mesh_json.type)
 					{
@@ -214,7 +216,16 @@ class World
 							break;
 					}
 					mesh.setSimplified(mesh_json);
+					
 					mesh.userData.loaded_from_level = true;
+					
+					mesh.traverse((child) => {
+						if (child.material)
+						{
+							child.material = Shaders.Soft(child.material);
+						}
+					});
+					
 					return mesh;
 				});
 			}
@@ -223,6 +234,7 @@ class World
 			if (json.objects)
 			{
 				world.objects = json.objects.map(mesh_json => {
+					
 					let mesh = new THREE.Object3D();
 					switch (mesh_json.type)
 					{
@@ -246,7 +258,16 @@ class World
 							break;
 					}
 					mesh.setSimplified(mesh_json);
+					
 					mesh.userData.loaded_from_level = true;
+					
+					mesh.traverse((child) => {
+						if (child.material)
+						{
+							child.material = Shaders.Soft(child.material);
+						}
+					});
+					
 					return mesh;
 				});
 			}
@@ -284,7 +305,7 @@ class World
 			// Add object to scene
 			this.scene.add(object);
 			
-			// If multiplayer is enabled...
+			// If game is multiplayer...
 			if (Multiplayer.enabled && broadcast)
 			{
 				
@@ -331,7 +352,7 @@ class World
 			// Remove object from scene
 			this.scene.remove(object);
 			
-			// If multiplayer is enabled...
+			// If game is multiplayer...
 			if (Multiplayer.enabled && broadcast)
 			{
 				
@@ -574,7 +595,7 @@ class World
 			// Initialize the detected object's surface height to default to the player's position
 			let object_surface_height = Game.player.position.y - Game.player.height;
 			
-			// Check intersections with all world objects
+			// Check intersections with all world objects...
 			const intersects = Game.player.raycaster.intersectRaycastableObjects(this.all_objects, true);
 			if (intersects.length > 0)
 			{

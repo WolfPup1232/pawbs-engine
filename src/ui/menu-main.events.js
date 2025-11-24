@@ -7,6 +7,12 @@ import Game from '../classes/game.class.js';
 export default function initializeMainMenuUIEventHandlers()
 {
 	
+	/**
+	 * Game menu UI functions.
+	 */
+	Game.ui.menus = { };
+	
+	
 	//#region [Functions]
 		
 		

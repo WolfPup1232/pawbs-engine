@@ -22,6 +22,8 @@ export default function initializeObject3DExtension()
 		// ignore_collision
 		//
 		// original_material
+		// base_material_visible
+		// use_base_material
 		//
 		// original_geometry
 		// selected_faces
@@ -149,7 +151,7 @@ export default function initializeObject3DExtension()
 			this.frustumCulled = data.frustumCulled;
 			this.renderOrder = data.renderOrder;
 			
-			// Set object matrix
+			// Set object matrix and extract it into separate variables...
 			this.matrixAutoUpdate = data.matrixAutoUpdate;
 			if (data.matrix)
 			{
@@ -694,4 +696,3 @@ export default function initializeObject3DExtension()
 	//#endregion
 	
 }
-

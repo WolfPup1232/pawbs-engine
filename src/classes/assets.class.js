@@ -1,6 +1,5 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
-import { CustomOutlineEffect } from '../libraries/threejs/modules/CustomOutlineEffect.js';
 
 // Static Class Imports
 import Game from './game.class.js';
@@ -448,12 +447,9 @@ class Assets
 				const container = cell;
 				
 				// Initialize three.js renderer and add it to the thumbnail's container
-				const renderer = new THREE.WebGLRenderer();
+				const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
 				renderer.setSize(container.width(), container.height());
 				container.append(renderer.domElement);
-				
-				// Initialize cel shader effect
-				const effect = new CustomOutlineEffect(renderer, { defaultThickness: 0.032 });
 				
 				// Initialize three.js scene and add object to it
 				const scene = new THREE.Scene();
@@ -498,7 +494,7 @@ class Assets
 				this.#object_thumbnail_animations.push(animation_id);
 				
 				// Animate object thumbnail
-				this.objectThumbnailAnimate(animation_id, effect, scene, camera, object);
+				this.objectThumbnailAnimate(animation_id, renderer, scene, camera, object);
 				
 			}
 			

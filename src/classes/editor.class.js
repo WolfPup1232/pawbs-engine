@@ -218,26 +218,6 @@ class Editor
 		//#endregion
 		
 		
-		//#region [Editor Tools]
-			
-			/**
-			 * Editor tool modes.
-			 */
-			static ToolMode = {
-				None: 		0,
-				Spawn: 		1,
-				NPC: 		2,
-				Cinematics:	3
-			};
-			
-			/**
-			 * The current editor tool mode.
-			 */
-			static tool_mode = this.ToolMode.None;
-			
-		//#endregion
-		
-		
 		//#region [Editor Tool Modes]
 			
 			
@@ -595,7 +575,17 @@ class Editor
 				
 				// Show open file dialog...
 				Game.ui.utilities.showOpenFileDialog('.json', (event) => {
-				
+					
+					// Ensure a file was selected...
+					if (!event.target.files || event.target.files.length === 0)
+					{
+						
+						// No file selected
+						console.warn('No file selected.');
+						return;
+						
+					}
+					
 					// Initialize a file reader to read the selected file
 					let reader = new FileReader();
 					
@@ -675,6 +665,75 @@ class Editor
 		//#endregion
 		
 		
+		//#region [Texture Methods]
+			
+			/**
+			 * Imports a texture from an image file using an open file dialog.
+			 */
+			static importTexture()
+			{
+				
+				// Show open file dialog...
+				Game.ui.utilities.showOpenFileDialog('image/*', (event) => {
+					
+					// Ensure a file was selected...
+					if (!event.target.files || event.target.files.length === 0)
+					{
+						
+						// No file selected
+						console.warn('No file selected.');
+						return;
+						
+					}
+					
+					// Initialize selected file
+					let file = event.target.files[0];
+					
+					// Initialize object URL for use with THREE.TextureLoader
+					let object_url = URL.createObjectURL(file);
+					
+					// Initialize texture loader
+					let texture_loader = new THREE.TextureLoader();
+					
+					try
+					{
+					
+						// texture_loader.load(object_url, (texture) => {
+							
+						// 	// Add texture path to loaded texture
+						// 	texture.path = Game.settings.path_root + texture_paths[key];
+							
+						// 	// Store loaded texture by name
+						// 	Assets.textures[key] = texture;
+							
+						// },
+						// undefined, // No onProgress callback
+						// (error) => {
+							
+						// 	// Error loading texture
+						// 	console.error("Error loading texture: ", error);
+							
+						// });
+						
+					}
+					catch (error)
+					{
+						
+						// Unexpected error initializing texture loading
+						console.error('Unexpected error while loading image texture: ', error);
+						
+						// Revoke object URL on error
+						URL.revokeObjectURL(object_url);
+						
+					}
+					
+				});
+				
+			}
+			
+		//#endregion
+		
+		
 		//#region [Object Methods]
 			
 			/**
@@ -691,7 +750,7 @@ class Editor
 				Game.player.raycaster.near = 0;
 				Game.player.raycaster.far = Infinity;
 				
-				// Check intersections with world objects
+				// Check intersections with world objects...
 				const intersects = Game.player.raycaster.intersectRaycastableObjects(Game.world.all_objects, true);
 				if (intersects.length > 0)
 				{
@@ -764,6 +823,9 @@ class Editor
 				else
 				{
 					Game.world.addObject(object);
+					
+					// Update scene graph UI
+					Game.ui.editor.updateSceneGraphWindow();
 				}
 				
 			}
@@ -784,6 +846,9 @@ class Editor
 				else
 				{
 					Game.world.removeObject(object);
+					
+					// Update scene graph UI
+					Game.ui.editor.updateSceneGraphWindow();
 				}
 				
 			}
@@ -827,7 +892,7 @@ class Editor
 				Game.player.raycaster.near = 0;
 				Game.player.raycaster.far = Infinity;
 				
-				// Check intersections with world objects
+				// Check intersections with world objects...
 				const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 				if (intersects.length > 0)
 				{
@@ -850,7 +915,7 @@ class Editor
 							new_highlighted_objects.traverse((child) => {
 								if (child.isMesh && child.material)
 								{
-									child.userData.original_material = child.material.clone();
+									child.userData.original_material = child.material;
 									child.material = new THREE.MeshBasicMaterial({ color: child.material.color.getHex(), transparent: true, opacity: 0.5, side: child.material.side });
 								}
 							});
@@ -861,7 +926,7 @@ class Editor
 						{
 							
 							// Make the new highlighted object's material transparent
-							new_highlighted_objects.userData.original_material = new_highlighted_objects.material.clone();
+							new_highlighted_objects.userData.original_material = new_highlighted_objects.material;
 							new_highlighted_objects.material = new THREE.MeshBasicMaterial({ color: new_highlighted_objects.material.color.getHex(), transparent: true, opacity: 0.5, side: new_highlighted_objects.material.side });
 							
 						}
@@ -897,7 +962,7 @@ class Editor
 			{
 				
 				// If objects are highlighted...
-				if (this.highlighted_objects && this.highlighted_objects.unlocked() && this.highlighted_objects.userData && this.highlighted_objects.userData.original_material)
+				if (this.highlighted_objects && this.highlighted_objects.unlocked()) // && this.highlighted_objects.userData && this.highlighted_objects.userData.original_material)
 				{
 					
 					// If the highlighted objects are a group...
@@ -910,7 +975,7 @@ class Editor
 							{
 								if (child.userData.original_material != null)
 								{
-									child.material = child.userData.original_material.clone();
+									child.material = child.userData.original_material;
 									delete child.userData.original_material;
 								}
 							}
@@ -953,7 +1018,7 @@ class Editor
 				Game.player.raycaster.near = 0;
 				Game.player.raycaster.far = Infinity;
 				
-				// Check intersections with world objects
+				// Check intersections with world objects...
 				const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 				if (intersects.length > 0)
 				{
@@ -989,8 +1054,8 @@ class Editor
 								new_selected_object.traverse((child) => {
 									if (child.isMesh)
 									{
-										child.userData.original_material = child.material.clone();
-										child.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+										child.userData.original_material = child.material;
+										child.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true, side: child.material.side });
 									}
 								});
 								
@@ -1000,8 +1065,8 @@ class Editor
 							{
 							
 								// Make the new selected object's material wireframe
-								new_selected_object.userData.original_material = new_selected_object.material.clone();
-								new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true });
+								new_selected_object.userData.original_material = new_selected_object.material;
+								new_selected_object.material = new THREE.MeshBasicMaterial({ color: this.selected_object_colour, wireframe: true, side: new_selected_object.material.side });
 							
 							}
 							
@@ -1100,7 +1165,7 @@ class Editor
 						{
 							if (child.userData.original_material != null)
 							{
-								child.material = child.userData.original_material.clone();
+								child.material = child.userData.original_material;
 								delete child.userData.original_material;
 							}
 						}
@@ -1189,7 +1254,7 @@ class Editor
 						{
 							if (child.userData.original_material != null)
 							{
-								child.material = child.userData.original_material.clone();
+								child.material = child.userData.original_material;
 								delete child.userData.original_material;
 							}
 						}
@@ -1447,10 +1512,10 @@ class Editor
 					this.selected_objects.traverse((child) => {
 						if (child.isMesh)
 						{
-							child.material = child.userData.original_material.clone();
+							child.material = child.userData.original_material;
 							child.material.color.set(new THREE.Color(selected_colour));
-							child.userData.original_material = child.material.clone();
-							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true });
+							child.userData.original_material = child.material;
+							child.material = new THREE.MeshBasicMaterial({ color: new THREE.Color(selected_colour), wireframe: true, side: child.material.side });
 							
 							// Send multiplayer object update...
 							if (Multiplayer.enabled)
@@ -1481,7 +1546,7 @@ class Editor
 				Game.player.raycaster.near = 0;
 				Game.player.raycaster.far = Infinity;
 				
-				// Check intersections with world objects
+				// Check intersections with world objects...
 				const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 				if (intersects.length > 0)
 				{
@@ -1643,7 +1708,7 @@ class Editor
 							
 							// Reset the object's geometry back to its original indexed geometry
 							this.hovered_faces_object.geometry = this.hovered_faces_object.userData.original_geometry;
-							this.hovered_faces_object.material.vertexColors = false;
+							//this.hovered_faces_object.material.vertexColors = false;
 							this.hovered_faces_object.material.needsUpdate = true;
 							
 							// Delete the object's geometry face modification related userData values
@@ -1688,7 +1753,7 @@ class Editor
 					
 					// Initialize flag indicating the hovered face's group should be selected if it isn't already selected
 					const select_face_group = !(this.hovered_faces_object.userData.selected_faces && this.hovered_faces_object.userData.selected_faces.has(face_group_id));
-
+					
 					// If the player is not holding down the shift key to select multiple faces...
 					if (!Game.player.controls.modifier_shift_left_pressed && !Game.player.controls.modifier_control_left_pressed)
 					{
@@ -1808,7 +1873,7 @@ class Editor
 							
 							// Reset the object's geometry back to its original indexed geometry
 							child.geometry = child.userData.original_geometry;
-							child.material.vertexColors = false;
+							//child.material.vertexColors = false;
 							child.material.needsUpdate = true;
 							
 							// Delete the object's geometry face modification related userData values
@@ -1998,43 +2063,179 @@ class Editor
 				// Initialize an array of face group IDs
 				const face_group_ids = new Uint16Array(geometry_face_count * 3);
 				
-				// Initialize a counter for tracking the current face group id as face groups are being created
+				// Initialize a counter for tracking the current face group ID as face groups are being created
 				let current_face_group_id = 0;
 				
-				// If the object was originally a box (not accounting for the user messing with the vertices after the fact)...
+				// If the object was originally a box...
 				if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'BoxGeometry')
 				{
-					
-					// Each side of a box consists of two faces/triangles, so provide the current face group id to two faces/triangles accordingly
-					// by letting the vertex offset value climb twice as high before moving on to the next face group...
 					for (let i = 0; i < geometry_face_count; i += 2)
 					{
 						for (let j = 0; j < 2; j++)
 						{
-							const vertexOffset = (i + j) * 3;
-							face_group_ids[vertexOffset] = current_face_group_id;
-							face_group_ids[vertexOffset + 1] = current_face_group_id;
-							face_group_ids[vertexOffset + 2] = current_face_group_id;
+							const vertex_offset = (i + j) * 3;
+							face_group_ids[vertex_offset] = current_face_group_id;
+							face_group_ids[vertex_offset + 1] = current_face_group_id;
+							face_group_ids[vertex_offset + 2] = current_face_group_id;
 						}
 						current_face_group_id++;
 					}
 					
-					
-				} // Otherwise, if the object was originally any other type of object (again, not accounting for the user messing with vertices)...
-				else
+				} // If the object was originally a plane...
+				else if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'PlaneGeometry')
 				{
-					
-					// For all other geometries, each face group will only have one face/triangle, so let the vertex offset value climb accordingly
-					// and move on to the next face group only after one face/triangle has been added...
-					for (let i = 0; i < geometry_face_count; i++)
+					for (let i = 0; i < geometry_face_count; i += 2)
 					{
-						const vertexOffset = i * 3;
-						face_group_ids[vertexOffset] = current_face_group_id;
-						face_group_ids[vertexOffset + 1] = current_face_group_id;
-						face_group_ids[vertexOffset + 2] = current_face_group_id;
+						for (let j = 0; j < 2; j++)
+						{
+							const vertex_offset = (i + j) * 3;
+							face_group_ids[vertex_offset] = current_face_group_id;
+							face_group_ids[vertex_offset + 1] = current_face_group_id;
+							face_group_ids[vertex_offset + 2] = current_face_group_id;
+						}
 						current_face_group_id++;
 					}
 					
+				} // If the object was originally a circle...
+				else if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'CircleGeometry')
+				{
+					const radial_segments = mesh.userData.original_geometry.parameters.segments;
+					for (let i = 0; i < radial_segments; i++)
+					{
+						const vertex_offset = i * 3;
+						face_group_ids[vertex_offset] = current_face_group_id;
+						face_group_ids[vertex_offset + 1] = current_face_group_id;
+						face_group_ids[vertex_offset + 2] = current_face_group_id;
+						current_face_group_id++;
+					}
+					
+				} // If the object was originally a ring...
+				else if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'RingGeometry')
+				{
+					const theta_segments = mesh.userData.original_geometry.parameters.thetaSegments;
+					for (let i = 0; i < theta_segments * 2; i += 2)
+					{
+						for (let j = 0; j < 2; j++)
+						{
+							const vertex_offset = (i + j) * 3;
+							face_group_ids[vertex_offset] = current_face_group_id;
+							face_group_ids[vertex_offset + 1] = current_face_group_id;
+							face_group_ids[vertex_offset + 2] = current_face_group_id;
+						}
+						current_face_group_id++;
+					}
+					
+				} // If the object was originally a cylinder...
+				else if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'CylinderGeometry')
+				{
+					
+					// Sides
+					const radial_segments = mesh.userData.original_geometry.parameters.radialSegments;
+					const height_segments = mesh.userData.original_geometry.parameters.heightSegments;
+					const side_face_count = radial_segments * height_segments * 2;
+					for (let i = 0; i < side_face_count; i += 2)
+					{
+						for (let j = 0; j < 2; j++)
+						{
+							const vertex_offset = (i + j) * 3;
+							face_group_ids[vertex_offset] = current_face_group_id;
+							face_group_ids[vertex_offset + 1] = current_face_group_id;
+							face_group_ids[vertex_offset + 2] = current_face_group_id;
+						}
+						current_face_group_id++;
+					}
+					
+					// Top and bottom caps
+					const cap_face_start = side_face_count;
+					const cap_face_count = (radial_segments - 2) * 2;
+					for (let i = 0; i < cap_face_count; i++)
+					{
+						const vertex_offset = (cap_face_start + i) * 3;
+						face_group_ids[vertex_offset] = current_face_group_id;
+						face_group_ids[vertex_offset + 1] = current_face_group_id;
+						face_group_ids[vertex_offset + 2] = current_face_group_id;
+						current_face_group_id++;
+					}
+					
+				} // If the object was originally a sphere...
+				else if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'SphereGeometry')
+				{
+					const width_segments = mesh.userData.original_geometry.parameters.widthSegments;
+					const height_segments = mesh.userData.original_geometry.parameters.heightSegments;
+					const sphere_face_count = width_segments * height_segments * 2;
+					for (let i = 0; i < sphere_face_count; i += 2)
+					{
+						for (let j = 0; j < 2; j++)
+						{
+							const vertex_offset = (i + j) * 3;
+							face_group_ids[vertex_offset] = current_face_group_id;
+							face_group_ids[vertex_offset + 1] = current_face_group_id;
+							face_group_ids[vertex_offset + 2] = current_face_group_id;
+						}
+						current_face_group_id++;
+					}
+					
+				} // If the object was originally a cone...
+				else if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'ConeGeometry')
+				{
+					
+					// Sides
+					const radial_segments = mesh.userData.original_geometry.parameters.radialSegments;
+					const height_segments = mesh.userData.original_geometry.parameters.heightSegments;
+					const side_face_count = radial_segments * height_segments * 2;
+					for (let i = 0; i < side_face_count; i += 2)
+					{
+						for (let j = 0; j < 2; j++)
+						{
+							const vertex_offset = (i + j) * 3;
+							face_group_ids[vertex_offset] = current_face_group_id;
+							face_group_ids[vertex_offset + 1] = current_face_group_id;
+							face_group_ids[vertex_offset + 2] = current_face_group_id;
+						}
+						current_face_group_id++;
+					}
+					
+					// Bottom cap
+					const cap_face_start = side_face_count;
+					const cap_face_count = (radial_segments - 2) * 2;
+					for (let i = 0; i < cap_face_count; i++)
+					{
+						const vertex_offset = (cap_face_start + i) * 3;
+						face_group_ids[vertex_offset] = current_face_group_id;
+						face_group_ids[vertex_offset + 1] = current_face_group_id;
+						face_group_ids[vertex_offset + 2] = current_face_group_id;
+						current_face_group_id++;
+					}
+					
+				} // If the object was originally a torus...
+				else if (mesh.userData.original_geometry && mesh.userData.original_geometry.type === 'TorusGeometry')
+				{
+					const tubular_segments = mesh.userData.original_geometry.parameters.tubularSegments;
+					const radial_segments = mesh.userData.original_geometry.parameters.radialSegments;
+					const torus_face_count = tubular_segments * radial_segments * 2;
+					for (let i = 0; i < torus_face_count; i += 2)
+					{
+						for (let j = 0; j < 2; j++)
+						{
+							const vertex_offset = (i + j) * 3;
+							face_group_ids[vertex_offset] = current_face_group_id;
+							face_group_ids[vertex_offset + 1] = current_face_group_id;
+							face_group_ids[vertex_offset + 2] = current_face_group_id;
+						}
+						current_face_group_id++;
+					}
+					
+				} // Otherwise, handle all other geometries as single triangles...
+				else
+				{
+					for (let i = 0; i < geometry_face_count; i++)
+					{
+						const vertex_offset = i * 3;
+						face_group_ids[vertex_offset] = current_face_group_id;
+						face_group_ids[vertex_offset + 1] = current_face_group_id;
+						face_group_ids[vertex_offset + 2] = current_face_group_id;
+						current_face_group_id++;
+					}
 				}
 				
 				// Add the array of face group IDs to the object
@@ -2111,7 +2312,7 @@ class Editor
 				let intersect_object = null;
 				let intersect_point = null;
 				
-				// Check intersections with world objects
+				// Check intersections with world objects...
 				const intersects = Game.player.raycaster.intersectRaycastableObjects(this.getObjects(), true);
 				if (intersects.length > 0)
 				{
@@ -2277,7 +2478,7 @@ class Editor
 										child.material.uniforms.intersection_point.value.copy(intersect_point);
 										
 										// Update the highlight radius
-										if (this.tool_mode == this.ToolMode.Spawn && this.spawn_tool == this.SpawnTools.Terrain)
+										if (this.spawn_tool == this.SpawnTools.Terrain)
 										{
 											this.vertex_pointer_radius = this.terrain_tool_select_vertex_radius;
 										}
@@ -2372,9 +2573,11 @@ class Editor
 				Game.player.raycaster.ray.direction.set(0, 0, -1).applyQuaternion(Game.player.quaternion);
 				Game.player.raycaster.near = 0;
 				Game.player.raycaster.far = Infinity;
+				
+				// Fine-tune raycaster points threshold
 				Game.player.raycaster.params.Points.threshold = 0.1;
 				
-				// Check intersections with world objects
+				// Check intersections with world objects...
 				const intersects = Game.player.raycaster.intersectObjects(this.getObjects(), true);
 				if (intersects.length > 0)
 				{
@@ -2645,6 +2848,9 @@ class Editor
 					this.resetSelectedVertices();
 					
 				}
+				
+				// Reset raycaster points threshold
+				Game.player.raycaster.params.Points.threshold = 1;
 				
 			}
 			

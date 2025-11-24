@@ -1,13 +1,13 @@
 # 🏳️‍⚧️ Pawbs Engine 🐾
-[![Good Puppy!<3](https://img.shields.io/badge/Wruff!-Wruff!%E2%99%A5-purple.svg?logo=data:image/svg%2bxml;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFVSURBVDhPjdNPK0RRGMfxY/wfU0QpC0shrERkoxRehyZLK1tegY3dZCHeAFs7yYImxUZNdlazMizEpNH1/Z37nOveWzK/+vTce+5zTufOndMRRZHLpYgWvvzdb0poQs+SFKyGrOAR91jWgKWMJ1xiVANJtIOUM4TU0I05tDRg2UEyJ7+DPqvKJGawhk4NWPqt+oQFBq2eWw3R76D3DvnGRXxpc9hGBS/Ys20d4hVHdj+Ca9RRtrF9NFDRzSdC1qGxAaslFO261+omQj70Cjd+K3GWrI7hFDXo1z/BOJRFq8qtVpxGFc+YxQbekI/G9Ew96tWcKS0gXWYBTfwVPVNP6M/8D/TNH/Bf1KNePy+9wDbajXozCxSgd2o36tWc5I80hIn4MhMdnMzhsahXc1z6NB5gC3VUcYU7KPNYhT6hPvExdpFZQBnGO/JHOaQHOtYNf+ec+wHhxe4h70smUwAAAABJRU5ErkJggg==)](https://github.com/WolfPup1232/pawbs-engine) [![MIT License](https://img.shields.io/badge/License-MIT-green)](https://github.com/WolfPup1232/pawbs-engine?tab=MIT-1-ov-file#readme) [![Neocities Website](https://img.shields.io/badge/Neocities-Website-%23B8681C.svg)](https://pawbs-engine.neocities.org/) [![Firefox Version](https://img.shields.io/badge/Firefox-135.0-blue.svg?logo=firefoxbrowser)](https://www.mozilla.org/en-US/firefox/new/) [![Good Puppy!](https://img.shields.io/badge/Good-Puppy!%F0%9F%A6%B4-%23880015.svg?logo=data:image/svg%2bxml;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAQCAYAAAAbBi9cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEySURBVDhPjdM7TsMwAIdxF1QelQCJx4JEFyRm7sDKyA3gIrByES7AwgAsTEUsbCBGxENF4rEgQJTvS+PKJGmbv/Sr7dhxajsJvV6vrgNcoo1lNDHoTweOcwbzhnvY3sQiWhOhXlpo96thHqd4xBVucNFgtikq5isvq7KOa8xmrRA+83ImL4P/6ATHaHhhSFYRJzFOMJiEnLv2B5gdLGClwI3VHtwb84FndOFebTjRPswP7Cxy8B12sYZDbMOH+oDsMPyZhJ110sEWsptTsTIHn14nL1jCv4ni8U/nZZ38ovTaxAujTqwY1lFO1Qv5jiPcopuXtr0+PPkaPea4R09wz/yW4jdl2+vGcY6v3KM0LtM9+4b/yNL2yOWnEzWTsniT7bS/lDjRKzr9albaTjOmP4Q/crnL1xm1tGoAAAAASUVORK5CYII=)](https://github.com/WolfPup1232/pawbs-engine)
+[![Good Puppy!<3](https://img.shields.io/badge/Wruff!-Wruff!%E2%99%A5-purple.svg?logo=data:image/svg%2bxml;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFVSURBVDhPjdNPK0RRGMfxY/wfU0QpC0shrERkoxRehyZLK1tegY3dZCHeAFs7yYImxUZNdlazMizEpNH1/Z37nOveWzK/+vTce+5zTufOndMRRZHLpYgWvvzdb0poQs+SFKyGrOAR91jWgKWMJ1xiVANJtIOUM4TU0I05tDRg2UEyJ7+DPqvKJGawhk4NWPqt+oQFBq2eWw3R76D3DvnGRXxpc9hGBS/Ys20d4hVHdj+Ca9RRtrF9NFDRzSdC1qGxAaslFO261+omQj70Cjd+K3GWrI7hFDXo1z/BOJRFq8qtVpxGFc+YxQbekI/G9Ew96tWcKS0gXWYBTfwVPVNP6M/8D/TNH/Bf1KNePy+9wDbajXozCxSgd2o36tWc5I80hIn4MhMdnMzhsahXc1z6NB5gC3VUcYU7KPNYhT6hPvExdpFZQBnGO/JHOaQHOtYNf+ec+wHhxe4h70smUwAAAABJRU5ErkJggg==)](https://github.com/WolfPup1232/pawbs-engine) [![MIT License](https://img.shields.io/badge/License-MIT-green)](https://github.com/WolfPup1232/pawbs-engine?tab=MIT-1-ov-file#readme) [![Neocities Website](https://img.shields.io/badge/Neocities-Website-%23B8681C.svg)](https://pawbs-engine.neocities.org/) [![Firefox Version](https://img.shields.io/badge/Firefox-145.0-blue.svg?logo=firefoxbrowser)](https://www.mozilla.org/en-US/firefox/new/) [![Good Puppy!](https://img.shields.io/badge/Good-Puppy!%F0%9F%A6%B4-%23880015.svg?logo=data:image/svg%2bxml;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAQCAYAAAAbBi9cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEySURBVDhPjdM7TsMwAIdxF1QelQCJx4JEFyRm7sDKyA3gIrByES7AwgAsTEUsbCBGxENF4rEgQJTvS+PKJGmbv/Sr7dhxajsJvV6vrgNcoo1lNDHoTweOcwbzhnvY3sQiWhOhXlpo96thHqd4xBVucNFgtikq5isvq7KOa8xmrRA+83ImL4P/6ATHaHhhSFYRJzFOMJiEnLv2B5gdLGClwI3VHtwb84FndOFebTjRPswP7Cxy8B12sYZDbMOH+oDsMPyZhJ110sEWsptTsTIHn14nL1jCv4ni8U/nZZ38ovTaxAujTqwY1lFO1Qv5jiPcopuXtr0+PPkaPea4R09wz/yW4jdl2+vGcY6v3KM0LtM9+4b/yNL2yOWnEzWTsniT7bS/lDjRKzr9albaTjOmP4Q/crnL1xm1tGoAAAAASUVORK5CYII=)](https://github.com/WolfPup1232/pawbs-engine)
 
-**Pawbs Engine** is a *very* under-construction first-person shooter game engine built on **three.js**, an easy-to-use JavaScript library that provides a simple interface for making use of the WebGL API.
+**Pawbs Engine** is an in-development first-person shooter game engine built on **three.js**, an easy-to-use JavaScript library that provides a simple interface for making use of the WebGL API.
 
-**Multiplayer Game Support -** Pawbs Engine comes with two **Node.js** servers for hosting online multiplayer games. A **WebSocket Dedicated Server** for hosting a multiplayer game in a server environment, and a **WebRTC Peer-To-Peer Signaling Server** for managing peer-to-peer multiplayer games.
+**Multiplayer Game Support -** Pawbs Engine comes with three **Node.js** servers for hosting online multiplayer games. A **WebSocket Dedicated Server** for hosting a multiplayer game in an authoritative server environment, a **WebRTC Peer-to-Peer Signaling Server** for managing peer-to-peer multiplayer games with host authority, and an **Express HTTP Server** for hosting the game files locally or on the web. Features bandwidth-optimized MessagePack compression.
 
-**In-Game World Editor -** Ctrl+E toggles the initial stages of an in-game world editor with online multiplayer support.
+**In-Game World Editor -** Ctrl+E toggles a powerful in-game world editor with online multiplayer support. Features include object/face/vertex selection modes, transform tools with snap-to-grid, a material editor, spawn tools for primitives/objects/terrain/NPCs/walls, scene graph visualization, and prefab save/load.
 
-**Cross-Platform Application Binaries -** This engine also utilizes **Tauri** to quickly perform cross-platform compilation of application binaries from game files.
+**Cross-Platform Application Binaries -** This engine utilizes **Tauri** to quickly perform cross-platform compilation of application binaries (Windows, macOS, Linux) from game files.
 
 **Docker & Fly.io Support -** A Dockerfile and .dockerignore, and a fly.toml config are included as a working example of containerization support.
 
@@ -15,11 +15,11 @@
 ## Features
 
 - Easy-to-follow, fully-documented JavaScript classes.
-- Online multiplayer game support (dedicated & peer-to-peer).
+- Online multiplayer game support (dedicated & peer-to-peer, authoritative hosts) with server browser and in-game chat.
+- In-game world editor with multiplayer support.
 - Mouse and keyboard controls.
 - Basic collision detection.
-- In-game world editor.
-- Game assets loaded via JSON asset lists.
+- Game assets and prefabs loaded via JSON asset lists.
 - Squimshy puppy toe beans! 🐾
 
 ## Prerequisites

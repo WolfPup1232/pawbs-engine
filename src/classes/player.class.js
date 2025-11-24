@@ -57,6 +57,21 @@ class Player
 			 */
 			this.connection = null;
 			
+			/**
+			 * The player's current ping to the server in milliseconds.
+			 */
+			this.ping = 0;
+			
+			/**
+			 * The timestamp of the player's last ping measurement request.
+			 */
+			this.ping_timestamp = 0;
+			
+			/**
+			 * The player's history of recent ping measurements for calculating a rolling average.
+			 */
+			this.ping_history = [];
+			
 			
 			// Player Movement
 			
@@ -71,9 +86,9 @@ class Player
 			this.direction = new THREE.Vector3();
 			
 			/**
-			 * The player's movement speed.
+			 * The player's movement speed (in units per second).
 			 */
-			this.speed = 0.1;
+			this.speed = 6;
 			
 			
 			// Player Steps/Stairs/Ramp Movement
@@ -92,9 +107,9 @@ class Player
 			this.jumping = false;
 			
 			/**
-			 * The player's maximum jump height.
+			 * The player's upward initial jump speed (in units per second).
 			 */
-			this.jump_height = 0.25;
+			this.jump_height = 15;
 			
 			/**
 			 * The player's jump velocity.
@@ -102,9 +117,9 @@ class Player
 			this.jump_velocity = 0;
 			
 			/**
-			 * The amount of gravity pulling down on the player.
+			 * The amount of gravity pulling down on the player (in units per second^2).
 			 */
-			this.jump_gravity = 0.0125;
+			this.jump_gravity = 45;
 			
 			
 			/**
@@ -113,9 +128,9 @@ class Player
 			this.noclip = false;
 			
 			/**
-			 * The player's noclip movement speed.
+			 * The player's noclip movement speed (in units per second).
 			 */
-			this.noclip_speed = 0.175;
+			this.noclip_speed = 10.5;
 			
 			
 			// three.js Camera
@@ -151,6 +166,7 @@ class Player
 				id: 		this.id,
 				name: 		this.name,
 				colour:		this.colour,
+				ping:		this.ping,
 				position: 	{ x: parseFloat(this.position.x).toFixed(4), y: parseFloat(this.position.y).toFixed(4), z: parseFloat(this.position.z).toFixed(4) },
 				rotation: 	{ x: parseFloat(this.rotation._x).toFixed(4), y: parseFloat(this.rotation._y).toFixed(4), z: parseFloat(this.rotation._z).toFixed(4) },
 			};
@@ -160,6 +176,7 @@ class Player
 			this.id = player.id;
 			this.name = player.name;
 			this.colour = player.colour;
+			this.ping = player.ping || 0;
 			this.position.set(player.position.x, player.position.y, player.position.z);
 			this.rotation.set(player.position.x, player.rotation.y, player.rotation.z);
 		}
@@ -267,12 +284,17 @@ class Player
 		
 		/**
 		 * Updates the player in the game world (movement, collision detection, etc).
+		 *
+		 * @param {number} delta Game time delta between current and previous frame.
 		 */
-		update()
+		update(delta)
 		{
 			
-			// If the player's post-initialization routine hasn't executed yet, and the game is either singleplayer, or multiplayer but not a dedicated server...
-			if (!this.post_initialization && (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer)))
+			// Check for missing delta time
+			delta = Math.max(0, (typeof delta === 'number' && isFinite(delta)) ? delta : 0);
+			
+			// If the player's post-initialization routine hasn't executed yet, and the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
+			if (!this.post_initialization && (Game.is_singleplayer || !Multiplayer.is_dedicated_server))
 			{
 				
 				// Flag the post-initialization routine as complete
@@ -377,8 +399,8 @@ class Player
 				if (this.position.y > (Game.world.detectObjectSurfaceBelowPlayer() + this.height))
 				{
 					
-					// Make the player fall downward
-					this.jump_velocity -= this.jump_gravity;
+					// Make the player fall downward by applying gravity over delta time
+					this.jump_velocity -= this.jump_gravity * delta;
 					
 					
 				} // Otherwise, if the player is not yet in the air...
@@ -410,20 +432,20 @@ class Player
 			}
 			
 			// Update the player's y-axis position accordingly, whether or not they're jumping
-			this.position.y += this.jump_velocity;
+			this.position.y += this.jump_velocity * delta;
 			
 			
 			// Player Collision Detection
 			
 			// Get the player's intended position based on their current position, movement speed, and direction
-			const intended_position = this.position.clone().add(this.velocity.clone());
+			const intended_position = this.position.clone().add(this.velocity.clone().multiplyScalar(delta));
 			
 			// Detect collision between the player's intended position and any collidable objects in the world
 			if (!Game.world.detectPlayerCollision(intended_position) || this.noclip)
 			{
 				
 				// If the game is multiplayer and the player has moved or is jumping...
-				if (Multiplayer.enabled && (!this.position.equals(intended_position) || this.jumping))
+				if (!Game.is_singleplayer && (!this.position.equals(intended_position) || this.jumping))
 				{
 					
 					// Send player update to server
@@ -449,8 +471,10 @@ class Player
 			Game.world.player_position = this.position;
 			Game.world.player_rotation = this.rotation;
 			
-			// Reduce player's velocity (smooths player's movement)
-			this.velocity.multiplyScalar(0.95);
+			// Reduce player's velocity
+			const damping_per_frame = 0.95;
+			const damping = Math.pow(damping_per_frame, delta * 60);
+			this.velocity.multiplyScalar(damping);
 			
 		}
 		
@@ -470,7 +494,7 @@ class Player
 			this.raycaster.near = 0;
 			this.raycaster.far = this.stair_check_distance;
 			
-			// Check intersections with all world objects
+			// Check intersections with all world objects...
 			const intersects = this.raycaster.intersectRaycastableObjects(Game.world.all_objects, true);
 			if (intersects.length > 0)
 			{

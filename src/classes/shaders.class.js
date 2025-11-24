@@ -229,6 +229,96 @@ class Shaders
 			});
 		}
 		
+		/**
+		 * Returns a shader material that multiplies a vertical gradient over the base colour/texture while preserving vertex colours.
+		 *
+		 * @param {THREE.Material} original_material The source material whose colour and texture are used as the base.
+		 * @return {THREE.ShaderMaterial} The custom shader material.
+		 */
+		static Soft(original_material)
+		{
+			// Check if a texture map is present
+			const has_map = !!original_material.map;
+			
+			// Initialize default fallback colour and texture
+			const default_colour = new THREE.Color(0xffffff);
+			const default_texture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1, THREE.RGBAFormat);
+			default_texture.needsUpdate = true;
+			
+			// Get base colour and texture
+			const base_colour = original_material.color ? original_material.color.clone() : default_colour;
+			const texture_map = original_material.map || default_texture;
+			
+			// Initialize shader material
+			let shader_material = new THREE.ShaderMaterial({
+				uniforms: {
+					base_colour: { value: base_colour },
+					texture_map: { value: texture_map },
+					use_map:	 { value: has_map }
+				},
+				vertexColors: true,
+				vertexShader: `
+					varying vec2 vertex_uv;
+					varying vec3 vertex_colour;
+					
+					void main()
+					{
+						vertex_uv = uv;
+						vertex_colour = color;
+						
+						gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+					}
+				`,
+				fragmentShader: `
+					uniform vec3 base_colour;
+					uniform sampler2D texture_map;
+					uniform bool use_map;
+					
+					varying vec2 vertex_uv;
+					varying vec3 vertex_colour;
+					
+					void main()
+					{
+						// Start from base material colour multiplied by per-vertex colour.
+						vec3 final_colour = base_colour * vertex_colour;
+						
+						// Optionally multiply by the texture sample.
+						if (use_map)
+						{
+							final_colour *= texture2D(texture_map, vertex_uv).rgb;
+						}
+						
+						// Gentle vertical gradient (UV-space Y).
+						float gradient_factor = 0.4 + 0.6 * vertex_uv.y;
+						final_colour *= gradient_factor;
+						
+						gl_FragColor = vec4(final_colour, 1.0);
+					}
+				`,
+				transparent: true
+			});
+			
+			// Mirror useful fields for external use
+			shader_material.color = base_colour;
+			shader_material.map = texture_map;
+			shader_material.side = THREE.DoubleSide;
+			
+			// Return shader material
+			return shader_material;
+			
+		}
+		
+		/**
+		 * Empty shader.
+		 *
+		 * @returns Nothing.
+		 */
+		static None()
+		{
+			return null;
+		}
+		
+		
 	//#endregion
 	
 }

@@ -37,11 +37,13 @@
 	</div>
 	
 	<!-- Editor UI -->
-	<div id="editor" class="mx-3" style="display: none;">
+	<div id="editor" class="mx-3 position-fixed" style="display: none;">
 		
-		<!-- Editor Main Menu -->
-		<div id="editor-menu" class="row">
-			<div class="editor-window col-12 p-2">
+		<!-- Editor Main Windows & Toolbars -->
+		<div id="editor-main" class="row">
+			
+			<!-- Editor Main Menu Bar -->
+			<div class="editor-window col-12 col-lg-8 col-xl-9 col-xxl-10 order-1 p-2 h-25">
 				<div class="row w-100 m-0 overflow-hidden">
 					
 					<!-- World Options -->
@@ -63,11 +65,11 @@
 								<i class="bi bi-file-earmark"></i>
 							</button>
 							<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-							data-bs-title="Load existing world." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							data-bs-title="Load existing world..." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-folder2-open"></i>
 							</button>
 							<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
-							data-bs-title="Save current world." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							data-bs-title="Save world as..." data-bs-toggle="tooltip" data-bs-placement="bottom">
 								<i class="bi bi-floppy"></i>
 							</button>
 							
@@ -126,35 +128,84 @@
 					</div>
 					
 					<!-- Tools -->
-					<div class="col p-0 text-nowrap" style="max-width: 9em;">
+					<div class="col p-0 text-nowrap" style="max-width: 11.6em;">
 						<div class="editor-panel card-title input-group-text mx-1 my-1">
-							<input id="editor-tool-spawn" name="editor-tool-types" value="1" class="btn-check" type="checkbox">
-							<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-							data-bs-title="Spawn/build tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-hammer"></i>
+							<input id="editor-tool-selected" name="editor-tool-types" value="1" class="btn-check" type="checkbox" disabled>
+							<label for="editor-tool-selected" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+							data-bs-title="Object editor menu." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-box-seam" style="float: right; position: relative; top: 3px; font-size: 0.8em; left: 3px;"></i>
+								<i class="bi bi-usb bi-rotate" style="position: relative; top: 0px;left: -7px;"></i>
 							</label>
 							
-							<input id="editor-tool-npcs" name="editor-tool-types" value="2" class="btn-check" type="checkbox" disabled>
+							<input id="editor-tool-spawn" name="editor-tool-types" value="2" class="btn-check" type="checkbox">
+							<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+							data-bs-title="Spawn/build menu." data-bs-toggle="tooltip" data-bs-placement="bottom">
+								<i class="bi bi-hammer" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -2px;"></i>
+								<i class="bi bi-usb" style="position: relative; top: 4px;"></i>
+							</label>
+							
+							<input id="editor-tool-npcs" name="editor-tool-types" value="3" class="btn-check" type="checkbox" disabled>
 							<label for="editor-tool-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
 							data-bs-title="NPC editor tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-person-arms-up"></i>
+								<i class="bi bi-person-arms-up" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -1px;"></i>
+								<i class="bi bi-usb" style="position: relative; top: 5px;"></i>
 							</label>
 							
-							<input id="editor-tool-cinematics" name="editor-tool-types" value="3" class="btn-check" type="checkbox" disabled>
+							<input id="editor-tool-cinematics" name="editor-tool-types" value="4" class="btn-check" type="checkbox" disabled>
 							<label for="editor-tool-cinematics" class="btn btn-sm btn-outline-secondary mx-1 my-0"
 							data-bs-title="Cinematics tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-camera-reels"></i>
+								<i class="bi bi-camera-reels" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -1px;"></i>
+								<i class="bi bi-usb" style="position: relative; top: 5px;"></i>
 							</label>
 						</div>
-					</div>
-					
+  					</div>
+				
 				</div>
 			</div>
-		</div>
-		
-		<!-- Selected Objects Window -->
-		<div id="editor-selected-objects" class="row" style="display: none;">
-			<div class="editor-window col-6 col-md-5 col-lg-4 col-xl-2 overflow-hidden">
+			
+			<!-- Scene Graph Window -->
+			<div class="editor-window col-6 col-sm-5 col-md-4 col-lg-4 col-xl-3 col-xxl-2 order-3 order-lg-2 ms-auto p-lg-2 h-0">
+				<div class="overflow-y-scroll p-lg-1">
+					<div class="accordion">
+					
+						<!-- Scene Graph -->
+						<div class="accordion-item">
+						
+							<!-- Scene Graph Title -->
+							<div class="accordion-title w-100 mb-0">
+								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-scene-graph-container">
+									<span data-bs-title="Scene graph." data-bs-toggle="tooltip" data-bs-placement="bottom">
+										Scene Graph
+									</span>
+								</button>
+							</div>
+							
+							<div id="editor-scene-graph-container" class="accordion-collapse collapse show p-2">
+								
+								<div id="editor-scene-graph-filters" class="pb-2 mb-2 border-bottom">
+									<div class="d-flex">
+										<div id="editor-scene-graph-toolbar" class="d-flex align-items-center w-100">
+											<label for="editor-scene-graph-sort" class="small me-2 mb-0">Sort:</label>
+											<select id="editor-scene-graph-sort" class="form-select form-select-sm w-auto">
+												<option value="none" selected>None</option>
+												<option value="type">By Type</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								
+								<div id="editor-scene-graph-list" class="mt-2"></div>
+								
+							</div>
+							
+						</div>
+					
+					</div>
+				</div>
+			</div>
+			
+			<!-- Selected Objects Window -->
+			<div id="editor-selected-objects" class="editor-window col-6 col-sm-5 col-md-4 col-lg-4 col-xl-3 col-xxl-2 order-2 order-lg-3 overflow-hidden" style="display: none;">
 				<div id="editor-selected-objects-inner">
 					<div class="accordion">
 						
@@ -288,6 +339,7 @@
 										<i class="bi bi-collection"></i>
 									</label>
 								</div>
+								
 							</div>
 						</div>
 						
@@ -461,6 +513,7 @@
 								</button>
 							</div>
 							
+							<!-- Materials Pickers -->
 							<div id="editor-selected-objects-materials" class="accordion-collapse collapse p-2">
 								
 								<!-- Material Colour Picker -->
@@ -496,11 +549,12 @@
 					</div>
 				</div>
 			</div>
+			
 		</div>
 		
 		<!-- Editor Spawn Tool -->
 		<div id="editor-spawn-tool" class="row fixed-bottom mx-1 my-3" style="display: none;">
-			<div class="editor-window col-12 col-lg-10 col-xl-7 mx-auto">
+			<div class="editor-window col-12 col-lg-10 col-xl-9 col-xxl-7 mx-auto">
 				<div id="editor-spawn-tool-container" class="px-2 pt-2 pb-0 shadow-sm overflow-hidden">
 					<div id="editor-spawn-tool-scroll" class="row h-138px overflow-scroll">
 						
@@ -1293,21 +1347,44 @@
 	
 	<!-- Game UI Elements -->
 	
-	<!-- Player Crosshair -->
-	<div id="crosshair"></div>
+	<!-- Player List -->
+	<div id="player-list" class="row position-relative">
+		<div id="player-list-container" class="col col-sm-6 col-lg-7 col-xl-6 rounded-4 mx-auto my-auto p-4 small" style="display: none;">
+			<div id="player-list-title" class="px-3 py-3">
+				<h5></h5>
+			</div>
+			<div class="d-flex">
+				<table class="table table-sm table-bordered table-transparent table-hover text-center mb-0">
+					<thead>
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">Name</th>
+							<th scope="col">ID</th>
+							<th scope="col">Ping</th>
+						</tr>
+					</thead>
+					<tbody id="player-list-body">
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
 	
 	<!-- Player Chat -->
 	<div id="chat" class="row">
-		<div id="chat-container" class="col col-sm-6 col-lg-4 col-xl-3 rounded-4 p-3 m-3 small">
+		<div id="chat-container" class="col col-sm-6 col-lg-4 col-xl-3 rounded-4 p-3 m-3 small" style="display: none;">
 			<div id="chat-log"></div>
 			<div id="chat-input" class="mt-2" style="display: none;">
 				<div id="chat-input" class="d-flex">
 					<input id="chat-message" placeholder="Type a message..." type="text" value="" class="me-2">
-					<button id="chat-send" class="btn btn-sm btn-secondary">Send</button>
+					<button id="chat-send" class="btn btn-sm btn-secondary" style="display: none;">Send</button>
 				</div>
 			</div>
 		</div>
 	</div>
+	
+	<!-- Player Crosshair -->
+	<div id="crosshair"></div>
 	
 	
 	<!-- Game Renderer -->

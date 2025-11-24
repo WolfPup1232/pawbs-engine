@@ -1,6 +1,5 @@
 // three.js Imports
 import * as THREE from '../libraries/threejs/three.js';
-import { CustomOutlineEffect } from '../libraries/threejs/modules/CustomOutlineEffect.js';
 import initializeObject3DExtension from '../libraries/threejs/modules/ExtendedObject3D.js';
 import initializeRaycasterExtension from '../libraries/threejs/modules/ExtendedRaycaster.js';
 
@@ -10,18 +9,6 @@ import World from './world.class.js';
 import Player from './player.class.js';
 import Controls from './controls.class.js';
 import UI from './ui.class.js';
-
-// UI Event Handler Imports
-import initializeUtilityUIEventHandlers from '../handlers/utility.events.js';
-
-import initializeGameUIEventHandlers from '../handlers/game.events.js';
-import initializeEditorUIEventHandlers from '../handlers/editor.events.js';
-import initializeDebugUIEventHandlers from '../handlers/debug.events.js';
-
-import initializeMainMenuUIEventHandlers from '../handlers/menu-main.events.js';
-import initializeMultiplayerMenuUIEventHandlers from '../handlers/menu-multiplayer.events.js';
-import initializeOptionsMenuUIEventHandlers from '../handlers/menu-options.events.js';
-import initializePauseMenuUIEventHandlers from '../handlers/menu-pause.events.js';
 
 // Static Class Imports
 import Assets from './assets.class.js';
@@ -59,11 +46,6 @@ class Game
 		 * The game's name.
 		 */
 		static name = "My First Game";
-		
-		/**
-		 * The game's birthday.
-		 */
-		static start_time = Date.now();
 		
 		
 		//#region [Libraries]
@@ -116,12 +98,12 @@ class Game
 			/**
 			 * The game's user interface.
 			 */
-			static ui = null;
+			static ui = new UI();
 			
 			/**
 			 * The game's settings.
 			 */
-			static settings = null;
+			static settings = new Settings();
 			
 		//#endregion
 		
@@ -141,7 +123,7 @@ class Game
 			/**
 			 * An optional reference to a Node.js server's FileSystem package.
 			 */
-			static file_system;
+			static file_system = null;
 			
 		//#endregion
 		
@@ -157,6 +139,11 @@ class Game
 			 * Flag indicating whether or not a single frame has been rendered before updating the game state can begin.
 			 */
 			static render_single_frame = false;
+
+			/**
+			 * Timestamp of the last frame, used for delta time calculations.
+			 */
+			static last_frame_time = null;
 			
 		//#endregion
 		
@@ -191,6 +178,14 @@ class Game
 		{
 			this.id = player.id;
 			this.name = player.name;
+		}
+		
+		/**
+		 * Flag indicating whether or not the current game instance is singleplayer.
+		 */
+		static get is_singleplayer()
+		{
+			return (!Multiplayer.enabled);
 		}
 		
 	//#endregion
@@ -232,8 +227,8 @@ class Game
 				
 			}
 			
-			// If the game is either singleplayer, or if it's multiplayer but *not* a signaling server...
-			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.SignalingServer))
+			// If the game is either singleplayer or a multiplayer dedicated server...
+			if (this.is_singleplayer || Multiplayer.is_dedicated_server)
 			{
 				
 				// Initialize web browser window and DOM document (dedicated servers will execute this block too because they have simulated DOMs)
@@ -242,9 +237,6 @@ class Game
 				
 			}
 			
-			// Initialize game settings
-			this.settings = new Settings();
-			
 			// Load game settings from JSON, then continue initialization...
 			this.settings.load((settings) => {
 				
@@ -252,7 +244,7 @@ class Game
 				Object.assign(this.settings, settings);
 				
 				// If the game is hosted on an HTTP server or a signaling server...
-				if (Multiplayer.connection_type == Multiplayer.ConnectionTypes.HTTPServer || Multiplayer.connection_type == Multiplayer.ConnectionTypes.SignalingServer)
+				if (Multiplayer.is_http_server || Multiplayer.is_signaling_server)
 				{
 					
 					// Don't initialize the game any more, invoke server callback
@@ -260,7 +252,7 @@ class Game
 					
 					
 				} // Otherwise, if the game is hosted on a dedicated server...
-				else if (Multiplayer.connection_type == Multiplayer.ConnectionTypes.DedicatedServer)
+				else if (Multiplayer.is_dedicated_server)
 				{
 					
 					// Invoke server callback
@@ -274,25 +266,8 @@ class Game
 				else
 				{
 					
-					// Initialize game UI
-					this.ui = new UI();
-					
-					// Initialize utility/helper UI event handlers
-					initializeUtilityUIEventHandlers();
-					
-					// Initialize game UI event handlers
-					initializeGameUIEventHandlers();
-					initializeEditorUIEventHandlers();
-					initializeDebugUIEventHandlers();
-					
-					// Initialize menu UI event handlers
-					initializeMainMenuUIEventHandlers();
-					initializeMultiplayerMenuUIEventHandlers();
-					initializeOptionsMenuUIEventHandlers();
-					initializePauseMenuUIEventHandlers();
-					
-					// Initialize tooltips
-					this.ui.utilities.initializeTooltips();
+					// Initialize main menu UI
+					this.ui.initializeMainMenuUI()
 					
 					// Show main menu
 					this.ui.menus.showMainMenu()
@@ -311,23 +286,11 @@ class Game
 		static start(multiplayerCallback = null)
 		{
 			
-			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
-			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
-			{
-				
-				// Initialize renderer
-				this.renderer = new THREE.WebGLRenderer();
-				this.renderer = new CustomOutlineEffect(this.renderer, { defaultThickness: 0.0032 });
-				this.renderer.setSize(window.innerWidth, window.innerHeight);
-				this.ui.utilities.initializeRenderer();
-				
-			}
+			// Initialize in-game UI and renderer
+			this.ui.initializeGameUI()
 			
 			// Load game assets, then initialize and start game...
 			Assets.load(() => {
-				
-				// Happy birthday!
-				this.start_time = Date.now();
 				
 				// Initialize game flags
 				this.paused = false;
@@ -346,18 +309,10 @@ class Game
 				
 				// Initialize player's keyboard/mouse controls
 				this.player.controls = new Controls();
-				
-				// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
-				if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
-				{
-					
-					// Initialize keyboard/mouse UI event handlers...
-					this.ui.controls.initializeControls();
-					
-				}
+				this.player.controls.initializeMouseAndKeyboardControls();
 				
 				// If game is multiplayer...
-				if (Multiplayer.enabled)
+				if (!this.is_singleplayer)
 				{
 					
 					// Set the game's multiplayer attributes
@@ -384,8 +339,10 @@ class Game
 		
 		/**
 		 * Updates the game state and handles other game processes before each frame renders, then renders the frame to the canvas.
+		 *
+		 * @param {number} timestamp A 'high-res' timestamp automatically passed by the browser DOM during the callback of requestAnimationFrame().
 		 */
-		static gameLoop()
+		static gameLoop(timestamp = null)
 		{
 			
 			// If pause-on-next-update has been flagged...
@@ -399,18 +356,21 @@ class Game
 			}
 			
 			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
-			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
+			if (this.is_singleplayer || !Multiplayer.is_dedicated_server)
 			{
 				
 				// Request a frame to be rendered using this method as a callback
-				const request_id = this.window_interface.requestAnimationFrame(() => this.gameLoop());
+				const request_id = this.window_interface.requestAnimationFrame((dom_high_res_timestamp) => this.gameLoop(dom_high_res_timestamp));
 				
 				// Make sure a single frame has been rendered before updating the game...
 				if (!this.render_single_frame)
 				{
 					
-					// This is workaround for initializing collision bounding boxes before handling *any* collision detection
+					// This is primarily workaround for initializing collision bounding boxes before handling *any* collision detection
 					this.render_single_frame = true;
+					
+					// Initialize last frame timestamp on first render for later use calculating delta time
+					this.last_frame_time = (timestamp !== null) ? timestamp : (this.window_interface.performance ? this.window_interface.performance.now() : Date.now());
 					
 					
 				} // Otherwise, if a single frame has already been rendered...
@@ -420,7 +380,19 @@ class Game
 					// Update the game state
 					if (!this.paused)
 					{
-						this.update();
+						
+						// Get current time
+						const now = (timestamp !== null) ? timestamp : (this.window_interface.performance ? this.window_interface.performance.now() : Date.now());
+						
+						// Calculate delta time between now and last frame for framerate-independent timing of stuff like movement and animations
+						const delta = Math.min(0.1, Math.max(0, (now - (this.last_frame_time ?? now)) / 1000));
+						
+						// Reset the last frame time to the current time, since we've now calculated our delta time between this frame and the last
+						this.last_frame_time = now;
+						
+						// Update game state using delta time
+						this.update(delta);
+						
 					}
 					
 				}
@@ -430,7 +402,7 @@ class Game
 				{
 					
 					// Render a single frame
-					this.renderer.render();
+					this.renderer.render(Game.world.scene, Game.player.camera);
 					
 					
 				} // Otherwise, if the game is paused...
@@ -444,17 +416,41 @@ class Game
 				
 				
 			} // Otherwise, if the game is a multiplayer dedicated server...
-			else if (Multiplayer.enabled && Multiplayer.connection_type == Multiplayer.ConnectionTypes.DedicatedServer)
+			else if (Multiplayer.is_dedicated_server)
 			{
-				
-				// Only update the game state...
-				if (!this.paused)
+			
+				// Make sure a single frame has been rendered before updating the game...
+				if (!this.render_single_frame)
 				{
-					this.update();
+					
+					// This isn't needed in multiplayer for the collision bounding boxes thing, as the server handles that, but it's useful for other stuff!
+					this.render_single_frame = true;
+					
+					// Initialize last frame timestamp on first tick for later use calculating delta time
+					this.last_frame_time = (timestamp !== null) ? timestamp : (this.window_interface.performance ? this.window_interface.performance.now() : Date.now());
+					
+					
+				} // Otherwise, if a single frame has already been rendered...
+				else
+				{
+				
+					// Get current time
+					const now = (timestamp !== null) ? timestamp : (this.window_interface.performance ? this.window_interface.performance.now() : Date.now());
+					
+					// Calculate delta time between now and last frame for framerate-independent timing of stuff like movement and animations
+					const delta = Math.min(0.1, Math.max(0, (now - (this.last_frame_time ?? now)) / 1000));
+					
+					// Reset the last frame time to the current time, since we've now calculated our delta time between this tick and the last
+					this.last_frame_time = now;
+					
+					// Update game state using delta time
+					this.update(delta);
+				
 				}
 				
-				// Keep on truckin'
-				setTimeout(() => Game.gameLoop, Math.max(1, (1000 / 60) - Date.now() - this.start_time));
+				// Keep on truckin' at ~50 Hz
+				const tick_ms = 1000 / this.settings.multiplayer_default_tick_hz;
+				setTimeout(() => Game.gameLoop(), tick_ms);
 				
 			}
 			
@@ -462,8 +458,10 @@ class Game
 		
 		/**
 		 * Updates the game state.
+		 *
+		 * @param {number} delta Game time delta between current and previous frame.
 		 */
-		static update()
+		static update(delta)
 		{
 			
 			// For each player in the game's player list...
@@ -477,7 +475,7 @@ class Game
 				// Update player (movement, collision detection, etc)...
 				if (player)
 				{
-					player.update();
+					player.update(delta);
 				}
 				
 			}
@@ -503,7 +501,7 @@ class Game
 		{
 			
 			// If game is singleplayer...
-			if (!Multiplayer.enabled)
+			if (this.is_singleplayer)
 			{
 				
 				// Pause game
@@ -528,6 +526,9 @@ class Game
 				
 				// Unpause game
 				this.paused = false;
+				
+				// Reset last frame timestamp to avoid large first delta time
+				this.last_frame_time = null;
 				
 				// Restart game loop
 				this.gameLoop();
@@ -557,11 +558,11 @@ class Game
 				Editor.toggle();
 			}
 			
-			// De-initialize player's keyboard/mouse UI event handlers
-			Game.ui.controls.deinitializeControls();
+			// De-initialize player's keyboard/mouse controls
+			this.player.controls.deinitializeMouseAndKeyboardControls();
 			
 			// If the game is either singleplayer, or if it's multiplayer but *not* a dedicated server...
-			if (!Multiplayer.enabled || (Multiplayer.enabled && Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer))
+			if (this.is_singleplayer || !Multiplayer.is_dedicated_server)
 			{
 				
 				// Hide pause menu
@@ -573,7 +574,7 @@ class Game
 			}
 			
 			// If game is multiplayer...
-			if (Multiplayer.enabled)
+			if (!this.is_singleplayer)
 			{
 				
 				// Disconnect from multiplayer

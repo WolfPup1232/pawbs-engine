@@ -129,30 +129,43 @@ import Multiplayer from '../classes/multiplayer.class.js';
 	
 	/**
 	 * Handle incoming messages.
+	 * 
+	 * Additional fields added to "connection" object:
+	 * 	- player_id - Authorative player identity, held server-side, so incoming messages aren't just "trust me bro". 
 	 */
 	server.on('connection', (connection) => {
 		
-		// Handle messages
+		// Handle messages...
 		connection.on('message', (raw) => {
 			
 			// Get incoming JSON message data and parse it into an object
 			let data;
 			data = msgpack.decode(fflate.decompressSync(new Uint8Array(raw)));
 			
-			// Show incoming message debug info if flagged...
-			if (debug_incoming_message)
+			// Initialize empty player ID
+			let player_id = null;
+			
+			// Attempt to get player ID from connection...
+			if (connection.player_id)
 			{
-				let player_id = null;
+				player_id = connection.player_id;
 				
-				if (data.player)
-				{
-					player_id = data.player.id;
-				}
-				else if (data.player_id)
+			} // Otherwise, if that fails, attempt to get player ID from message data...
+			else
+			{
+				if (data.player_id)
 				{
 					player_id = data.player_id;
 				}
-				
+				else if (data.player)
+				{
+					player_id = data.player.id;
+				}
+			}
+			
+			// Show incoming message debug info if flagged...
+			if (debug_incoming_message)
+			{
 				const message_type = Object.keys(Multiplayer.MessageTypes).find(key => Multiplayer.MessageTypes[key] === data.type);
 				log(c_cyan + message_type + c_reset, player_id);
 			}
@@ -162,17 +175,63 @@ import Multiplayer from '../classes/multiplayer.class.js';
 			{
 				
 				//#region [Server]
-				
+					
 					// PING
 					case Multiplayer.MessageTypes.PING:
 					{
 						
-						// Send a ping in return for latency measurement
-						connection.send(fflate.compressSync(msgpack.encode({
-							type: 			Multiplayer.MessageTypes.PING,
-							game_id: 		Game.id,
-							player_count: 	Object.keys(Game.players).length - 1,
-						})));
+						// If this is a server list ping (no player_id bound to connection)...
+						if (!player_id)
+						{
+							
+							// Send a ping in return for server listing latency measurement
+							connection.send(fflate.compressSync(msgpack.encode({
+								type: 			Multiplayer.MessageTypes.PING,
+								game_id: 		Game.id,
+								player_count: 	Object.keys(Game.players).length - 1,
+							})));
+							
+							
+						} // Otherwise, if this is an in-game ping from a connected player...
+						else
+						{
+							
+							// Get message data
+							const timestamp = data.timestamp;
+							const client_ping = data.client_ping;
+							
+							// Get player by ID
+							const player = Game.players[player_id];
+							
+							// If player exists...
+							if (player)
+							{
+								
+								// Update player's ping from client-reported value...
+								if (client_ping !== undefined)
+								{
+									player.ping = client_ping;
+								}
+								
+								// Echo timestamp back to sender for their RTT calculation...
+								if (timestamp && player.connection && player.connection.readyState === 1)
+								{
+									player.connection.send(fflate.compressSync(msgpack.encode({
+										type: 		Multiplayer.MessageTypes.PING,
+										timestamp: 	timestamp,
+									})));
+								}
+								
+								// Broadcast player's ping to all other clients
+								broadcast({
+									type: 		Multiplayer.MessageTypes.PING,
+									player_id: 	player_id,
+									ping:		player.ping,
+								}, player_id);
+								
+							}
+							
+						}
 						
 						break;
 					}
@@ -209,8 +268,11 @@ import Multiplayer from '../classes/multiplayer.class.js';
 								return;
 							}
 							
-							// Add a new player to the game
-							player = Multiplayer.addPlayer(player, connection);
+							// Add a new player to the game but generate a new player ID
+							player = Multiplayer.addPlayer(player, connection, false);
+							
+							// Bind this connection to the player's ID (authoritative identity)
+							connection.player_id = player.id;
 							
 							// Client successfully joined the game
 							log("joined the game.", player.id);
@@ -248,8 +310,13 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						{
 							
 							// Get message data
-							const player_id = data.player_id;
 							const message = data.message;
+							
+							// Basic chat message validation...
+							if (typeof message !== 'string' || message.length <= 0 || message.length > 512)
+							{
+								break;
+							}
 							
 							// Log chat message
 							log(message, player_id, Multiplayer.MessageTypes.CHAT);
@@ -269,7 +336,6 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						{
 							
 							// Get message data
-							const player_id = data.player_id;
 							const position = data.position;
 							const rotation = data.rotation;
 							
@@ -280,17 +346,17 @@ import Multiplayer from '../classes/multiplayer.class.js';
 							if (player)
 							{
 								
-								// Update player's rotation server-side
+								// Update player's position and rotation server-side
 								player.position.set(parseFloat(position.x), parseFloat(position.y), parseFloat(position.z));
 								player.rotation.set(parseFloat(rotation.x), parseFloat(rotation.y), parseFloat(rotation.z));
 								
-								// Broadcast player update to all clients
+								// Broadcast player update to all other clients
 								broadcast({
 									type: 		Multiplayer.MessageTypes.PLAYER_UPDATED,
 									player_id: 	player_id,
 									position: 	position,
 									rotation:	rotation,
-								});
+								}, player_id);
 								
 							}
 							
@@ -302,7 +368,6 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						{
 							
 							// Get message data
-							const player_id = data.player_id;
 							const object = data.object;
 							
 							// Initialize new object from message data
@@ -328,7 +393,6 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						{
 							
 							// Get message data
-							const player_id = data.player_id;
 							const object = data.object;
 							
 							// Get object by ID
@@ -358,7 +422,6 @@ import Multiplayer from '../classes/multiplayer.class.js';
 						{
 							
 							// Get message data
-							const player_id = data.player_id;
 							const object_id = data.object_id;
 							
 							// Get object by ID
@@ -392,7 +455,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 			
 		});
 		
-		// Handle connection closing
+		// Handle connection closing...
 		connection.on('close', () => {
 			
 			// Iterate through each player...

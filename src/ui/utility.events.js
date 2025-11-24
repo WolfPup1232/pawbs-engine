@@ -17,22 +17,6 @@ export default function initializeUtilityUIEventHandlers()
 	//#region [Functions]
 		
 		
-		//#region [Renderer]
-			
-			/**
-			 * Initializes the renderer canvas.
-			 */
-			Game.ui.utilities.initializeRenderer = function initializeRenderer()
-			{
-				
-				// Add the canvas to the renderer element
-				$('#renderer').html(Game.renderer.domElement);
-				
-			}
-			
-		//#endregion
-		
-		
 		//#region [Mouse/Keyboard Controls]
 			
 			/**
@@ -68,7 +52,7 @@ export default function initializeUtilityUIEventHandlers()
 				const relative_y = event.pageY - offset.top;
 				
 				// Check if any of the HTML element's children with the specified CSS class applied were clicked...
-				$(element_clicked).find(window_class).each(function()
+				$(element_clicked).find(window_class + ":visible").each(function()
 				{
 					
 					// Calculate the child HTML element's offset
@@ -89,7 +73,7 @@ export default function initializeUtilityUIEventHandlers()
 					}
 					else
 					{
-					
+						
 						// Determine if the child HTML element was clicked...
 						if (relative_x >= (child_offset.left - offset.left) && relative_x <= (child_offset.left - offset.left + child_width) && relative_y >= (child_offset.top - offset.top) && relative_y <= (child_offset.top - offset.top + child_height))
 						{
@@ -111,51 +95,6 @@ export default function initializeUtilityUIEventHandlers()
 				{
 					Game.player.controls.lockPointerLockControls();
 				}
-				
-			}
-			
-		//#endregion
-		
-		
-		//#region [Tooltips]
-			
-			/**
-			 * Re-initializes all UI bootstrap tooltips.
-			 */
-			Game.ui.utilities.initializeTooltips = function initializeTooltips()
-			{
-				
-				// Remove all tooltips...
-				Game.ui.tooltips.forEach((tooltip, element) => {
-					tooltip.dispose();
-					Game.ui.tooltips.delete(element);
-				});
-				
-				// Clear tooltips
-				Game.ui.tooltips.clear();
-				
-				// Re-initialize tooltips...
-				$('[data-bs-toggle="tooltip"]').each(function()
-				{
-					
-					// Initialize new tooltip
-					let tooltip = new bootstrap.Tooltip($(this), { html: true, sanitize: false });
-					
-					// Add tooltip to the Map, using the DOM element as the key
-					Game.ui.tooltips.set(this, tooltip);
-					
-				});
-				
-			}
-			
-			/**
-			 * Hides all tooltips.
-			 */
-			Game.ui.utilities.hideTooltips = function hideTooltips()
-			{
-				
-				// Hide all tooltips
-				Game.ui.tooltips.forEach((tooltip, element) => { tooltip.hide(); });
 				
 			}
 			
@@ -314,10 +253,105 @@ export default function initializeUtilityUIEventHandlers()
 				// Colour cell click event
 				$('.' + cell_class).on('click', cellClickEventCallback);
 				
-				// Re-initialize tooltips
-				Game.ui.utilities.initializeTooltips();
+				// Refresh all UI tooltips
+				Game.ui.refreshTooltips();
 				
 			}
+			
+		//#endregion
+		
+		
+		//#region [Objects]
+		
+			/**
+			 * Lists an array of objects in the specified HTML DOM <ul> element.
+			 *
+			 * @param {JQuery<HTMLElement>} ul_element The specified HTML DOM <ul> element to append items to.
+			 * @param {Array<THREE.Object3D>} objects The array of objects to list.
+			 * @param {number} depth The current tree depth.
+			 * @param {boolean} sort_by_type Boolean flag indicating whether or not to sort objects alphabetically by type.
+			 */
+			Game.ui.utilities.renderChildren = function(ul_element, objects, depth, sort_by_type)
+			{
+				
+				// If there are no children to render, abort...
+				if (!objects || objects.length === 0)
+				{
+					return;
+				}
+				
+				// Get copy of objects array
+				let items = Array.from(objects);
+				
+				// If sorting by type, order items alphabetically by their Object3D.type...
+				if (sort_by_type)
+				{
+					items.sort((a, b) => {
+						const ta = (a.type || "").toLowerCase();
+						const tb = (b.type || "").toLowerCase();
+						if (ta < tb) return -1; if (ta > tb) return 1; return 0;
+					});
+				}
+				
+				// Render each object as a list item with a label row and an optional children list...
+				items.forEach(object => {
+					
+					// Determine if this node has children
+					const has_children = object.children && object.children.length > 0;
+					
+					// Initialize object display name
+					const display_name = (object.name && object.name.trim().length > 0) ? object.name : 
+						((object.userData && object.userData.name) ? object.userData.name : (object.type || "Object3D") + " #" + object.id);
+					
+					// Initialize list item and row
+					const li = $('<li class="editor-scene-graph-item" data-object-id="' + object.id + '"></li>');
+					const row = $('<span class="editor-scene-graph-label"></span>');
+					
+					// if object has children, initialize expand/collapse toggle...
+					const toggle = $('<span class="editor-scene-graph-toggle' + (has_children ? '' : ' disabled') + '" role="button" aria-label="toggle"></span>');
+					if (has_children)
+					{
+						toggle.html('<i class="bi bi-caret-down-fill"></i>');
+					}
+					else
+					{
+						toggle.html('<i class="bi bi-dot"></i>');
+					}
+					
+					// Initialize name text and a small type badge
+					const name = $('<span class="editor-scene-graph-name"></span>').text(display_name);
+					const type = $('<span class="editor-scene-graph-type-badge"></span>').text(object.type || 'Object3D');
+					
+					// Assemble the row and append it to the list item
+					row.append(toggle).append(name).append(type);
+					li.append(row);
+					
+					// Add the list item to the list
+					ul_element.append(li);
+					
+					// If the object has children, render them as a nested <ul>...
+					if (has_children)
+					{
+						
+						// Initialize list of object's children and add it to the list item
+						const child_ul = $('<ul class="editor-scene-graph-children"></ul>');
+						li.append(child_ul);
+						
+						// Collapse children by default when the depth is >= 1 to keep the tree tidy...
+						if (depth >= 1)
+						{
+							child_ul.hide();
+							toggle.html('<i class="bi bi-caret-right-fill"></i>');
+						}
+						
+						// Recursively render object's children
+						this.renderChildren(child_ul, object.children, depth + 1);
+						
+					}
+					
+				});
+				
+			};
 			
 		//#endregion
 		
@@ -336,7 +370,7 @@ export default function initializeUtilityUIEventHandlers()
 			$(window).on('click', () => {
 				
 				// Hide all tooltips
-				Game.ui.utilities.hideTooltips();
+				Game.ui.hideTooltips();
 				
 			});
 			
@@ -376,7 +410,7 @@ export default function initializeUtilityUIEventHandlers()
 		
 		
 		//#region [Input Elements]
-		
+			
 			/**
 			 * Letter input textbox text input event.
 			 */
