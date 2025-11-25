@@ -3,32 +3,35 @@
 
 **Pawbs Engine** is an in-development first-person shooter game engine built on **three.js**, an easy-to-use JavaScript library that provides a simple interface for making use of the WebGL API.
 
-**Multiplayer Game Support -** Pawbs Engine comes with three **Node.js** servers for hosting online multiplayer games. A **WebSocket Dedicated Server** for hosting a multiplayer game in an authoritative server environment, a **WebRTC Peer-to-Peer Signaling Server** for managing peer-to-peer multiplayer games with host authority, and an **Express HTTP Server** for hosting the game files locally or on the web. Features bandwidth-optimized MessagePack compression.
-
-**In-Game World Editor -** Ctrl+E toggles a powerful in-game world editor with online multiplayer support. Features include object/face/vertex selection modes, transform tools with snap-to-grid, a material editor, spawn tools for primitives/objects/terrain/NPCs/walls, scene graph visualization, and prefab save/load.
-
-**Cross-Platform Application Binaries -** This engine utilizes **Tauri** to quickly perform cross-platform compilation of application binaries (Windows, macOS, Linux) from game files.
-
-**Docker & Fly.io Support -** A Dockerfile and .dockerignore, and a fly.toml config are included as a working example of containerization support.
-
-
 ## Features
 
-- Easy-to-follow, fully-documented JavaScript classes.
-- Online multiplayer game support (dedicated & peer-to-peer, authoritative hosts) with server browser and in-game chat.
-- In-game world editor with multiplayer support.
-- Mouse and keyboard controls.
-- Basic collision detection.
-- Game assets and prefabs loaded via JSON asset lists.
-- Squimshy puppy toe beans! 🐾
+#### Multiplayer Game Support
+
+Three **Node.js** servers come pre-configured for authoritative dedicated & peer-to-peer hosting, featuring a server browser, multiplayer in-game editor, and player chat:
+  - A **WebSocket Dedicated Server** for hosting a multiplayer game in an authoritative server environment.
+  - A **WebRTC Peer-to-Peer Signaling Server** for managing peer-to-peer multiplayer games.
+  - An **Express HTTP Server** for hosting the game files locally or on the web.
+
+#### In-Game World Editor
+
+Toggle a powerful in-game world editor with Ctrl+E. Includes online multiplayer support, object/face/vertex selection modes, transform tools with snap-to-grid, material editor, spawn tools for primitives/objects/terrain/NPCs/walls, scene graph visualization, and prefab save/load.
+
+#### Cross-Platform Application Binaries
+
+Pawbs Engine utilizes **Tauri** to quickly perform cross-platform compilation of application binaries (Windows, macOS, Linux) from game files.
+
+#### Docker & Fly.io Support
+
+A Dockerfile and .dockerignore, and a fly.toml config, are included as a working example of containerization support.
 
 ## Prerequisites
 
-- **Microsoft Visual Studio C++ Build Tools**: [https://visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-- **Rust**: [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
-- **Node.js and npm**: [https://nodejs.org/en/download/prebuilt-installer](https://nodejs.org/en/download/prebuilt-installer)
+- **Node.js / npm**: [https://nodejs.org/en/download/prebuilt-installer](https://nodejs.org/en/download/prebuilt-installer)
+- Tauri:
+  - Microsoft Visual Studio C++ Build Tools: [https://visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+  - Rust: [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
 
-(For help installing Microsoft Visual Studio C++ Build Tools, the Tauri installation guide can be found at [https://tauri.app/v1/guides/getting-started/prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites).)
+(For help installing Microsoft Visual Studio C++ Build Tools, the Tauri installation guide can be found at [https://tauri.app/start/prerequisites/#windows](https://tauri.app/start/prerequisites/#windows).)
 
 ## Installation
 

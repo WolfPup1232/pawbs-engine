@@ -9,15 +9,17 @@
 		"container": "concurrently \"node ./src/servers/dedicated-server.js remote container\" \"node ./src/servers/http-server.js remote container\" \"node ./src/servers/signaling-server.js remote container\""
 	},
 	"devDependencies": {
-		"@tauri-apps/cli": "^1"
+		"@tauri-apps/cli": "^2.9.4",
+		"three": "^0.181.2"
 	},
 	"dependencies": {
-		"concurrently": "^9.1.2",
+		"concurrently": "^9.2.1",
 		"cors": "^2.8.5",
-		"express": "^4.21.2",
+		"express": "^5.1.0",
 		"fflate": "^0.8.2",
-		"jsdom": "^26.0.0",
+		"jsdom": "^26.1.0",
 		"msgpack-lite": "^0.1.26",
-		"ws": "^8.18.0"
+		"parse5": "^7.2.0",
+		"ws": "^8.18.3"
 	}
 }

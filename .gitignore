@@ -6,10 +6,10 @@
 src/tests
 
 # Shortcuts
-_Run Game.url
-_Run Game.lnk
-_Run Game Locally.url
-_Publish Game.lnk
+_Run Game (Local).url
+_Run Game (Remote).url
+_Run Game (Tauri).lnk
+_Publish Game (Fly.io).lnk
 _Start Dedicated Server.lnk
 _Start Signaling Server.lnk
 _Start HTTP Server.lnk
@@ -36,6 +36,7 @@ lerna-debug.log*
 
 # Claude
 .claude
+.claudeignore
 
 # Other
 .idea

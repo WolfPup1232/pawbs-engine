@@ -1114,9 +1114,12 @@ class Multiplayer
 				static disconnect()
 				{
 					
-					// Stop ping intervals
-					this.ui.player_list.stopPingTimer();
+					// Stop ping intervals...
 					Multiplayer.stopPingTimer();
+					if (Game.ui.player_list)
+					{
+						Game.ui.player_list.stopPingTimer();
+					}
 					
 					// Disable multiplayer
 					this.enabled = false;

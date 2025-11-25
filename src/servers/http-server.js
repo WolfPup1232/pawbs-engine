@@ -105,7 +105,7 @@ import Multiplayer from '../classes/multiplayer.class.js';
 	server.use(express.static(path.join(path_root, '../')));
 	
 	// Initialize all other HTTP server routes
-	server.get('*', (req, res) => {
+	server.get('/*splat', (req, res) => {
 		res.sendFile(path.join(path_root, '../index.html'));
 	});
 	

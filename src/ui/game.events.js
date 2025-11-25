@@ -51,7 +51,7 @@ export default function initializeGameUIEventHandlers()
 			{
 				
 				// Show player list
-				$('#player-list-container').fadeIn(256);
+				$('#player-list').fadeIn(256);
 				
 			}
 			
@@ -62,7 +62,7 @@ export default function initializeGameUIEventHandlers()
 			{
 				
 				// Hide player list
-				$('#player-list-container').fadeOut(256);
+				$('#player-list').fadeOut(256);
 				
 			}
 			

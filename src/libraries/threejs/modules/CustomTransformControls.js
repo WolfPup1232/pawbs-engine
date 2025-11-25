@@ -2249,7 +2249,7 @@ class CustomTransformControls extends Object3D
 					}
 					
 					// If scaling an object using any of the end-caps...
-					if (this.mode === "scale" && (handle.name.endsWith("_POS") || handle.name.endsWith("_NEG")) && handle.tag !== "helper")
+					if (this.mode === "scale" && (handle.name.endsWith("_POS") || handle.name.endsWith("_NEG")) && handle.tag !== "helper" && this.object !== undefined)
 					{
 						
 						// Bounding box for calculating object extents
