@@ -440,7 +440,7 @@ class Assets
 			 * @param {THREE.Object3D} object The object to be rendered in an animated thumbnail.
 			 * @param {Element} cell The ID of the HTML DOM grid cell element which will contain the object thumbnail.
 			 */
-			static createObjectThumbnail(object, cell)
+			static createObjectThumbnail(object, cell, background = "#ffffff")
 			{
 				
 				// Get thumbnail's container DOM element
@@ -453,7 +453,7 @@ class Assets
 				
 				// Initialize three.js scene and add object to it
 				const scene = new THREE.Scene();
-				scene.background = new THREE.Color(0xffffff);
+				scene.background = new THREE.Color(background);
 				scene.add(object);
 				
 				// Initialize camera

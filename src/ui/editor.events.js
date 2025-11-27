@@ -95,10 +95,10 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// Set selected objects window maximum height
-				$('#editor-selected-objects-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
+				//$('#editor-selected-objects-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
 				
 				// Set scene graph window maximum height
-				$('#editor-scene-graph-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
+				//$('#editor-scene-graph-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
 				
 			}
 			
@@ -114,11 +114,11 @@ export default function initializeEditorUIEventHandlers()
 			{
 				
 				// De-initialize any existing event handlers on the scene graph container and its controls
-				Game.ui.utilities.removeAllEventHandlers("#editor-scene-graph-list");
+				Game.ui.utilities.removeAllEventHandlers("#editor-scene-graph-list-container");
 				Game.ui.utilities.removeAllEventHandlers("#editor-scene-graph-sort");
 				
 				// Get scene graph container
-				const container = $("#editor-scene-graph-list");
+				const container = $("#editor-scene-graph-list-container");
 				
 				// Get the current sort mode
 				const sort_mode = ($("#editor-scene-graph-sort").val() || "none");
@@ -126,14 +126,14 @@ export default function initializeEditorUIEventHandlers()
 				
 				// Re-initialize the scene graph root list
 				container.empty();
-				const root_list = $('<ul class="editor-scene-graph"></ul>');
+				const root_list = $('<ul id="editor-scene-graph-list"></ul>');
 				container.append(root_list);
 				
 				// Get root objects
 				let roots = Game.world && Game.world.objects ? Array.from(Game.world.objects) : [];
 				
 				// Render root objects and their children
-				Game.ui.utilities.renderChildren(root_list, roots, 0, sort_by_type);
+				Game.ui.editor.updateSceneGraphObjects(root_list, roots, 0, sort_by_type);
 				
 				// Toggle expand/collapse handler...
 				container.on('click', '.editor-scene-graph-toggle:not(.disabled)', function()
@@ -164,6 +164,96 @@ export default function initializeEditorUIEventHandlers()
 				
 				// Refresh all UI tooltips
 				Game.ui.refreshTooltips();
+				
+			};
+			
+			/**
+			 * Lists an array of objects in the specified HTML DOM <ul> element.
+			 *
+			 * @param {JQuery<HTMLElement>} ul_element The specified HTML DOM <ul> element to append items to.
+			 * @param {Array<THREE.Object3D>} objects The array of objects to list.
+			 * @param {number} depth The current tree depth.
+			 * @param {boolean} sort_by_type Boolean flag indicating whether or not to sort objects alphabetically by type.
+			 */
+			Game.ui.editor.updateSceneGraphObjects = function(ul_element, objects, depth, sort_by_type)
+			{
+				
+				// If there are no children to render, abort...
+				if (!objects || objects.length === 0)
+				{
+					return;
+				}
+				
+				// Get copy of objects array
+				let items = Array.from(objects);
+				
+				// If sorting by type, order items alphabetically by their Object3D.type...
+				if (sort_by_type)
+				{
+					items.sort((a, b) => {
+						const ta = (a.type || "").toLowerCase();
+						const tb = (b.type || "").toLowerCase();
+						if (ta < tb) return -1; if (ta > tb) return 1; return 0;
+					});
+				}
+				
+				// Render each object as a list item with a label row and an optional children list...
+				items.forEach(object => {
+					
+					// Determine if this node has children
+					const has_children = object.children && object.children.length > 0;
+					
+					// Initialize object display name
+					const display_name = (object.name && object.name.trim().length > 0) ? object.name : 
+						((object.userData && object.userData.name) ? object.userData.name : (object.type || "Object3D") + " #" + object.id);
+					
+					// Initialize list item and row
+					const li = $('<li class="editor-scene-graph-item" data-object-id="' + object.id + '"></li>');
+					const row = $('<span class="editor-scene-graph-label"></span>');
+					
+					// if object has children, initialize expand/collapse toggle...
+					const toggle = $('<span class="editor-scene-graph-toggle' + (has_children ? '' : ' disabled') + '" role="button" aria-label="toggle"></span>');
+					if (has_children)
+					{
+						toggle.html('<i class="bi bi-caret-down-fill"></i>');
+					}
+					else
+					{
+						toggle.html('<i class="bi bi-dot"></i>');
+					}
+					
+					// Initialize name text and a small type badge
+					const name = $('<span class="editor-scene-graph-name"></span>').text(display_name);
+					const type = $('<span class="editor-scene-graph-type-badge"></span>').text(object.type || 'Object3D');
+					
+					// Assemble the row and append it to the list item
+					row.append(toggle).append(name).append(type);
+					li.append(row);
+					
+					// Add the list item to the list
+					ul_element.append(li);
+					
+					// If the object has children, render them as a nested <ul>...
+					if (has_children)
+					{
+						
+						// Initialize list of object's children and add it to the list item
+						const child_ul = $('<ul class="editor-scene-graph-children"></ul>');
+						li.append(child_ul);
+						
+						// Collapse children by default when the depth is >= 1 to keep the tree tidy...
+						if (depth >= 1)
+						{
+							child_ul.hide();
+							toggle.html('<i class="bi bi-caret-right-fill"></i>');
+						}
+						
+						// Recursively render object's children
+						this.updateSceneGraphObjects(child_ul, object.children, depth + 1);
+						
+					}
+					
+				});
 				
 			};
 			

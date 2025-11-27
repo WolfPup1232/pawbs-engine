@@ -34,12 +34,14 @@ lerna-debug.log*
 .vscode
 .VSCodeCounter
 
+# JetBrains
+.idea
+
 # Claude
 .claude
 .claudeignore
 
 # Other
-.idea
 .DS_Store
 *.suo
 *.ntvs*

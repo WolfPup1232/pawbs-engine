@@ -37,175 +37,132 @@
 	</div>
 	
 	<!-- Editor UI -->
-	<div id="editor" class="mx-3 position-fixed" style="display: none;">
+	<div id="editor" style="display: none;">
 		
 		<!-- Editor Main Windows & Toolbars -->
-		<div id="editor-main" class="row">
+		<div id="editor-main">
 			
 			<!-- Editor Main Menu Bar -->
-			<div class="editor-window col-12 col-lg-8 col-xl-9 col-xxl-10 order-1 p-2 h-25">
-				<div class="row w-100 m-0 overflow-hidden">
-					
-					<!-- World Options -->
-					<div class="col p-0" style="max-width: 36em;">
-						<div class="editor-panel card-title fw-bold input-group-text mx-1 my-1">
-							<span class="editor-title" data-bs-title="Awrrruff!🐺" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Edit World</span>
-							
-							<div class="vr ms-3"></div>
-							
-							<!-- World Name -->
-							<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
-							data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
-							
-							<div class="vr"></div>
-							
-							<!-- New/Load/Save World -->
-							<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-1 my-0"
-							data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-file-earmark"></i>
-							</button>
-							<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-							data-bs-title="Load existing world..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-folder2-open"></i>
-							</button>
-							<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
-							data-bs-title="Save world as..." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-floppy"></i>
-							</button>
-							
-							<div class="vr"></div>
-							
-							<!-- World Event Triggers -->
-							<button id="editor-world-triggers" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
-							data-bs-title="World event triggers." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>
-								<i class="bi bi-list-check"></i>
-							</button>
-						</div>
-					</div>
-					
-					<!-- Camera Modes -->
-					<div class="col p-0 text-nowrap" style="max-width: 4.1em;">
-						<div class="editor-panel card-title input-group-text mx-1 my-1">
-							<input id="editor-camera-walk" name="editor-camera-types" value="walk" class="btn-check" type="checkbox" checked>
-							<label for="editor-camera-walk" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-							data-bs-title="Player walking mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-person-walking"></i>
-							</label>
-						</div>
-					</div>
-					
-					<!-- Object Selection Types -->
-					<div class="col p-0 text-nowrap" style="max-width: 13.2em;">
-						<div class="editor-panel card-title input-group-text mx-1 my-1">
-							<input id="editor-select-objects" name="editor-select-types" value="1" class="btn-check" type="radio" checked>
-							<label for="editor-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-							data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-box-seam"></i>
-							</label>
-							
-							<input id="editor-select-faces" name="editor-select-types" value="2" class="btn-check" type="radio">
-							<label for="editor-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-							data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-box2"></i>
-							</label>
-							
-							<input id="editor-select-vertices" name="editor-select-types" value="3" class="btn-check" type="radio">
-							<label for="editor-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
-							data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-bounding-box"></i>
-							</label>
-							
-							<div class="vr"></div>
-							
-							<input id="editor-select-terrain" value="terrain" class="btn-check" type="checkbox">
-							<label for="editor-select-terrain" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
-							data-bs-title="Terrain selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-bounding-box-circles" style="float: right;"></i>
-								<i class="bi bi-image-alt" style="font-size: 0.5em; position: relative; top: -3px; left: 4px;"></i>
-							</label>
-							
-						</div>
-					</div>
-					
-					<!-- Tools -->
-					<div class="col p-0 text-nowrap" style="max-width: 11.6em;">
-						<div class="editor-panel card-title input-group-text mx-1 my-1">
-							<input id="editor-tool-selected" name="editor-tool-types" value="1" class="btn-check" type="checkbox" disabled>
-							<label for="editor-tool-selected" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
-							data-bs-title="Object editor menu." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-box-seam" style="float: right; position: relative; top: 3px; font-size: 0.8em; left: 3px;"></i>
-								<i class="bi bi-usb bi-rotate" style="position: relative; top: 0px;left: -7px;"></i>
-							</label>
-							
-							<input id="editor-tool-spawn" name="editor-tool-types" value="2" class="btn-check" type="checkbox">
-							<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-							data-bs-title="Spawn/build menu." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-hammer" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -2px;"></i>
-								<i class="bi bi-usb" style="position: relative; top: 4px;"></i>
-							</label>
-							
-							<input id="editor-tool-npcs" name="editor-tool-types" value="3" class="btn-check" type="checkbox" disabled>
-							<label for="editor-tool-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-							data-bs-title="NPC editor tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-person-arms-up" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -1px;"></i>
-								<i class="bi bi-usb" style="position: relative; top: 5px;"></i>
-							</label>
-							
-							<input id="editor-tool-cinematics" name="editor-tool-types" value="4" class="btn-check" type="checkbox" disabled>
-							<label for="editor-tool-cinematics" class="btn btn-sm btn-outline-secondary mx-1 my-0"
-							data-bs-title="Cinematics tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
-								<i class="bi bi-camera-reels" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -1px;"></i>
-								<i class="bi bi-usb" style="position: relative; top: 5px;"></i>
-							</label>
-						</div>
-  					</div>
+			<div id="editor-main-menu" class="row">
 				
-				</div>
-			</div>
-			
-			<!-- Scene Graph Window -->
-			<div class="editor-window col-6 col-sm-5 col-md-4 col-lg-4 col-xl-3 col-xxl-2 order-3 order-lg-2 ms-auto p-lg-2 h-0">
-				<div class="overflow-y-scroll p-lg-1">
-					<div class="accordion">
-					
-						<!-- Scene Graph -->
-						<div class="accordion-item">
+				<!-- World Options -->
+				<div class="editor-window col p-0" style="max-width: 36em;">
+					<div class="editor-panel card-title fw-bold input-group-text mx-1 my-1">
+						<span class="editor-title" data-bs-title="Awrrruff!🐺" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Edit World</span>
 						
-							<!-- Scene Graph Title -->
-							<div class="accordion-title w-100 mb-0">
-								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-scene-graph-container">
-									<span data-bs-title="Scene graph." data-bs-toggle="tooltip" data-bs-placement="bottom">
-										Scene Graph
-									</span>
-								</button>
-							</div>
-							
-							<div id="editor-scene-graph-container" class="accordion-collapse collapse show p-2">
-								
-								<div id="editor-scene-graph-filters" class="pb-2 mb-2 border-bottom">
-									<div class="d-flex">
-										<div id="editor-scene-graph-toolbar" class="d-flex align-items-center w-100">
-											<label for="editor-scene-graph-sort" class="small me-2 mb-0">Sort:</label>
-											<select id="editor-scene-graph-sort" class="form-select form-select-sm w-auto">
-												<option value="none" selected>None</option>
-												<option value="type">By Type</option>
-											</select>
-										</div>
-									</div>
-								</div>
-								
-								<div id="editor-scene-graph-list" class="mt-2"></div>
-								
-							</div>
-							
-						</div>
-					
+						<div class="vr ms-3"></div>
+						
+						<!-- World Name -->
+						<input id="editor-world-name" class="form-control form-control-sm w-auto mx-3" placeholder="Enter your world's name." type="text"
+						data-bs-title="Enter your world's name." data-bs-toggle="tooltip" data-bs-placement="bottom">
+						
+						<div class="vr"></div>
+						
+						<!-- New/Load/Save World -->
+						<button id="editor-world-new" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-1 my-0"
+						data-bs-title="Create a new world." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-file-earmark"></i>
+						</button>
+						<button id="editor-world-load" type="button" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+						data-bs-title="Load existing world..." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-folder2-open"></i>
+						</button>
+						<button id="editor-world-save" type="button" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
+						data-bs-title="Save world as..." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-floppy"></i>
+						</button>
+						
+						<div class="vr"></div>
+						
+						<!-- World Event Triggers -->
+						<button id="editor-world-triggers" type="button" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
+						data-bs-title="World event triggers." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>
+							<i class="bi bi-list-check"></i>
+						</button>
 					</div>
 				</div>
+				
+				<!-- Camera Modes -->
+				<div class="editor-window col p-0 text-nowrap" style="max-width: 4.1em;">
+					<div class="editor-panel card-title input-group-text mx-1 my-1">
+						<input id="editor-camera-walk" name="editor-camera-types" value="walk" class="btn-check" type="checkbox" checked>
+						<label for="editor-camera-walk" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+						data-bs-title="Player walking mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-person-walking"></i>
+						</label>
+					</div>
+				</div>
+				
+				<!-- Object Selection Types -->
+				<div class="editor-window col p-0 text-nowrap" style="max-width: 13.2em;">
+					<div class="editor-panel card-title input-group-text mx-1 my-1">
+						<input id="editor-select-objects" name="editor-select-types" value="1" class="btn-check" type="radio" checked>
+						<label for="editor-select-objects" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+						data-bs-title="Object selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-box-seam"></i>
+						</label>
+						
+						<input id="editor-select-faces" name="editor-select-types" value="2" class="btn-check" type="radio">
+						<label for="editor-select-faces" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+						data-bs-title="Face selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-box2"></i>
+						</label>
+						
+						<input id="editor-select-vertices" name="editor-select-types" value="3" class="btn-check" type="radio">
+						<label for="editor-select-vertices" class="btn btn-sm btn-outline-secondary ms-1 me-3 my-0"
+						data-bs-title="Vertex selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-bounding-box"></i>
+						</label>
+						
+						<div class="vr"></div>
+						
+						<input id="editor-select-terrain" value="terrain" class="btn-check" type="checkbox">
+						<label for="editor-select-terrain" class="btn btn-sm btn-outline-secondary ms-3 me-0 my-0"
+						data-bs-title="Terrain selection mode." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-bounding-box-circles" style="float: right;"></i>
+							<i class="bi bi-image-alt" style="font-size: 0.5em; position: relative; top: -3px; left: 4px;"></i>
+						</label>
+						
+					</div>
+				</div>
+				
+				<!-- Tools -->
+				<div class="editor-window col p-0 text-nowrap" style="max-width: 11.6em;">
+					<div class="editor-panel card-title input-group-text mx-1 my-1">
+						<input id="editor-tool-selected" name="editor-tool-types" value="1" class="btn-check" type="checkbox" disabled>
+						<label for="editor-tool-selected" class="btn btn-sm btn-outline-secondary ms-0 me-1 my-0"
+						data-bs-title="Object editor menu." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-box-seam" style="float: right; position: relative; top: 3px; font-size: 0.8em; left: 3px;"></i>
+							<i class="bi bi-usb bi-rotate" style="position: relative; top: 0px;left: -7px;"></i>
+						</label>
+						
+						<input id="editor-tool-spawn" name="editor-tool-types" value="2" class="btn-check" type="checkbox">
+						<label for="editor-tool-spawn" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+						data-bs-title="Spawn/build menu." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-hammer" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -2px;"></i>
+							<i class="bi bi-usb" style="position: relative; top: 4px;"></i>
+						</label>
+						
+						<input id="editor-tool-npcs" name="editor-tool-types" value="3" class="btn-check" type="checkbox" disabled>
+						<label for="editor-tool-npcs" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+						data-bs-title="NPC editor tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-person-arms-up" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -1px;"></i>
+							<i class="bi bi-usb" style="position: relative; top: 5px;"></i>
+						</label>
+						
+						<input id="editor-tool-cinematics" name="editor-tool-types" value="4" class="btn-check" type="checkbox" disabled>
+						<label for="editor-tool-cinematics" class="btn btn-sm btn-outline-secondary mx-1 my-0"
+						data-bs-title="Cinematics tool." data-bs-toggle="tooltip" data-bs-placement="bottom">
+							<i class="bi bi-camera-reels" style="float: right; position: relative; top: -2px; font-size: 0.8em; left: -1px;"></i>
+							<i class="bi bi-usb" style="position: relative; top: 5px;"></i>
+						</label>
+					</div>
+				</div>
+			
 			</div>
 			
 			<!-- Selected Objects Window -->
-			<div id="editor-selected-objects" class="editor-window col-6 col-sm-5 col-md-4 col-lg-4 col-xl-3 col-xxl-2 order-2 order-lg-3 overflow-hidden" style="display: none;">
+			<div id="editor-selected-objects" class="editor-window col-3 m-1" style="display: none;">
 				<div id="editor-selected-objects-inner">
 					<div class="accordion">
 						
@@ -347,7 +304,7 @@
 						<div class="accordion-item">
 							
 							<!-- Transform Title -->
-							<div class="accordion-title w-100 mb-0">
+							<div class="accordion-title">
 								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-transform">
 									<span data-bs-title="Move/scale/rotate objects." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										Transform
@@ -505,7 +462,7 @@
 						<div class="accordion-item">
 						
 							<!-- Materials Title -->
-							<div class="card-title accordion-title w-100 mt-2 mb-0">
+							<div class="card-title accordion-title mt-2">
 								<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-selected-objects-materials">
 									<span data-bs-title="Change colours/textures." data-bs-toggle="tooltip" data-bs-placement="bottom">
 										Material
@@ -551,6 +508,47 @@
 			</div>
 			
 		</div>
+		
+		<!-- Scene Graph Window -->
+		<div id="editor-scene-graph" class="editor-window col-3">
+			<div class="overflow-y-scroll p-1">
+				<div class="accordion">
+					<div class="accordion-item">
+					
+						<!-- Scene Graph Title -->
+						<div class="accordion-title">
+							<button class="accordion-button collapsed small-important fw-bold p-0 m-0" type="button" data-bs-toggle="collapse" data-bs-target="#editor-scene-graph-container">
+								<span data-bs-title="Scene graph." data-bs-toggle="tooltip" data-bs-placement="bottom">
+									Scene Graph
+								</span>
+							</button>
+						</div>
+						
+						<div id="editor-scene-graph-container" class="accordion-collapse collapse show p-2">
+							
+							<!-- Scene Graph Filters -->
+							<div id="editor-scene-graph-filters" class="pb-2 mb-2 border-bottom">
+								<div class="d-flex">
+									<div id="editor-scene-graph-toolbar" class="d-flex align-items-center w-100">
+										<label for="editor-scene-graph-sort" class="small me-2 mb-0">Sort:</label>
+										<select id="editor-scene-graph-sort" class="form-select form-select-sm w-auto">
+											<option value="none" selected>None</option>
+											<option value="type">By Type</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							
+							<!-- Scene Graph -->
+							<div id="editor-scene-graph-list-container" class="mt-2"></div>
+							
+						</div>
+						
+					</div>
+				</div>
+			</div>
+		</div>
+		
 		
 		<!-- Editor Spawn Tool -->
 		<div id="editor-spawn-tool" class="row fixed-bottom mx-1 my-3" style="display: none;">
