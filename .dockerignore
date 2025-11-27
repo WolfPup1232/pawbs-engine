@@ -6,10 +6,13 @@
 /src/tests
 
 # Shortcuts
-_Run Game.url
-_Run Game.lnk
-_Publish Game.lnk
+_Run Game (Local).url
+_Run Game (Remote).url
+_Run Game (Tauri).lnk
+_Publish Game (Fly.io).lnk
 _Start Dedicated Server.lnk
+_Start Signaling Server.lnk
+_Start HTTP Server.lnk
 
 # Build
 /.git
@@ -33,9 +36,17 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # VSCode
-/.vscode/*
-!/.vscode/extensions.json
-.idea
+/.vscode
+/.VSCodeCounter
+
+# JetBrains
+/.idea
+
+# Claude
+/.claude
+.claudeignore
+
+# Other
 .DS_Store
 *.suo
 *.ntvs*

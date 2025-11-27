@@ -15,6 +15,8 @@ _Start Signaling Server.lnk
 _Start HTTP Server.lnk
 
 # Build
+.git
+.env
 src-tauri/target
 node_modules
 dist
