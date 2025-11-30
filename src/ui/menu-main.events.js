@@ -119,11 +119,22 @@ export default function initializeMainMenuUIEventHandlers()
 			$('#exit-game').on('click', function()
 			{
 				
-				// Hide main menu
-				Game.ui.menus.hideMainMenu();
-				
-				// Exit game
-				Game.exit();
+				// Show confirmation dialog...
+				Game.ui.dialog.showDialog({
+					message: 'Are you sure you want to exit the game?',
+					ok_button_text: 'Yes',
+					ok_button_callback: function() {
+						
+						// Hide main menu
+						Game.ui.menus.hideMainMenu();
+						
+						// Exit the game
+						Game.exit();
+						
+					},
+					show_cancel_button: true,
+					cancel_button_text: 'No'
+				});
 				
 			});
 			

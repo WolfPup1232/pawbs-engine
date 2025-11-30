@@ -1,6 +1,5 @@
 // Static Class Imports
 import Game from '../classes/game.class.js';
-import Editor from '../classes/editor.class.js';
 
 /**
  * Initializes the utility UI event handlers, which must be loaded first because they are general-use and critical.
@@ -301,12 +300,6 @@ export default function initializeUtilityUIEventHandlers()
 					Game.player.camera.aspect = window.innerWidth / window.innerHeight;
 					Game.player.camera.updateProjectionMatrix();
 					
-				}
-				
-				// Resize editor UI elements...
-				if (Editor.enabled)
-				{
-					Game.ui.editor.resize();
 				}
 				
 			});

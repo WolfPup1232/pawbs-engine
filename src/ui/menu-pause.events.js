@@ -28,6 +28,10 @@ export default function initializePauseMenuUIEventHandlers()
 					
 				}
 				
+				// Temporarily disable the Resume button (browsers seem to enforce a ~1s cooldown on pointer re-lock after unlock)
+				$('#pause-menu-resume').prop('disabled', true);
+				setTimeout(function() { $('#pause-menu-resume').prop('disabled', false); }, 1000);
+				
 				// Show pause menu
 				$('#menu-pause').fadeIn(256);
 				
@@ -61,6 +65,9 @@ export default function initializePauseMenuUIEventHandlers()
 			$('#pause-menu-resume').on('click', function()
 			{
 				
+				// Request pointer lock directly during the click event (apparently this is required by some browsers)
+				Game.renderer.domElement.requestPointerLock();
+				
 				// Unpause the game
 				Game.unpause();
 				
@@ -72,8 +79,19 @@ export default function initializePauseMenuUIEventHandlers()
 			$('#pause-menu-quit').on('click', function()
 			{
 				
-				// Quit the game
-				Game.quit();
+				// Show confirmation dialog...
+				Game.ui.dialog.showDialog({
+					message: 'Return to the main menu?',
+					ok_button_text: 'Yes',
+					ok_button_callback: function() {
+						
+						// Quit the game
+						Game.quit();
+						
+					},
+					show_cancel_button: true,
+					cancel_button_text: 'No'
+				});
 				
 			});
 			
@@ -83,8 +101,19 @@ export default function initializePauseMenuUIEventHandlers()
 			$('#pause-menu-exit').on('click', function()
 			{
 				
-				// Exit game
-				Game.exit();
+				// Show confirmation dialog...
+				Game.ui.dialog.showDialog({
+					message: 'Are you sure you want to exit the game?',
+					ok_button_text: 'Yes',
+					ok_button_callback: function() {
+						
+						// Exit the game
+						Game.exit();
+						
+					},
+					show_cancel_button: true,
+					cancel_button_text: 'No'
+				});
 				
 			});
 			

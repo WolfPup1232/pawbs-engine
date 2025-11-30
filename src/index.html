@@ -6,7 +6,7 @@
 	<meta charset="UTF-8">
 	<title>Game</title>
 	
-	<!-- Third-Party Imports - Bootstrap & jQuery -->
+	<!-- Third-Party Imports - Bootstrap / jQuery / fflate / MessagePack -->
 	<link href="./libraries/bootstrap/bootstrap.min.css" rel="stylesheet">
 	<link href="./libraries/bootstrap/bootstrap-icons.min.css" rel="stylesheet">
 	<script src="./libraries/bootstrap/bootstrap.bundle.min.js"></script>
@@ -549,12 +549,11 @@
 			</div>
 		</div>
 		
-		
 		<!-- Editor Spawn Tool -->
 		<div id="editor-spawn-tool" class="row fixed-bottom mx-1 my-3" style="display: none;">
 			<div class="editor-window col-12 col-lg-10 col-xl-9 col-xxl-7 mx-auto">
 				<div id="editor-spawn-tool-container" class="px-2 pt-2 pb-0 shadow-sm overflow-hidden">
-					<div id="editor-spawn-tool-scroll" class="row h-138px overflow-scroll">
+					<div id="editor-spawn-tool-scroll" class="row h-138px overflow-auto">
 						
 						<!-- Spawn Tool Panels -->
 						<div class="col-6 col-sm-5 col-md-4 pe-1">
@@ -1002,26 +1001,37 @@
 		<div class="modal-dialog">
 			<div class="modal-content border-brown rounded-4 shadow-lg">
 				<div class="modal-body p-5">
+					
+					<!-- Main Menu Title -->
 					<div class="d-flex justify-content-center">
 						<h2 class="fw-bold mb-4"
 						data-bs-title="Thanks, WolfPup! 🐺" data-bs-toggle="tooltip" data-bs-placement="bottom">🏳️‍⚧️ Pawbs Engine 🐾</h2>
 					</div>
+					
+					<!-- Singleplayer Game Button -->
 					<div class="d-flex mb-1 justify-content-center">
 						<button id="singleplayer-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Start a new singleplayer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Singleplayer</button>
 					</div>
+					
+					<!-- Multiplayer Menu Button -->
 					<div class="d-flex mb-1 justify-content-center">
 						<button id="multiplayer-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Join or host a multiplayer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Multiplayer</button>
 					</div>
+					
+					<!-- Options Menu Button -->
 					<div class="d-flex mb-5 justify-content-center">
 						<button id="options-menu" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Change game settings and player options." data-bs-toggle="tooltip" data-bs-placement="bottom">Options</button>
 					</div>
+					
+					<!-- Exit Game Button -->
 					<div class="d-flex justify-content-center">
 						<button id="exit-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Exit the game." data-bs-toggle="tooltip" data-bs-placement="bottom">Exit</button>
 					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -1032,22 +1042,31 @@
 		<div class="modal-dialog">
 			<div class="modal-content border-brown rounded-4 shadow-lg">
 				<div class="modal-body p-5">
+					
+					<!-- Multiplayer Menu Title -->
 					<div class="d-flex justify-content-center">
 						<h2 class="fw-bold mb-3"
 						data-bs-title="Need a friend? Get a dog!" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Multiplayer 🦴</h2>
 					</div>
+					
+					<!-- Host Game Button -->
 					<div class="d-flex mb-1 justify-content-center">
 						<button id="multiplayer-host-game-menu" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Host a new peer-to-peer multiplayer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Host Game</button>
 					</div>
+					
+					<!-- Join Game Button -->
 					<div class="d-flex mb-5 justify-content-center">
 						<button id="multiplayer-join-game-menu" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Join a dedicated server or peer-to-peer game." data-bs-toggle="tooltip" data-bs-placement="bottom">Join Game</button>
 					</div>
+					
+					<!-- Back To Main Menu -->
 					<div class="d-flex justify-content-center">
 						<button id="multiplayer-menu-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Back to main menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -1057,7 +1076,9 @@
 	<div id="menu-multiplayer-host-game" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
 		<div class="modal-dialog modal-xl h-85">
 			<div class="modal-content h-100 border-brown rounded-4 shadow-lg">
-				<div class="modal-body d-flex flex-column p-5">
+				<div class="modal-body d-flex flex-column overflow-hidden px-5 pt-5 pb-4">
+					
+					<!-- Host Game Menu Title -->
 					<div class="row">
 						<div class="col-12 text-center">
 							<h2 class="fw-bold mb-0"
@@ -1066,8 +1087,12 @@
 							data-bs-title="P2P games use a star to communicate!⭐" data-bs-toggle="tooltip" data-bs-placement="bottom">Peer-to-Peer</span>
 						</div>
 					</div>
-					<div class="row justify-content-center mb-1">
-						<div class="col-12 col-lg-5 my-3">
+					
+					<!-- Host Game Menu Content -->
+					<div class="row justify-content-center overflow-auto overflow-x-hidden pb-3 mb-3">
+						
+						<!-- Game Options -->
+						<div class="col-12 col-lg-6 my-3">
 							<div class="mt-2 mb-2 d-flex align-items-end">
 								<div class="form-check form-switch small p-0 m-0">
 									<label id="multiplayer-p2p-server-label" for="multiplayer-server-type" class="cursor-pointer form-check-label badge text-bg-light"
@@ -1092,19 +1117,25 @@
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class="row justify-content-center">
-						<div class="col-12 col-lg-4 mt-2 mb-5">
-							<button id="multiplayer-host-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
-							data-bs-title="Host this P2P game." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>Host Game</button>
+						
+						<!-- Host Game Button -->
+						<div class="row justify-content-center">
+							<div class="col-12 col-lg-4 mt-2">
+								<button id="multiplayer-host-game" type="button" class="btn btn-lg btn-secondary shadow w-100"
+								data-bs-title="Host this P2P game." data-bs-toggle="tooltip" data-bs-placement="bottom" disabled>Host Game</button>
+							</div>
 						</div>
+						
 					</div>
-					<div class="row justify-content-center mt-5">
+					
+					<!-- Back To Multiplayer Menu -->
+					<div class="row justify-content-center mt-auto">
 						<div class="col-12 col-lg-4">
 							<button id="multiplayer-host-game-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
 							data-bs-title="Back to multiplayer menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 						</div>
 					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -1114,7 +1145,9 @@
 	<div id="menu-multiplayer-join-game" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
 		<div class="modal-dialog modal-xl h-85">
 			<div class="modal-content h-100 border-brown rounded-4 shadow-lg">
-				<div class="modal-body d-flex flex-column p-5">
+				<div class="modal-body d-flex flex-column overflow-hidden px-5 pt-5 pb-4">
+					
+					<!-- Join Game Menu Title -->
 					<div class="row">
 						<div class="col-12 text-center">
 							<h2 class="fw-bold mb-0"
@@ -1123,8 +1156,14 @@
 							data-bs-title="You can toggle between P2P and dedicated servers." data-bs-toggle="tooltip" data-bs-placement="bottom">Dedicated Server</span>
 						</div>
 					</div>
-					<div class="row justify-content-center h-85 mb-1">
-						<div class="col-12 col-md-12 col-lg-7 col-xl-8 h-75">
+					
+					<!-- Join Game Menu Content -->
+					<div class="row justify-content-center overflow-auto overflow-x-hidden pb-3 mb-3">
+						
+						<!-- Multiplayer Server Browser -->
+						<div id="multiplayer-server-browser" class="col-12 col-md-12 col-lg-7 col-xl-8">
+							
+							<!-- Server Browser Filters -->
 							<div class="mt-2 mb-2 d-flex align-items-end">
 								<button id="multiplayer-refresh-games" type="button" class="btn btn-sm btn-secondary tiny text-nowrap m-0"
 								data-bs-title="Refresh the servers list." data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
@@ -1139,6 +1178,8 @@
 									<span id="multiplayer-server-status" class="tiny fst-italic text-danger text-nowrap"></span>
 								</div>
 							</div>
+							
+							<!-- Server Browser Headings -->
 							<div class="d-flex align-items-center bg-body-secondary border rounded-top tiny fw-bold text-center p-2">
 								<div class="col-7 border-end me-neg2px">
 									<span class="d-block d-xl-none"
@@ -1160,12 +1201,21 @@
 								</div>
 								<div class="col-2">&nbsp;</div>
 							</div>
-							<div id="multiplayer-games-list" class="border border-top-0 rounded-bottom shadow p-2"></div>
+							
+							<!-- Server Browser List -->
+							<div id="multiplayer-games-list" class="border rounded-bottom shadow overflow-auto p-2"></div>
+							
 						</div>
+						
+						<!-- Multiplayer Player Options -->
 						<div class="d-none d-lg-block col-lg-5 col-xl-4">
+							
+							<!-- Player Options Title -->
 							<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-44px">
 								<div class="mx-auto" data-bs-title="Customize your player." data-bs-toggle="tooltip" data-bs-placement="bottom">Customize Player</div>
 							</div>
+							
+							<!-- Player Options -->
 							<div id="multiplayer-options-player" class="border border-top-0 rounded-bottom shadow p-2">
 								<div class="row">
 									<div class="col-12">
@@ -1194,14 +1244,19 @@
 									</div>
 								</div>
 							</div>
+							
 						</div>
+						
 					</div>
-					<div class="row justify-content-center mt-3">
+					
+					<!-- Back To Multiplayer Menu -->
+					<div class="row justify-content-center mt-auto">
 						<div class="col-12 col-lg-4">
 							<button id="multiplayer-join-game-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
 							data-bs-title="Back to multiplayer menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 						</div>
 					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -1211,14 +1266,17 @@
 	<div id="menu-options" class="modal modal-sheet bg-white p-4 py-md-5" style="display: none;">
 		<div class="modal-dialog modal-xl h-85">
 			<div class="modal-content h-100 border-brown rounded-4 shadow-lg">
-				<div class="modal-body d-flex flex-column p-5">
+				<div class="modal-body d-flex flex-column overflow-hidden px-5 pt-5 pb-4">
+					
+					<!-- Options Menu Title -->
 					<div class="d-flex justify-content-center">
-						<h2 class="fw-bold mb-3"
-						data-bs-title="Puns like this, and more!" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Pawptions 📝</h2>
+						<h2 class="fw-bold mb-3" data-bs-title="Puns like this, and more!" data-bs-toggle="tooltip" data-bs-placement="bottom">🐾 Pawptions 📝</h2>
 					</div>
+					
+					<!-- Options Menu Tabs -->
 					<div class="row justify-content-center">
-						<div class="col mb-1">
-							<ul class="nav nav-tabs tiny fw-bold" role="tablist">
+						<div class="col">
+							<ul class="nav nav-tabs tiny fw-bold border-0" role="tablist">
 								<li class="nav-item" role="presentation"
 								data-bs-title="General game settings." data-bs-toggle="tooltip" data-bs-placement="bottom">
 									<button id="options-general" data-bs-target="#options-tab-general" class="nav-link" data-bs-toggle="tab" type="button" role="tab">General</button>
@@ -1234,17 +1292,56 @@
 							</ul>
 						</div>
 					</div>
-					<div class="row justify-content-center">
+					
+					<!-- Options Tab Content -->
+					<div class="row justify-content-center overflow-auto border-top-brown pb-3 mb-3">
 						<div class="col">
 							<div class="tab-content h-100">
-								<div id="options-tab-general" class="h-100 tab-pane fade"  role="tabpanel">N/A</div>
+								
+								<!-- General Options -->
+								<div id="options-tab-general" class="h-100 tab-pane fade"  role="tabpanel">
+									<div class="row mb-3 h-100">
+									
+										<!-- Video Options -->
+										<div class="col-12 col-xl-6 border-start-xl-brown">
+											
+											<!-- Video Options Title -->
+											<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-2">
+												<div class="mx-auto" data-bs-title="Customize your video settings." data-bs-toggle="tooltip" data-bs-placement="bottom">Video Settings</div>
+											</div>
+											
+											<!-- Video Options -->
+											<div id="options-server" class="border border-top-0 rounded-bottom shadow p-2">
+												<div class="row">
+													<div class="col-12">
+														<div id="options-video-fullscreen-group" class="input-group input-group-sm mb-2"
+														data-bs-title="Toggle fullscreen window." data-bs-toggle="tooltip" data-bs-placement="bottom">
+															<span class="d-block input-group-text text-small col-12 col-sm-5">Toggle Fullscreen:</span>
+															<button id="options-video-fullscreen" type="button" class="btn btn-sm btn-secondary tiny text-nowrap m-0 px-4">Off</button>
+														</div>
+													</div>
+												</div>
+											</div>
+											
+										</div>
+									
+									</div>
+								</div>
+								
+								<!-- Multiplayer Options -->
 								<div id="options-tab-multiplayer" class="h-100 tab-pane fade show active"  role="tabpanel">
 									<div class="row mb-3 h-100">
-										<div class="col-12 col-lg-6">
+										
+										<!-- Multiplayer Player Options -->
+										<div class="col-12 col-xl-6">
+											
+											<!-- Player Options Title -->
 											<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-2">
 												<div class="mx-auto" data-bs-title="Customize your player." data-bs-toggle="tooltip" data-bs-placement="bottom">Player Settings</div>
 											</div>
-											<div id="multiplayer-options-player" class="border border-top-0 rounded-bottom shadow p-2">
+											
+											<!-- Player Options -->
+											<div id="options-player" class="border border-top-0 rounded-bottom shadow p-2">
 												<div class="row">
 													<div class="col-12">
 														<div class="input-group input-group-sm mb-2"
@@ -1272,12 +1369,19 @@
 													</div>
 												</div>
 											</div>
+											
 										</div>
-										<div class="col-12 col-lg-6 border-start-lg-brown">
+										
+										<!-- Multiplayer Server Options -->
+										<div class="col-12 col-xl-6 border-start-xl-brown">
+											
+											<!-- Server Options Title -->
 											<div class="d-flex align-items-center bg-body-secondary border rounded-top small fw-bold text-center p-2 mt-2">
 												<div class="mx-auto" data-bs-title="Customize your multiplayer server connections." data-bs-toggle="tooltip" data-bs-placement="bottom">Server Settings</div>
 											</div>
-											<div id="multiplayer-options-server" class="border border-top-0 rounded-bottom shadow p-2">
+											
+											<!-- Server Options -->
+											<div id="options-server" class="border border-top-0 rounded-bottom shadow p-2">
 												<div class="row">
 													<div class="col-12">
 														<div class="input-group input-group-sm mb-2"
@@ -1297,19 +1401,27 @@
 													</div>
 												</div>
 											</div>
+											
 										</div>
+										
 									</div>
 								</div>
+								
+								<!-- Other Options -->
 								<div id="options-tab-other" class="h-100 tab-pane fade" role="tabpanel">N/A</div>
+								
 							</div>
 						</div>
 					</div>
+					
+					<!-- Back To Main Menu -->
 					<div class="row justify-content-center mt-auto">
 						<div class="col-12 col-lg-4">
 							<button id="options-menu-back" type="button" class="btn btn-lg btn-secondary shadow w-100"
 							data-bs-title="Back to main menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Back</button>
 						</div>
 					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -1320,21 +1432,60 @@
 		<div class="modal-dialog">
 			<div class="modal-content border-brown rounded-4 shadow-lg">
 				<div class="modal-body p-5">
+					
+					<!-- Pause Menu Title -->
 					<div class="d-flex justify-content-center">
 						<h2 class="fw-bold mb-3"
 						data-bs-title="...unless it's multiplayer." data-bs-toggle="tooltip" data-bs-placement="bottom">Game Pawbsed 🐾</h2>
 					</div>
+					
+					<!-- Resume Game Button -->
 					<div class="d-flex mb-4 justify-content-center">
 						<button id="pause-menu-resume" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Resume the game." data-bs-toggle="tooltip" data-bs-placement="bottom">Resume</button>
 					</div>
+					
+					<!-- Main Menu Button -->
 					<div class="d-flex mb-1 justify-content-center">
 						<button id="pause-menu-quit" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Quit the game and return to the main menu." data-bs-toggle="tooltip" data-bs-placement="bottom">Main Menu</button>
 					</div>
+					
+					<!-- Exit Game Button -->
 					<div class="d-flex justify-content-center">
 						<button id="pause-menu-exit" type="button" class="btn btn-lg btn-secondary shadow w-100"
 						data-bs-title="Exit the game." data-bs-toggle="tooltip" data-bs-placement="bottom">Exit Game</button>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Dialog Box -->
+	<div id="dialog-box" class="modal modal-sheet p-4 py-md-5" style="display: none;">
+		<div class="modal-dialog">
+			<div class="modal-content border-brown rounded-4 shadow-lg">
+				<div class="modal-body p-5">
+					
+					<!-- Dialog Box Message -->
+					<div class="d-flex justify-content-center">
+						<p id="dialog-box-message" class="mb-4"></p>
+					</div>
+					
+					<!-- Dialog Box Input -->
+					<div id="dialog-box-input-container" class="justify-content-center w-100" style="display: none;">
+						<input id="dialog-box-input" type="text" class="form-control mb-3 w-100" />
+					</div>
+					
+					<!-- Dialog Box Buttons -->
+					<div class="d-flex justify-content-center gap-2">
+						<div id="dialog-box-ok-container">
+							<button id="dialog-box-ok" type="button" class="btn btn-lg btn-secondary shadow w-100">OK</button>
+						</div>
+						<div id="dialog-box-cancel-container" style="display: none;">
+							<button id="dialog-box-cancel" type="button" class="btn btn-lg btn-secondary shadow w-100">Cancel</button>
+						</div>
 					</div>
 					
 				</div>
@@ -1348,9 +1499,13 @@
 	<!-- Player List -->
 	<div id="player-list" class="row position-relative" style="display: none;">
 		<div id="player-list-container" class="col col-sm-6 col-lg-7 col-xl-6 rounded-4 mx-auto my-auto p-4 small">
+			
+			<!-- Player List Title -->
 			<div id="player-list-title" class="px-3 py-3">
 				<h5></h5>
 			</div>
+			
+			<!-- Player List Content -->
 			<div class="d-flex">
 				<table class="table table-sm table-bordered table-transparent table-hover text-center mb-0">
 					<thead>
@@ -1365,19 +1520,25 @@
 					</tbody>
 				</table>
 			</div>
+			
 		</div>
 	</div>
 	
 	<!-- Player Chat -->
 	<div id="chat" class="row">
 		<div id="chat-container" class="col col-sm-6 col-lg-4 col-xl-3 rounded-4 p-3 m-3 small" style="display: none;">
+			
+			<!-- Player Chat Log -->
 			<div id="chat-log"></div>
+			
+			<!-- Player Chat Input -->
 			<div id="chat-input" class="mt-2" style="display: none;">
 				<div id="chat-input" class="d-flex">
 					<input id="chat-message" placeholder="Type a message..." type="text" value="" class="me-2">
 					<button id="chat-send" class="btn btn-sm btn-secondary" style="display: none;">Send</button>
 				</div>
 			</div>
+			
 		</div>
 	</div>
 	
@@ -1385,9 +1546,10 @@
 	<div id="crosshair"></div>
 	
 	
+	<!-- --- Game --- -->
+	
 	<!-- Game Renderer -->
 	<div id="renderer"></div>
-	
 	
 	<!-- Game Initialization -->
 	<script type="module">

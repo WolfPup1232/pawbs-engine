@@ -83,23 +83,6 @@ export default function initializeEditorUIEventHandlers()
 				// Update object spawn tool UI
 				Game.ui.editor.updateSpawnToolWindow();
 				
-				// Resize UI elements
-				Game.ui.editor.resize();
-				
-			}
-			
-			/**
-			 * Resizes editor UI elements.
-			 */
-			Game.ui.editor.resize = function resize()
-			{
-				
-				// Set selected objects window maximum height
-				//$('#editor-selected-objects-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
-				
-				// Set scene graph window maximum height
-				//$('#editor-scene-graph-inner').css({'max-height': 'calc(' + ($('#renderer').height() - $('#editor-main').height()) + 'px - 2rem)'});
-				
 			}
 			
 		//#endregion

@@ -16,12 +16,17 @@ import Editor from './editor.class.js';
 import Debug from './debug.class.js';
 import Multiplayer from './multiplayer.class.js';
 
-// fflate & MessagePack Imports
-let fflate, msgpack;
+// Tauri, fflate, MessagePack Imports
+let tauri, fflate, msgpack;
 if (typeof window !== 'undefined')
 {
 	fflate = window.fflate;
 	msgpack = window.msgpack;
+	
+	if ('__TAURI_INTERNALS__' in window)
+	{
+		tauri = window.__TAURI__;
+	}
 }
 else
 {
@@ -49,6 +54,11 @@ class Game
 		
 		
 		//#region [Libraries]
+			
+			/**
+			 * Tauri library.
+			 */
+			static tauri = tauri;
 			
 			/**
 			 * fflate library.
@@ -418,7 +428,7 @@ class Game
 			} // Otherwise, if the game is a multiplayer dedicated server...
 			else if (Multiplayer.is_dedicated_server)
 			{
-			
+				
 				// Make sure a single frame has been rendered before updating the game...
 				if (!this.render_single_frame)
 				{
@@ -433,7 +443,7 @@ class Game
 				} // Otherwise, if a single frame has already been rendered...
 				else
 				{
-				
+					
 					// Get current time
 					const now = (timestamp !== null) ? timestamp : (this.window_interface.performance ? this.window_interface.performance.now() : Date.now());
 					
@@ -445,7 +455,7 @@ class Game
 					
 					// Update game state using delta time
 					this.update(delta);
-				
+					
 				}
 				
 				// Keep on truckin' at ~50 Hz
@@ -508,6 +518,12 @@ class Game
 				this.paused = true;
 				
 			}
+			
+			// Release all held keys to prevent stuck player actions
+			this.player.controls.releaseAllKeys();
+			
+			// Unlock mouse pointer
+			this.player.controls.unlockPointerLockControls();
 			
 			// Show pause menu
 			this.ui.menus.showPauseMenu();
@@ -589,6 +605,12 @@ class Game
 		 */
 		static exit()
 		{
+			
+			// Attempt to close Tauri window...
+			if (this.tauri)
+			{
+				this.tauri.window.getCurrentWindow().close();
+			}
 			
 			// Close browser window
 			this.window_interface.close();

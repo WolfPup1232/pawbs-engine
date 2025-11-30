@@ -1,5 +1,5 @@
 // three.js Imports
-import { CustomPointerLockControls } from '../libraries/threejs/modules/CustomPointerLockControls.js';
+import CustomPointerLockControls from '../libraries/threejs/modules/CustomPointerLockControls.js';
 import { CustomTransformControls } from '../libraries/threejs/modules/CustomTransformControls.js';
 
 // Static Class Imports
@@ -35,12 +35,12 @@ class Controls
 			this.mouse_dragging = false;
 			
 			// three.js pointer lock controls
-			this.pointer_lock_controls = new CustomPointerLockControls(Game.player.camera, Game.dom_document.body);
+			this.pointer_lock_controls = new CustomPointerLockControls(Game.player.camera, (!Multiplayer.is_dedicated_server ? Game.dom_document.body : null));
 			this.mouse_locked = true;
 			this.lockPointerLockControls();
 			
 			// three.js transform controls
-			this.transform_controls = new CustomTransformControls(Game.player.camera, (Multiplayer.connection_type != Multiplayer.ConnectionTypes.DedicatedServer ? Game.renderer.domElement : null));
+			this.transform_controls = new CustomTransformControls(Game.player.camera, (!Multiplayer.is_dedicated_server ? Game.renderer.domElement : null));
 			this.transform_controls.setMode('translate');
 			this.transform_controls.translation_snap = 0.25;
 			this.transform_controls.scale_snap = 0.1;
@@ -149,6 +149,32 @@ class Controls
 				Game.player.controls.transform_controls.removeEventListener('objectChange');
 				
 			}
+			
+		}
+		
+		/**
+		 * Releases all held keys and mouse buttons.
+		 */
+		releaseAllKeys()
+		{
+			
+			// Release movement keys
+			this.player_moving_forward = false;
+			this.player_moving_backward = false;
+			this.player_moving_left = false;
+			this.player_moving_right = false;
+			
+			// Release jump key
+			this.player_jumping = false;
+			
+			// Release modifier keys
+			this.modifier_shift_left_pressed = false;
+			this.modifier_control_left_pressed = false;
+			
+			// Release mouse buttons
+			this.mouse_left_down = false;
+			this.mouse_right_down = false;
+			this.mouse_dragging = false;
 			
 		}
 		
@@ -355,11 +381,14 @@ class Controls
 				lockPointerLockControls()
 				{
 					
+					// Lock the mouse if it's not already locked...
+					if (!this.pointer_lock_controls.is_locked)
+					{
+						this.pointer_lock_controls.lock();
+					}
+					
 					// Mouse is now locked to the renderer
 					this.mouse_locked = true;
-					
-					// Lock the pointer lock controls
-					this.pointer_lock_controls.lock();
 					
 				}
 				
@@ -369,14 +398,17 @@ class Controls
 				unlockPointerLockControls()
 				{
 					
-					// Mouse is no longer locked to the renderer
-					this.mouse_locked = false;
-					
 					// Disable pause game flag
 					this.trigger_pause_game = false;
 					
-					// Unlock the pointer lock controls
-					this.pointer_lock_controls.unlock();
+					// Only unlock mouse if it's already locked...
+					if (this.pointer_lock_controls.is_locked)
+					{
+						this.pointer_lock_controls.unlock();
+					}
+					
+					// Mouse is no longer locked to the renderer
+					this.mouse_locked = false;
 					
 				}
 				
@@ -388,6 +420,9 @@ class Controls
 					
 					// Mouse is now locked to the renderer
 					this.mouse_locked = true;
+					
+					// Re-enable pause game flag so next Pause key press triggers pause menu
+					this.trigger_pause_game = true;
 					
 				}
 				
@@ -486,6 +521,12 @@ class Controls
 			 */
 			onKeyDown(event)
 			{
+				
+				// If game is paused, only allow Escape key (to unpause game)...
+				if (Game.paused && event.code !== 'Escape')
+				{
+					return;
+				}
 				
 				// If a text box or text area is being edited...
 				if (Game.ui.utilities.isInputFocused())
@@ -639,6 +680,12 @@ class Controls
 			 */
 			onKeyUp(event)
 			{
+				
+				// If game is paused, only allow Escape key (to unpause game)...
+				if (Game.paused && event.code !== 'Escape')
+				{
+					return;
+				}
 				
 				// If a text box or text area is being edited...
 				if (Game.ui.utilities.isInputFocused())
@@ -814,9 +861,20 @@ class Controls
 					case 'Escape':
 						// Escape
 						
-						// Check if game is paused...
-						if (Game.paused)
+						// If a dialog box is visible...
+						if (Game.ui.dialog.isVisible())
 						{
+							
+							// Close the dialog box
+							Game.ui.dialog.hideDialog();
+							
+							
+						} // Otherwise, if check if game is paused...
+						else if (Game.paused)
+						{
+							
+							// Request pointer lock directly during the key event (required by some browsers)
+							Game.renderer.domElement.requestPointerLock();
 							
 							// Unpause game
 							Game.unpause();

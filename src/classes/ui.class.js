@@ -17,6 +17,8 @@ import initializeMultiplayerMenuUIEventHandlers from '../ui/menu-multiplayer.eve
 import initializeOptionsMenuUIEventHandlers from '../ui/menu-options.events.js';
 import initializePauseMenuUIEventHandlers from '../ui/menu-pause.events.js';
 
+import initializeDialogBoxUIEventHandlers from '../ui/dialog-box.events.js';
+
 /**
  * A UI object containing all game UI functions.
  */
@@ -59,6 +61,7 @@ class UI
 			initializeMultiplayerMenuUIEventHandlers();
 			initializeOptionsMenuUIEventHandlers();
 			initializePauseMenuUIEventHandlers();
+			initializeDialogBoxUIEventHandlers();
 			
 			// Refresh all UI tooltips
 			this.refreshTooltips();

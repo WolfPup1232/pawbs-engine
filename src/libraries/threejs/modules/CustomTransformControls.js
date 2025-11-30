@@ -53,8 +53,8 @@ import Multiplayer from "../../../classes/multiplayer.class.js";
 		const object_change_event = { type: "objectChange" };
 		
 	//#endregion
-
-
+	
+	
 	//#region [Constants]
 		
 		/**
@@ -98,8 +98,8 @@ import Multiplayer from "../../../classes/multiplayer.class.js";
 		const AXIS_FLIP_THRESHOLD = 0.0;
 		
 	//#endregion
-
-
+	
+	
 	//#region [Shared State Variables]
 		
 		

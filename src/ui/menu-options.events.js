@@ -18,6 +18,35 @@ export default function initializeOptionsMenuUIEventHandlers()
 			Game.ui.menus.showOptionsMenu = function showOptionsMenu()
 			{
 				
+				// Initialize asynchronously determined field values...
+				const asyncInitialization = async function() {
+					
+					// If the game is running in a Tauri window...
+					if (Game.tauri)
+					{
+						
+						// Get Tauri window
+						const current_window = Game.tauri.window.getCurrentWindow();
+						
+						// Show fullscreen settings
+						const is_fullscreen = await current_window.isFullscreen();
+						$('#options-video-fullscreen').text(is_fullscreen ? 'On' : 'Off');
+						$('#options-video-fullscreen').toggleClass('active', is_fullscreen);
+						
+						
+					} // Otherwise, if the game is not running in a Tauri window...
+					else
+					{
+						
+						// Disable fullscreen settings
+						$('#options-video-fullscreen').prop('disabled', true);
+						$('#options-video-fullscreen-group').attr("data-bs-title", "(Disabled)<br />Toggle fullscreen window.");
+						
+					}
+					
+				}
+				asyncInitialization();
+				
 				// Initialize colour grid...
 				Game.ui.utilities.initializeColourGrid("#options-player-colour-grid", "options-player-colour-cell", "#options-player-selected-colour", Game.ui.utilities.getMSPaintColours, function() {
 					
@@ -57,6 +86,9 @@ export default function initializeOptionsMenuUIEventHandlers()
 					
 				}
 				
+				// Refresh all UI tooltips
+				Game.ui.refreshTooltips();
+				
 				// Show options menu
 				$('#menu-options').delay(256).fadeIn(256);
 				
@@ -95,6 +127,30 @@ export default function initializeOptionsMenuUIEventHandlers()
 				
 				// Show main menu UI
 				$('#menu-main').delay(256).fadeIn(256);
+				
+			});
+			
+		//#endregion
+		
+		
+		//#region [General Options]
+			
+			/**
+			 * Fullscreen toggle button click event.
+			 */
+			$('#options-video-fullscreen').on('click', async function()
+			{
+				
+				// Toggle Tauri window fullscreen on/off...
+				if (Game.tauri)
+				{
+					const current_window = Game.tauri.window.getCurrentWindow();
+					const is_fullscreen = await current_window.isFullscreen();
+					
+					await Game.tauri.window.getCurrentWindow().setFullscreen(!is_fullscreen);
+					$('#options-video-fullscreen').text(is_fullscreen ? 'Off' : 'On');
+					$('#options-video-fullscreen').toggleClass('active', !is_fullscreen);
+				}
 				
 			});
 			

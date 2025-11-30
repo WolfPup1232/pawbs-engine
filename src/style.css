@@ -4,6 +4,11 @@ Pawbs Engine style.css
 
 /* #region [HTML Elements] */
 	
+	html {
+		scrollbar-width: thin;
+		scrollbar-color: rgba(80, 80, 80, 0.35) transparent;
+	}
+	
 	body {
 		margin: 0px;
 		overflow: hidden;
@@ -26,10 +31,24 @@ Pawbs Engine style.css
 		font-size: 20px; 
 	}
 	
+	::-webkit-scrollbar {
+		width: 8px;
+	}
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	::-webkit-scrollbar-thumb {
+		background-color: rgba(80, 80, 80, 0.35);
+		border-radius: 6px;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background-color: rgba(80, 80, 80, 0.55);
+	}
+	
 /* #endregion */
 
 
-/* #region [three.js Renderer] */
+/* #region [Game Renderer] */
 	
 	#renderer {
 		position: fixed;
@@ -43,16 +62,32 @@ Pawbs Engine style.css
 /* #region [Menu UIs] */
 	
 	
-	/* #region [Main Menu] */
+	/* #region [All Menus] */
 		
-		#menu-main { 
-			position: absolute; 
-			top: 50%; 
-			left: 50%; 
-			transform: translate(-50%, -50%); 
-			display: block; 
-			flex-direction: column; 
-			align-items: center;
+		#menu-main,
+		#menu-multiplayer,
+		#menu-multiplayer-host-game,
+		#menu-multiplayer-join-game,
+		#menu-options,
+		#menu-pause {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			user-select: none;
+		}
+		
+		#menu-main > .modal-dialog,
+		#menu-multiplayer > .modal-dialog,
+		#menu-multiplayer-host-game > .modal-dialog,
+		#menu-multiplayer-join-game > .modal-dialog,
+		#menu-options > .modal-dialog,
+		#menu-pause > .modal-dialog {
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			margin: 0;
 		}
 		
 	/* #endregion */
@@ -60,49 +95,66 @@ Pawbs Engine style.css
 	
 	/* #region [Options Menu] */
 		
-		#options-player-colour-picker {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-		}
-		#options-player-colour-grid {
-			display: grid;
-			grid-gap: 5px;
-			grid-template-columns: repeat(8, 16px);
-		}
-		.options-player-colour-cell {
-			width: 16px;
-			height: 16px;
-			cursor: pointer;
-			border: 1px solid #000000;
-		}
 		
-		#options-player-colour-info {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-		}
-		#options-player-selected-colour {
-			padding: 0px;
-			text-align: center;
-			width: 150px;
-			border: 1px solid #000000;
-		}
+		/* #region [Multiplayer Options] */
+			
+			#options-server {
+				height: 256px;
+			}
+			
+			#options-player {
+				height: 256px;
+			}
+			#options-player-colour-picker {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+			#options-player-colour-grid {
+				display: grid;
+				grid-gap: 5px;
+				grid-template-columns: repeat(8, 16px);
+			}
+			.options-player-colour-cell {
+				width: 16px;
+				height: 16px;
+				cursor: pointer;
+				border: 1px solid #000000;
+			}
+			#options-player-colour-info {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+			#options-player-selected-colour {
+				padding: 0px;
+				text-align: center;
+				width: 150px;
+				border: 1px solid #000000;
+			}
+			
+		/* #endregion */
+		
 		
 	/* #endregion */
 	
 	
 	/* #region [Multiplayer Join Game Menu] */
 		
+		#multiplayer-server-browser {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+		}
+		
 		#multiplayer-games-list {
-			height: 256px;
+			border-top: 0 !important;
+			min-height: 256px;
+			flex: 1 1 auto;
+			max-height: 100%;
 		}
 		
 		#multiplayer-options-player {
-			height: 256px;
-		}
-		
-		#multiplayer-options-server {
 			height: 256px;
 		}
 		
@@ -133,6 +185,42 @@ Pawbs Engine style.css
 			text-align: center;
 			width: 150px;
 			border: 1px solid #000000;
+		}
+		
+	/* #endregion */
+	
+	
+	/* #region [Dialog Box] */
+		
+		#dialog-box {
+			user-select: none;
+			z-index: 10000;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+		}
+		#dialog-box .modal-dialog {
+			margin: 0;
+			max-width: fit-content;
+			min-width: 300px;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: auto;
+		}
+		#dialog-box.dialog-box-darken {
+			background-color: rgba(0, 0, 0, 0.5);
+		}
+		
+		#dialog-box-ok-container {
+			flex: 1;
+		}
+		
+		#dialog-box-cancel-container {
+			flex: 1;
 		}
 		
 	/* #endregion */
@@ -377,7 +465,7 @@ Pawbs Engine style.css
 		}
 		
 		#editor-selected-objects-inner {
-			overflow-y: scroll;
+			overflow-y: auto;
 		}
 		
 		/* #region [Selected Objects Colour Picker] */
@@ -546,6 +634,9 @@ Pawbs Engine style.css
 	.border-brown {
 		border: 12px solid #643200;
 	}
+	.border-top-brown {
+		border-top: 1px solid #643200;
+	}
 	.border-start-lg {
 		border-left: none;
 	}
@@ -618,6 +709,12 @@ Pawbs Engine style.css
 		--bs-btn-disabled-color: #ffffff;
 		--bs-btn-disabled-bg: #643200;
 		--bs-btn-disabled-border-color: #643200;
+	}
+	.btn-secondary.active {
+		color: #ffffff;
+		background-color: #552b00;
+		border-color: #2a1500;
+		box-shadow: inset 3px 6px 4px rgba(0, 0, 0, 0.4), inset -3px -6px 4px rgba(0, 0, 0, 0.4);
 	}
 	.btn-check:disabled + .btn, .btn-check[disabled] + .btn {
 		--bs-btn-color: #af8b66;
